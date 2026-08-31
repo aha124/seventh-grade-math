@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seventh Grade Math</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/style.css">
+<style>
+.wrap{max-width:900px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.06em}
+
+.lede{margin:1.5rem 0 .2rem;max-width:52ch;font-size:1.12rem}
+
+/* The tile grid fills across as many columns as fit, so a fourth and a
+   fifth tile just drop in after this one. Nothing here counts the tiles. */
+.tiles{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));
+  gap:.9rem;
+  margin:1.4rem 0 0;
+  padding:0;
+  list-style:none;
+}
+.tile{
+  display:flex;flex-direction:column;
+  height:100%;
+  background:var(--paper);
+  border:1.5px solid var(--line);
+  border-left:5px solid var(--edge);
+  border-radius:3px;
+  padding:1rem 1.1rem 1.1rem;
+  text-decoration:none;color:inherit;
+  box-shadow:0 2px 0 rgba(16,36,58,.09);
+}
+.tile:hover,.tile:focus-visible{border-left-color:var(--gold);background:#FBFDFE}
+.tile .kicker{
+  font-family:var(--body);font-size:.72rem;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:#7C93A5;
+}
+.tile h2{
+  font-family:var(--display);font-weight:700;
+  font-size:1.85rem;line-height:1.05;letter-spacing:.01em;
+  margin:.35rem 0 .45rem;color:var(--board);
+}
+.tile p{margin:0;font-size:1rem;color:var(--board-soft)}
+.tile .go{
+  margin-top:auto;padding-top:.8rem;
+  font-family:var(--display);font-size:1.1rem;font-weight:600;color:var(--edge);
+}
+
+.foot{margin:2.4rem 0 0;padding-top:1rem;border-top:1.5px solid var(--line);font-size:.95rem;color:#7C93A5;max-width:56ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <h1 class="mark">Seventh Grade <span>Math</span></h1>
+    <div class="sess">Practice tools</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="lede">Pick the one you want to work on. You can come back to any of them as many times as you like.</p>
+
+  <ul class="tiles">
+    <li>
+      <a class="tile" href="lessons/mmmr-cards.html">
+        <span class="kicker">Mean, median, mode, range</span>
+        <h2>Sort the cards</h2>
+        <p>Drag a set of numbers into order, then tap a button to see where the mean, median, mode, and range actually come from.</p>
+        <span class="go">Start sorting &rarr;</span>
+      </a>
+    </li>
+    <li>
+      <a class="tile" href="practice/mmmr.html">
+        <span class="kicker">Mean, median, mode, range</span>
+        <h2>Practice on your own</h2>
+        <p>A new problem whenever you want one. Type your four answers and it tells you which ones are right. Hints are there if you get stuck.</p>
+        <span class="go">Start practicing &rarr;</span>
+      </a>
+    </li>
+  </ul>
+
+  <p class="foot">Everything here runs in the browser. Nothing you type gets sent anywhere.</p>
+</main>
+
+</body>
+</html>

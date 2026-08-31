@@ -29,10 +29,10 @@ system faces and everything still works.
 
 ```
 index.html               hub; lists the tools and links to them
-lessons/mmmr-cards.html  guided card sorting for mean, median, mode, range
-practice/mmmr.html       generated practice problems with hints and checking
+lesson-01/cards.html     guided card sorting for mean, median, mode, range
+lesson-01/practice.html  generated practice problems with hints and checking
 shared/style.css         design tokens and the components both pages share
-vercel.json              cleanUrls, so /practice/mmmr resolves
+vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```
 
 `shared/style.css` holds the palette and type tokens, the base reset, the
@@ -48,7 +48,7 @@ more cards, tighten those clamps rather than letting the rail wrap.
 
 ## Adding a practice page
 
-1. Copy `practice/mmmr.html` to `practice/<topic>.html`. It is the closest
+1. Copy `lesson-01/practice.html` into the new lesson folder. It is the closest
    thing to a template: problem generator, answer sheet, hints, and saved
    progress are all in one file.
 2. Keep the `<link rel="stylesheet" href="../shared/style.css">` and the
@@ -56,7 +56,7 @@ more cards, tighten those clamps rather than letting the rail wrap.
    a different number of cards, and check at a 375px-wide viewport that a
    full row still fits on one line.
 3. If the page saves progress, give it its own key under the same
-   namespace (`seventh-grade-math:<topic>`), and keep every localStorage
+   namespace (`seventh-grade-math:<name>`), and keep every localStorage
    call inside a `try`/`catch` so the page still works with storage off.
 4. Add a tile to the list in `index.html`. Name it for what she does on
    the page, not for a lesson number. The grid fills as many columns as

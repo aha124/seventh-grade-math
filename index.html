@@ -14,13 +14,29 @@
 
 .lede{margin:1.5rem 0 .2rem;max-width:52ch;font-size:1.12rem}
 
-/* The tile grid fills across as many columns as fit, so a fourth and a
-   fifth tile just drop in after this one. Nothing here counts the tiles. */
+/* One section per lesson, newest first. The heading carries the lesson
+   number and topic so a tile never has to say which lesson it belongs to. */
+.lesson{margin:2.1rem 0 0}
+.lesson-head{margin:0 0 .9rem;padding-bottom:.5rem;border-bottom:1.5px solid var(--line)}
+.lnum{
+  display:block;
+  font-family:var(--body);font-size:.72rem;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:#7C93A5;
+}
+.ltitle{
+  display:block;
+  font-family:var(--display);font-weight:700;
+  font-size:1.5rem;line-height:1.15;letter-spacing:.01em;color:var(--board);
+  margin-top:.15rem;
+}
+
+/* The tile grid fills across as many columns as fit, so a third and a
+   fourth page in a lesson just drop in. Nothing here counts the tiles. */
 .tiles{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));
   gap:.9rem;
-  margin:1.4rem 0 0;
+  margin:0;
   padding:0;
   list-style:none;
 }
@@ -36,14 +52,10 @@
   box-shadow:0 2px 0 rgba(16,36,58,.09);
 }
 .tile:hover,.tile:focus-visible{border-left-color:var(--gold);background:#FBFDFE}
-.tile .kicker{
-  font-family:var(--body);font-size:.72rem;font-weight:600;
-  letter-spacing:.09em;text-transform:uppercase;color:#7C93A5;
-}
-.tile h2{
+.tile h3{
   font-family:var(--display);font-weight:700;
-  font-size:1.85rem;line-height:1.05;letter-spacing:.01em;
-  margin:.35rem 0 .45rem;color:var(--board);
+  font-size:1.7rem;line-height:1.05;letter-spacing:.01em;
+  margin:0 0 .45rem;color:var(--board);
 }
 .tile p{margin:0;font-size:1rem;color:var(--board-soft)}
 .tile .go{
@@ -51,6 +63,7 @@
   font-family:var(--display);font-size:1.1rem;font-weight:600;color:var(--edge);
 }
 
+.nolist{margin:1.6rem 0 0;color:var(--board-soft)}
 .foot{margin:2.4rem 0 0;padding-top:1rem;border-top:1.5px solid var(--line);font-size:.95rem;color:#7C93A5;max-width:56ch}
 </style>
 </head>
@@ -66,27 +79,67 @@
 <main class="wrap">
   <p class="lede">Pick the one you want to work on. You can come back to any of them as many times as you like.</p>
 
-  <ul class="tiles">
-    <li>
-      <a class="tile" href="lesson-01/cards.html">
-        <span class="kicker">Mean, median, mode, range</span>
-        <h2>Sort the cards</h2>
-        <p>Drag a set of numbers into order, then tap a button to see where the mean, median, mode, and range actually come from.</p>
-        <span class="go">Start sorting &rarr;</span>
-      </a>
-    </li>
-    <li>
-      <a class="tile" href="lesson-01/practice.html">
-        <span class="kicker">Mean, median, mode, range</span>
-        <h2>Practice on your own</h2>
-        <p>A new problem whenever you want one. Type your four answers and it tells you which ones are right. Hints are there if you get stuck.</p>
-        <span class="go">Start practicing &rarr;</span>
-      </a>
-    </li>
-  </ul>
+  <div id="lessons">
+    <p class="nolist">The list could not load. Open <code>index.html</code> from the folder that holds <code>site.js</code>.</p>
+  </div>
 
   <p class="foot">Everything here runs in the browser. Nothing you type gets sent anywhere.</p>
 </main>
+
+<script src="site.js"></script>
+<script>
+/* Builds the list from LESSONS in site.js. If that file is missing the
+   fallback paragraph above is left in place rather than an empty page. */
+(function(){
+  const host = document.getElementById('lessons');
+  if (typeof LESSONS === 'undefined' || !Array.isArray(LESSONS)) return;
+
+  const frag = document.createDocumentFragment();
+
+  [...LESSONS].sort((a, b) => b.n - a.n).forEach(lesson => {
+    const section = document.createElement('section');
+    section.className = 'lesson';
+
+    const head = document.createElement('h2');
+    head.className = 'lesson-head';
+    const num = document.createElement('span');
+    num.className = 'lnum';
+    num.textContent = 'Lesson ' + lesson.n;
+    const title = document.createElement('span');
+    title.className = 'ltitle';
+    title.textContent = lesson.title;
+    head.append(num, title);
+
+    const list = document.createElement('ul');
+    list.className = 'tiles';
+
+    (lesson.pages || []).forEach(page => {
+      const item = document.createElement('li');
+      const tile = document.createElement('a');
+      tile.className = 'tile';
+      tile.href = page.href;
+
+      const name = document.createElement('h3');
+      name.textContent = page.name;
+      const blurb = document.createElement('p');
+      blurb.textContent = page.blurb;
+      const go = document.createElement('span');
+      go.className = 'go';
+      go.textContent = (page.cta || 'Open') + ' →';
+
+      tile.append(name, blurb, go);
+      item.append(tile);
+      list.append(item);
+    });
+
+    section.append(head, list);
+    frag.append(section);
+  });
+
+  host.textContent = '';
+  host.append(frag);
+})();
+</script>
 
 </body>
 </html>

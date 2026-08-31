@@ -28,10 +28,11 @@ system faces and everything still works.
 ## Layout
 
 ```
-index.html               hub; lists the tools and links to them
+index.html               hub; builds its list from site.js at load
+site.js                  the registry: every lesson and page is one entry here
 lesson-01/cards.html     guided card sorting for mean, median, mode, range
 lesson-01/practice.html  generated practice problems with hints and checking
-shared/style.css         design tokens and the components both pages share
+shared/style.css         design tokens and the components every page shares
 vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```
 
@@ -46,20 +47,26 @@ drag code measures one slot width from the gap between the first two
 cards, so a row of cards must never wrap to a second line. If a page shows
 more cards, tighten those clamps rather than letting the rail wrap.
 
-## Adding a practice page
+## Adding a page
 
-1. Copy `lesson-01/practice.html` into the new lesson folder. It is the closest
-   thing to a template: problem generator, answer sheet, hints, and saved
-   progress are all in one file.
-2. Keep the `<link rel="stylesheet" href="../shared/style.css">` and the
-   `:root` block of card geometry. Adjust the clamps if the new page shows
-   a different number of cards, and check at a 375px-wide viewport that a
-   full row still fits on one line.
-3. If the page saves progress, give it its own key under the same
+One folder per lesson, and one entry in `site.js`. There is no markup to
+edit: `index.html` renders whatever is in that array.
+
+1. Make the folder if it is new: `lesson-02/`, `lesson-03/`, and so on.
+   Everything for one lesson lives together.
+2. Copy `lesson-01/practice.html` (or `cards.html`) into it as a starting
+   point. Each is self-contained: problem generator, answer sheet, hints,
+   and saved progress are all in the one file.
+3. Keep `<link rel="stylesheet" href="../shared/style.css">`. It assumes
+   the page is one folder deep; a page nested deeper needs another `../`.
+4. Keep the `:root` block of card geometry if the page sorts cards.
+   Adjust the clamps if it shows a different number of them, and check at
+   a 375px-wide viewport that a full row still fits on one line.
+5. If the page saves progress, give it its own key under the same
    namespace (`seventh-grade-math:<name>`), and keep every localStorage
    call inside a `try`/`catch` so the page still works with storage off.
-4. Add a tile to the list in `index.html`. Name it for what she does on
-   the page, not for a lesson number. The grid fills as many columns as
-   fit, so a new tile needs no layout change.
-5. Reopen both `index.html` and the new page from the filesystem before
-   committing, to confirm nothing depended on being served.
+6. Register it in `site.js`. Add to an existing lesson's `pages`, or push
+   a new `{ n, title, pages }` object. Order does not matter; the hub
+   sorts on `n` and shows the newest lesson first.
+7. Open `index.html` from the filesystem, click into the new page, and
+   click the back link to make sure the relative paths are right.

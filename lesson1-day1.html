@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Judges' Scores — Lesson 1, Day One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rink:#EDF4F8;
+  --board:#10243A;
+  --board-soft:#1D3B58;
+  --ice:#8FC4E0;
+  --edge:#2E6E9E;
+  --gold:#C0862B;
+  --paper:#FFFFFF;
+  --line:#C8DCE8;
+  --display:"Barlow Condensed","Haettenschweiler","Arial Narrow",sans-serif;
+  --body:"Barlow","Avenir Next","Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;overscroll-behavior:none}
+body{
+  background:var(--rink);
+  color:var(--board);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+  padding:0 0 3rem;
+}
+.wrap{max-width:960px;margin:0 auto;padding:0 1.25rem}
+
+.board{
+  background:var(--board);
+  color:var(--rink);
+  border-bottom:6px solid var(--edge);
+  padding:1.1rem 0 1.25rem;
+}
+.board .wrap{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.mark{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(2rem,7vw,3.1rem);
+  letter-spacing:.01em;line-height:.95;margin:0;
+}
+.mark span{color:var(--ice)}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.06em}
+
+.rounds{display:flex;gap:.4rem;margin:1.1rem 0 .25rem;flex-wrap:wrap}
+.round{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.round[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+
+.prompt{margin:.9rem 0 1.4rem;max-width:62ch;font-size:1.05rem}
+
+/* ---- the deck ---- */
+.rail{
+  display:flex;
+  flex-wrap:nowrap;
+  gap:clamp(4px,1.1vw,10px);
+  align-items:center;
+  justify-content:center;
+  min-height:150px;
+  padding:.75rem 0;
+  overflow:visible;
+}
+.card{
+  position:relative;
+  flex:0 0 auto;
+  width:clamp(44px,11.2vw,88px);
+  height:clamp(64px,15.5vw,120px);
+  background:var(--paper);
+  border:1.5px solid var(--line);
+  border-radius:3px;
+  box-shadow:0 2px 0 rgba(16,36,58,.09);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:600;
+  font-size:clamp(1.3rem,3.4vw,2.3rem);
+  color:var(--board);
+  cursor:grab;
+  user-select:none;-webkit-user-select:none;
+  touch-action:none;
+  will-change:transform;
+}
+.card::after{
+  content:attr(data-judge);
+  position:absolute;top:6px;left:0;right:0;text-align:center;
+  font-family:var(--body);font-size:clamp(.45rem,1.15vw,.62rem);
+  font-weight:600;letter-spacing:.08em;color:#8FA6B8;
+}
+.card.sliding{transition:transform .19s cubic-bezier(.2,.75,.3,1)}
+.card.dragging{
+  z-index:10;
+  transition:none;
+  cursor:grabbing;
+  box-shadow:0 16px 28px rgba(16,36,58,.3);
+  border-color:var(--edge);
+}
+.card.settling{transition:transform .17s cubic-bezier(.3,.8,.4,1)}
+.card.picked{transform:translateY(-14px);box-shadow:0 10px 18px rgba(16,36,58,.22);border-color:var(--edge);transition:transform .13s ease}
+.card.lit{border-color:var(--gold);box-shadow:inset 0 0 0 3px rgba(192,134,43,.28),0 2px 0 rgba(16,36,58,.09)}
+.card.dim{opacity:.32;transition:opacity .18s ease}
+@media (prefers-reduced-motion:reduce){
+  .card,.card.sliding,.card.settling,.card.picked{transition:none!important}
+}
+
+.hint{text-align:center;font-size:.95rem;color:var(--board-soft);min-height:1.6em;margin:.35rem 0 1.3rem}
+.hint.done{color:var(--edge);font-weight:600}
+
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;max-width:640px;margin:0 auto}
+@media (max-width:520px){.tools{grid-template-columns:repeat(2,1fr)}}
+.tool{
+  font-family:var(--display);font-size:1.25rem;font-weight:600;letter-spacing:.02em;
+  padding:.6rem .3rem;background:var(--paper);
+  border:1.5px solid var(--edge);color:var(--edge);
+  border-radius:3px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.tool[disabled]{opacity:.3;cursor:default;border-color:var(--line);color:#93A9B8}
+.tool[aria-pressed="true"]{background:var(--edge);color:#fff}
+
+.readout{
+  max-width:640px;margin:1.1rem auto 0;
+  background:var(--paper);border:1.5px solid var(--line);
+  border-left:5px solid var(--gold);border-radius:3px;
+  padding:.9rem 1.1rem;min-height:5.2rem;
+}
+.readout .big{font-family:var(--display);font-size:2.4rem;font-weight:700;line-height:1;margin:0 0 .3rem}
+.readout p{margin:.25rem 0;font-size:1rem}
+.readout .work{color:var(--board-soft);font-variant-numeric:tabular-nums}
+.readout.empty{border-left-color:var(--line);color:#7C93A5}
+
+details.notes{max-width:660px;margin:2rem auto 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.notes summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none}
+details.notes summary::-webkit-details-marker{display:none}
+details.notes summary::before{content:"▸ ";color:var(--ice)}
+details.notes[open] summary::before{content:"▾ "}
+details.notes .body{font-size:.98rem;color:var(--board-soft);max-width:60ch}
+details.notes h4{font-family:var(--display);font-size:1.15rem;margin:1.1rem 0 .2rem;color:var(--board)}
+details.notes p{margin:.35rem 0}
+.reset{display:block;margin:1.4rem auto 0;background:none;border:none;color:var(--edge);font-family:var(--body);font-size:.95rem;text-decoration:underline;cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <h1 class="mark">Judges' <span>Scores</span></h1>
+    <div class="sess">Lesson 1 &nbsp;/&nbsp; Day One</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="rounds" id="rounds"></div>
+  <p class="prompt" id="prompt"></p>
+
+  <div class="rail" id="rail"></div>
+  <p class="hint" id="hint"></p>
+
+  <div class="tools">
+    <button class="tool" data-stat="median" disabled>Median</button>
+    <button class="tool" data-stat="mode" disabled>Mode</button>
+    <button class="tool" data-stat="range" disabled>Range</button>
+    <button class="tool" data-stat="mean" disabled>Mean</button>
+  </div>
+
+  <div class="readout empty" id="readout">
+    <p>Sort the cards lowest to highest, then the four buttons unlock.</p>
+  </div>
+
+  <button class="reset" id="reset">Shuffle this round again</button>
+
+  <details class="notes">
+    <summary>Teacher notes</summary>
+    <div class="body" id="notes"></div>
+  </details>
+</main>
+
+<script>
+const DECKS = [
+  { key:"r1", tab:"Round 1", dec:1, vals:[52,56,54,55,54,53,54],
+    prompt:"Seven judges scored the same program. Drag the cards into order, lowest on the left." },
+  { key:"r2", tab:"Round 2", dec:1, vals:[52,21,54,55,54,53,54],
+    prompt:"Same skate, same judges, except one of them scored it very differently. Sort it again and find all four numbers. Watch which ones move and which ones don't." },
+  { key:"r3", tab:"Six games", dec:0, vals:[100,70,30,80,50,20],
+    prompt:"Jessie's baseball team scored these points in six games. Sort them. Now there is no single card in the middle, so what is the median?" }
+];
+
+let deckIdx = 0, order = [], picked = null, active = null, busy = false;
+
+const rail = document.getElementById('rail');
+const hint = document.getElementById('hint');
+const readout = document.getElementById('readout');
+const promptEl = document.getElementById('prompt');
+const tools = [...document.querySelectorAll('.tool')];
+
+const deck = () => DECKS[deckIdx];
+const fmt = v => (v/10).toFixed(deck().dec);
+const isSorted = () => order.every((v,i)=> i===0 || order[i-1] <= v);
+const sortedVals = () => [...order].sort((a,b)=>a-b);
+
+function meanStr(sum,n){
+  const t = sum/n, v = t/10;
+  return Number.isInteger(t) ? v.toFixed(deck().dec) : v.toFixed(2);
+}
+
+function shuffle(){
+  const v = [...deck().vals];
+  do { for(let i=v.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[v[i],v[j]]=[v[j],v[i]];} }
+  while (v.every((x,i)=> i===0 || v[i-1]<=x));
+  order = v;
+}
+
+function render(){
+  rail.innerHTML = '';
+  order.forEach((v,i)=>{
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.dataset.index = i;
+    c.dataset.judge = deck().key==='r3' ? 'GAME '+(i+1) : 'JUDGE '+(i+1);
+    c.textContent = fmt(v);
+    if (picked === i) c.classList.add('picked');
+    c.addEventListener('pointerdown', onDown);
+    rail.appendChild(c);
+  });
+  const ok = isSorted();
+  tools.forEach(t=>{ t.disabled = !ok; if(!ok) t.setAttribute('aria-pressed','false'); });
+  hint.textContent = ok
+    ? 'In order. Now find the four numbers.'
+    : 'Drag a card where you want it, or tap two cards to swap them.';
+  hint.classList.toggle('done', ok);
+  if (active) show(active);
+}
+
+function clearMarks(){ [...rail.children].forEach(c=>c.classList.remove('lit','dim')); }
+function mark(idxs){ [...rail.children].forEach((c,i)=> { c.classList.toggle('lit',idxs.includes(i)); c.classList.toggle('dim',!idxs.includes(i)); }); }
+
+function show(stat){
+  active = stat;
+  tools.forEach(t=>t.setAttribute('aria-pressed', String(t.dataset.stat===stat)));
+  readout.classList.remove('empty');
+  const v = sortedVals(), n = v.length;
+  let html = '';
+
+  if (stat === 'median'){
+    if (n % 2){
+      const k = (n-1)/2;
+      mark([k]);
+      html = `<p class="big">${fmt(v[k])}</p><p>The card in the exact middle, with the same number of cards on each side.</p>`;
+    } else {
+      const a = v[n/2-1], b = v[n/2], med = (a+b)/2;
+      const d = a===b ? deck().dec : Math.max(deck().dec,1);
+      mark([n/2-1, n/2]);
+      html = `<p class="big">${(med/10).toFixed(d)}</p>
+              <p>Two cards share the middle, so take the mean of those two.</p>
+              <p class="work">(${fmt(a)} + ${fmt(b)}) &divide; 2 = ${(med/10).toFixed(d)}</p>`;
+    }
+  }
+
+  if (stat === 'mode'){
+    const count = {}; v.forEach(x=> count[x]=(count[x]||0)+1);
+    const top = Math.max(...Object.values(count));
+    if (top === 1){ clearMarks(); html = `<p class="big">none</p><p>No number repeats, so this set has no mode.</p>`; }
+    else {
+      const modes = Object.keys(count).filter(k=>count[k]===top).map(Number);
+      mark(v.map((x,i)=> modes.includes(x)?i:-1).filter(i=>i>=0));
+      html = `<p class="big">${modes.map(fmt).join(' and ')}</p><p>Shows up ${top} times, more than anything else.</p>`;
+    }
+  }
+
+  if (stat === 'range'){
+    mark([0,n-1]);
+    const r = ((v[n-1]-v[0])/10).toFixed(deck().dec);
+    html = `<p class="big">${r}</p><p>Highest card minus lowest card.</p>
+            <p class="work">${fmt(v[n-1])} &minus; ${fmt(v[0])} = ${r}</p>`;
+  }
+
+  if (stat === 'mean'){
+    const sum = v.reduce((a,b)=>a+b,0);
+    mark(v.map((_,i)=>i));
+    html = `<p class="big">${meanStr(sum,n)}</p>
+            <p>Add every card, then divide by how many cards there are.</p>
+            <p class="work">${v.map(fmt).join(' + ')} = ${fmt(sum)}</p>
+            <p class="work">${fmt(sum)} &divide; ${n} = ${meanStr(sum,n)}</p>`;
+  }
+  readout.innerHTML = html;
+}
+
+function nudge(msg){
+  active = null;
+  readout.className = 'readout empty';
+  readout.innerHTML = `<p>${msg}</p>`;
+}
+
+/* ---------- drag with live reordering ---------- */
+function onDown(e){
+  if (busy) return;
+  const card = e.currentTarget;
+  const home = +card.dataset.index;
+  const cards = [...rail.children];
+  const rects = cards.map(c=>c.getBoundingClientRect());
+  const slot = cards.length > 1 ? (rects[1].left - rects[0].left) : 0;
+  const start = {x:e.clientX, y:e.clientY};
+  let moved = false, target = home;
+
+  function shiftOthers(){
+    cards.forEach((c,i)=>{
+      if (c === card) return;
+      let s = 0;
+      if (target > home && i > home && i <= target) s = -slot;
+      else if (target < home && i >= target && i < home) s = slot;
+      c.style.transform = s ? `translateX(${s}px)` : 'translateX(0px)';
+    });
+  }
+
+  const move = ev => {
+    const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+    if (!moved && Math.hypot(dx,dy) < 6) return;
+    if (!moved){
+      moved = true;
+      picked = null;
+      cards.forEach(c => c.classList.remove('picked'));
+      card.classList.add('dragging');
+      cards.forEach(c => { if (c !== card) c.classList.add('sliding'); });
+      clearMarks();
+    }
+    card.style.transform = `translate(${dx}px, ${dy}px) scale(1.07) rotate(-2deg)`;
+
+    let t = rects.findIndex(r => ev.clientX < r.left + r.width/2);
+    if (t === -1) t = rects.length - 1;
+    if (t !== target){ target = t; shiftOthers(); }
+  };
+
+  const up = () => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    window.removeEventListener('pointercancel', up);
+
+    if (moved){
+      busy = true;
+      card.classList.remove('dragging');
+      card.classList.add('settling');
+      card.style.transform = `translate(${(target - home) * slot}px, 0px)`;
+      setTimeout(()=>{
+        const [m] = order.splice(home,1);
+        order.splice(target,0,m);
+        busy = false;
+        nudge(isSorted() ? 'In order. Pick a button.' : 'Moved. Keep sorting.');
+        render();
+      }, 175);
+    } else {
+      if (picked === null) picked = home;
+      else if (picked === home) picked = null;
+      else {
+        [order[picked], order[home]] = [order[home], order[picked]];
+        picked = null;
+        nudge(isSorted() ? 'In order. Pick a button.' : 'Swapped. Keep sorting.');
+      }
+      render();
+    }
+  };
+
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+  e.preventDefault();
+}
+
+/* ---------- rounds ---------- */
+const roundsEl = document.getElementById('rounds');
+DECKS.forEach((d,i)=>{
+  const b = document.createElement('button');
+  b.className = 'round';
+  b.textContent = d.tab;
+  b.setAttribute('aria-pressed', String(i===0));
+  b.onclick = ()=>{ if(busy) return; deckIdx = i; startRound(); };
+  roundsEl.appendChild(b);
+});
+
+function startRound(){
+  [...roundsEl.children].forEach((b,i)=> b.setAttribute('aria-pressed', String(i===deckIdx)));
+  promptEl.textContent = deck().prompt;
+  picked = null; active = null;
+  readout.className = 'readout empty';
+  readout.innerHTML = '<p>Sort the cards lowest to highest, then the four buttons unlock.</p>';
+  shuffle(); render(); notes();
+}
+
+tools.forEach(t => t.onclick = ()=> { if(!t.disabled) show(t.dataset.stat); });
+document.getElementById('reset').onclick = ()=>{
+  if (busy) return;
+  picked = null; active = null;
+  readout.className = 'readout empty';
+  readout.innerHTML = '<p>Reshuffled. Sort them again.</p>';
+  shuffle(); render();
+};
+
+function notes(){
+  const n = document.getElementById('notes');
+  const warm = `<h4>Before you start</h4>
+    <p>Five minutes of the counting game from page 1 of the coursebook. Count to 100 by 2s and back down, then by 3s, all in her head.</p>`;
+  const map = {
+    r1:`${warm}
+      <h4>Run it in this order</h4>
+      <p>Median first, because she can put a finger on the middle card. Then mode, then range, then mean. Mean last, since it is the only one that needs arithmetic.</p>
+      <p>Mean, median, and mode all come out to 5.4 here. Say that out loud. The coursebook makes the same point on page 6 with a different set.</p>
+      <h4>Watch for</h4>
+      <p>If she reaches for mean first, that is fine, but make her sort anyway. Median and mode both depend on the order and she needs the habit.</p>`,
+    r2:`<h4>The point of this round</h4>
+      <p>One judge gave a 2.1. That pulls the mean from 5.4 down to 4.9, and it moves the range from 0.4 to 3.4. The median and the mode do not move at all.</p>
+      <p>Let her find the low card herself. Do not point at it.</p>
+      <h4>Ask her</h4>
+      <p>Which number is the fairer picture of how she skated? There is no wrong answer, and the argument is the actual concept in this chapter.</p>
+      <p>Worth telling her: real figure skating scoring drops the highest and lowest scores before averaging, for exactly this reason.</p>`,
+    r3:`<h4>The even set</h4>
+      <p>This is the coursebook's own example from page 4. Six games, so no single middle card. The two middle cards are 5 and 7, and the median is their mean, 6.</p>
+      <p>Let her sit with it for a minute before you tell her. The book's line is worth repeating: the team never actually scored 6 in a game, but 6 is still the midpoint of the season.</p>
+      <h4>Then close</h4>
+      <p>Have her pick her own set of seven numbers for tomorrow. Minutes per practice, jumps landed, anything she has a record of. She computes all four on Tuesday.</p>`
+  };
+  n.innerHTML = map[deck().key];
+}
+
+startRound();
+</script>
+</body>
+</html>

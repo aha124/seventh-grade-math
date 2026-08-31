@@ -14,7 +14,7 @@
 const LESSONS = [
   {
     n: 1,
-    title: "Mean, median, mode, and range",
+    title: "Mean, median, mode, range, and exponents",
     pages: [
       {
         href: "lesson-01/cards.html",
@@ -27,6 +27,12 @@ const LESSONS = [
         name: "Practice on your own",
         blurb: "A new problem whenever you want one. Type your four answers and it tells you which ones are right. Hints are there if you get stuck.",
         cta: "Start practicing"
+      },
+      {
+        href: "lesson-01/exponents.html",
+        name: "Build a power",
+        blurb: "Tap the exponent up and a tile appears for every copy of the base. Squares and cubes get drawn as real dots, so the names make sense.",
+        cta: "Start building"
       }
     ]
   }

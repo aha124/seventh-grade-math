@@ -58,12 +58,12 @@
 .state{font-family:var(--display);font-size:1.1rem;min-width:4.6rem;text-align:right;color:var(--board-soft)}
 .row.right .state{color:var(--good)}
 .row.wrong .state{color:var(--gold)}
-.hbtn{
+.hbtn,.export-btn{
   font-family:var(--display);font-size:1rem;font-weight:600;
   background:none;border:1.5px solid var(--line);color:var(--board-soft);
   border-radius:3px;padding:.3rem .6rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
-.hbtn:disabled{opacity:.35;cursor:default}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
 .tip{grid-column:1/-1;font-size:.97rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--gold);padding:.5rem .7rem;margin:.5rem 0 0;border-radius:2px}
 
 .banner{
@@ -72,6 +72,44 @@
   font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
 }
 .banner.show{display:block}
+/* problem log */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy-note{margin:0 0 .9rem;font-size:.88rem;color:#7C93A5}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .stat{text-align:center}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+.export-box[hidden]{display:none}
+
 .foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
 </style>
 </head>
@@ -128,6 +166,36 @@
     <button class="btn ghost" id="next">New problem</button>
   </div>
 
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="accuracy-note" id="accuracyNote"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Set</th>
+              <th scope="col">Cards</th>
+              <th scope="col" class="stat" title="Median">Med</th>
+              <th scope="col" class="stat" title="Mode">Mode</th>
+              <th scope="col" class="stat" title="Range">Range</th>
+              <th scope="col" class="stat" title="Mean">Mean</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing solved yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
   <p class="foot">Answers are checked, never shown. 5.4, 5.40 and 05.400 all count as the same answer. If a set has two modes, type both: 5.4, 5.6</p>
 </main>
 
@@ -175,12 +243,155 @@ function clearProgress(){
   solved = 0; clean = 0;
   try { localStorage.removeItem(STORE_KEY); } catch (e) {}
   drawTally();
+  clearLog();
 }
 
 function drawTally(){
   document.getElementById('tally').textContent =
     `Solved ${solved} \u00A0/\u00A0 Clean ${clean}`;
   document.getElementById('clear').hidden = solved === 0 && clean === 0;
+}
+
+/* ---------------- problem log ----------------
+   One record per solved problem, in its own key so the tally above is
+   untouched. Kept to the most recent LOG_CAP; older records fall off the
+   front. Same guarding as the counts: with storage off the log still
+   fills in for this visit, it just does not survive a reload. */
+const LOG_KEY = 'seventh-grade-math:mmmr-log';
+const LOG_CAP = 200;
+const LOG_SHOWN = 20;
+const STATS = ['median', 'mode', 'range', 'mean'];
+const STAT_LABEL = {median:'Median', mode:'Mode', range:'Range', mean:'Mean'};
+let log = [];
+
+function validRecord(r){
+  return r && typeof r === 'object'
+    && typeof r.t === 'number' && isFinite(r.t)
+    && r.first && typeof r.first === 'object'
+    && r.hints && typeof r.hints === 'object';
+}
+
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+
+function saveLog(){
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); }
+  catch (e) { /* full or switched off; the log stays in memory for this visit */ }
+}
+
+function clearLog(){
+  log = [];
+  try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+  drawLog();
+}
+
+/* Called from checkAll the moment all four are right. attempts[s] is the
+   number of wrong submissions for that statistic, so zero means she got it
+   on the first try. */
+function recordSolved(){
+  const rec = { t: Date.now(), tag: scene.tag, n: vals.length, first: {}, hints: {} };
+  STATS.forEach(s => { rec.first[s] = attempts[s] === 0; rec.hints[s] = hintLevel[s]; });
+  log.push(rec);
+  if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+  saveLog();
+  drawLog();
+}
+
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'})
+      + ', ' + d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  } catch (e) { return ''; }
+}
+
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const note = document.getElementById('accuracyNote');
+  const empty = document.getElementById('logEmpty');
+  const scroll = document.querySelector('.log-scroll');
+
+  rows.textContent = '';
+  accuracy.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  empty.hidden = log.length > 0;
+  scroll.hidden = log.length === 0;
+  if (!log.length){ note.textContent = ''; return; }
+
+  /* first-try accuracy per statistic, across the whole log */
+  STATS.forEach(s => {
+    const hits = log.reduce((total, r) => total + (r.first[s] ? 1 : 0), 0);
+    const li = document.createElement('li');
+    const pct = document.createElement('b');
+    pct.textContent = Math.round(hits * 100 / log.length) + '%';
+    li.append(STAT_LABEL[s] + ' ', pct);
+    accuracy.append(li);
+  });
+  note.textContent = 'Answered with no wrong tries, across all ' + log.length
+    + (log.length === 1 ? ' record. ' : ' records. ')
+    + 'Hints are counted separately, in the table.';
+
+  /* newest first, most recent LOG_SHOWN */
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = text => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    };
+    tr.append(cell(whenText(r.t)), cell(r.tag || ''), cell(r.n == null ? '' : String(r.n)));
+    STATS.forEach(s => {
+      const td = document.createElement('td');
+      td.className = 'stat';
+      const flag = document.createElement('span');
+      const ok = !!r.first[s];
+      flag.className = ok ? 'yes' : 'no';
+      flag.textContent = ok ? 'yes' : 'no';
+      td.append(flag);
+      const used = Number(r.hints[s]) || 0;
+      if (used){
+        const h = document.createElement('span');
+        h.className = 'hints';
+        h.textContent = ' +' + used;
+        td.append(h);
+      }
+      tr.append(td);
+    });
+    rows.append(tr);
+  });
+}
+
+/* ---------------- export ----------------
+   The copied text is exactly what sits under LOG_KEY, so on the other
+   device it can go straight back into that key. navigator.clipboard is not
+   always available from a file:// page, hence the two fallbacks. */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
 }
 
 const hintLevel = {median:0, mode:0, range:0, mean:0};
@@ -395,6 +606,7 @@ function checkAll(){
     if (!usedHintOrMiss) clean++;
     saveProgress();
     drawTally();
+    recordSolved();
     banner.textContent = usedHintOrMiss ? 'All four correct.' : 'All four, first try, no hints.';
     banner.classList.add('show');
     checkBtn.disabled = true;
@@ -482,8 +694,35 @@ clearBtn.onclick = ()=>{
   armed = setTimeout(disarm, 4000);
 };
 
+const exportBtn = document.getElementById('export');
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+
+exportBtn.onclick = async ()=>{
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length
+      + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(()=>{ exportNote.textContent = ''; }, 4000);
+  } else {
+    /* last resort: show it so it can be selected and copied by hand */
+    exportBox.value = text;
+    exportBox.hidden = false;
+    exportBox.focus();
+    exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
 loadProgress();
+loadLog();
 drawTally();
+drawLog();
 newProblem();
 </script>
 </body>

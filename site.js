@@ -33,6 +33,12 @@ const LESSONS = [
         name: "Build a power",
         blurb: "Tap the exponent up and a tile appears for every copy of the base. Squares and cubes get drawn as real dots, so the names make sense.",
         cta: "Start building"
+      },
+      {
+        href: "lesson-01/exponents-practice.html",
+        name: "Powers practice",
+        blurb: "Work out powers, write them from a list of factors, or run the 45 second speed round on the nine worth knowing cold.",
+        cta: "Start practicing"
       }
     ]
   }

@@ -33,6 +33,7 @@ site.js                  the registry: every lesson and page is one entry here
 lesson-01/cards.html     guided card sorting for mean, median, mode, range
 lesson-01/practice.html  generated practice problems with hints and checking
 lesson-01/exponents.html an exponent to build a tile at a time, not graded
+lesson-01/exponents-practice.html   graded powers drill, three modes
 shared/style.css         design tokens and the components every page shares
 vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```

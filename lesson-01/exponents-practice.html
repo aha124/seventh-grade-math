@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Powers Practice — Exponents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* the problem itself */
+.prompt-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:1.3rem 0 0;padding:1.4rem 1rem;min-height:8.5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.power{
+  font-family:var(--display);font-weight:700;line-height:1;
+  font-size:clamp(3rem,13vw,4.6rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.power sup{font-size:.5em;vertical-align:super;line-height:0}
+.power .blank{color:var(--edge)}
+.expanded{
+  font-family:var(--display);font-weight:700;line-height:1.15;text-align:center;
+  font-size:clamp(1.8rem,7vw,3rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.prompt-sub{margin:.7rem 0 0;font-size:1rem;color:var(--board-soft);text-align:center}
+
+/* speed round bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}   /* a class that sets display beats the hidden attribute */
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+/* answer sheet, same shape as the other practice page */
+.sheet{background:var(--paper);border:1.5px solid var(--line);border-radius:3px;overflow:hidden;margin:1.1rem 0 0}
+.sheet.locked{opacity:.45}
+.row{display:grid;grid-template-columns:6.4rem 1fr auto;gap:.6rem;align-items:center;padding:.7rem .9rem;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+@media (max-width:480px){.row{grid-template-columns:5.2rem 1fr auto;gap:.4rem;padding:.6rem .5rem}}
+.row label{font-family:var(--display);font-size:1.3rem;font-weight:600}
+.row input{
+  width:100%;font-family:var(--display);font-size:1.35rem;font-weight:600;
+  padding:.35rem .55rem;border:1.5px solid var(--line);border-radius:3px;
+  background:var(--rink);color:var(--board);font-variant-numeric:tabular-nums;
+  min-height:44px;
+}
+.row input:disabled{background:#F4F7F9}
+.row.right input{border-color:var(--good);background:#EFF7F2;color:var(--good)}
+.row.wrong input{border-color:var(--gold);background:#FBF5EA}
+.state{font-family:var(--display);font-size:1.1rem;min-width:4.6rem;text-align:right;color:var(--board-soft)}
+.row.right .state{color:var(--good)}
+.row.wrong .state{color:var(--gold)}
+
+.tip{
+  font-size:.97rem;color:var(--board-soft);background:#F6FAFC;
+  border-left:4px solid var(--gold);padding:.6rem .8rem;margin:.7rem 0 0;border-radius:2px;
+}
+.tip[hidden]{display:none}
+.tip.trap{border-left-color:var(--edge);background:#F2F8FB}
+.tip.trap b{color:var(--board)}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+/* problem log, same shape as the other practice page */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy-note{margin:0 0 .9rem;font-size:.88rem;color:#7C93A5}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+.export-box[hidden]{display:none}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Powers <span>Practice</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="prompt-box" id="promptBox"></div>
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">45</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div class="sheet" id="sheet"></div>
+  <p class="tip trap" id="trapTip" hidden></p>
+  <p class="tip" id="hintTip" hidden></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="check" type="button">Check answer</button>
+    <button class="btn ghost" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="accuracy-note" id="accuracyNote"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col">Result</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. Extra zeros and spaces do not matter: 125, 125.0 and 0125 all count as the same answer.</p>
+</main>
+
+<script>
+/* ---------------- saved progress ----------------
+   Its own key, so the mean/median/mode/range page is untouched. Best is
+   the speed round high score and lives in the same object. Everything
+   that touches localStorage is wrapped; with storage off the page still
+   works, the numbers just stop surviving a reload. */
+const STORE_KEY = 'seventh-grade-math:exponents';
+let solved = 0, clean = 0, best = 0;
+
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.solved)) solved = Math.max(0, Math.floor(saved.solved));
+    if (Number.isFinite(saved.clean))  clean  = Math.max(0, Math.floor(saved.clean));
+    if (Number.isFinite(saved.best))   best   = Math.max(0, Math.floor(saved.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+
+function saveProgress(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({solved, clean, best})); }
+  catch (e) { /* nothing to do; the numbers stay in memory for this visit */ }
+}
+
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally();
+  drawSpeedBar();
+  clearLog();
+}
+
+function drawTally(){
+  document.getElementById('tally').textContent =
+    `Solved ${solved} \u00A0/\u00A0 Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   Same shape and the same 200 cap as the other practice page, under its
+   own key. Trimmed on read as well as on write, so a hand-edited key
+   cannot grow past the cap. */
+const LOG_KEY = 'seventh-grade-math:exponents-log';
+const LOG_CAP = 200;
+const LOG_SHOWN = 20;
+const MODE_LABEL = {evaluate:'Evaluate', power:'Write it', speed:'Speed'};
+let log = [];
+
+function validRecord(r){
+  return r && typeof r === 'object'
+    && typeof r.t === 'number' && isFinite(r.t)
+    && typeof r.mode === 'string'
+    && typeof r.problem === 'string';
+}
+
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+
+function saveLog(){
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); }
+  catch (e) { /* full or switched off; the log stays in memory for this visit */ }
+}
+
+function clearLog(){
+  log = [];
+  try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+  drawLog();
+}
+
+function pushRecord(rec){
+  log.push(rec);
+  if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+  saveLog();
+  drawLog();
+}
+
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'})
+      + ', ' + d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  } catch (e) { return ''; }
+}
+
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const note = document.getElementById('accuracyNote');
+  const empty = document.getElementById('logEmpty');
+  const scroll = document.querySelector('.log-scroll');
+
+  rows.textContent = '';
+  accuracy.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  empty.hidden = log.length > 0;
+  scroll.hidden = log.length === 0;
+  if (!log.length){ note.textContent = ''; return; }
+
+  /* first-try accuracy for the graded modes; the speed round has no
+     first try to measure, so it contributes its best score instead */
+  let graded = 0;
+  ['evaluate', 'power'].forEach(mode => {
+    const rows2 = log.filter(r => r.mode === mode);
+    if (!rows2.length) return;
+    graded += rows2.length;
+    const hits = rows2.reduce((total, r) => total + (r.first ? 1 : 0), 0);
+    const li = document.createElement('li');
+    const pct = document.createElement('b');
+    pct.textContent = Math.round(hits * 100 / rows2.length) + '%';
+    li.append(MODE_LABEL[mode] + ' ', pct);
+    accuracy.append(li);
+  });
+  const speedRuns = log.filter(r => r.mode === 'speed');
+  if (speedRuns.length){
+    const li = document.createElement('li');
+    const b = document.createElement('b');
+    b.textContent = String(Math.max(...speedRuns.map(r => Number(r.score) || 0)));
+    li.append('Best speed ', b);
+    accuracy.append(li);
+  }
+  note.textContent = graded
+    ? 'Answered with no wrong tries, across ' + graded
+      + (graded === 1 ? ' graded problem. ' : ' graded problems. ')
+      + 'Hints are counted separately, in the table.'
+    : 'No graded problems logged yet.';
+
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = text => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+
+    const result = document.createElement('td');
+    if (r.mode === 'speed'){
+      const s = document.createElement('span');
+      s.className = 'score';
+      s.textContent = (Number(r.score) || 0) + ' correct';
+      result.append(s);
+    } else {
+      const s = document.createElement('span');
+      s.className = r.first ? 'yes' : 'no';
+      s.textContent = r.first ? 'yes' : 'no';
+      result.append(s);
+    }
+    tr.append(result);
+
+    const hints = document.createElement('td');
+    const used = Number(r.hints) || 0;
+    if (used){
+      const h = document.createElement('span');
+      h.className = 'hints';
+      h.textContent = '+' + used;
+      hints.append(h);
+    }
+    tr.append(hints);
+    rows.append(tr);
+  });
+}
+
+/* ---------------- export ----------------
+   The copied text is exactly what sits under LOG_KEY, so on another
+   device it can go straight back into that key. navigator.clipboard is
+   not always available from a file:// page, hence the two fallbacks. */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- answer checking ---------------- */
+function parseNum(raw){
+  const s = String(raw).replace(/[\s$,]/g, '');
+  if (!s) return null;
+  if (!/^[-+]?\d*\.?\d+$/.test(s)) return null;
+  const v = parseFloat(s);
+  return Number.isFinite(v) ? v : null;
+}
+const near = (a, b) => Math.abs(a - b) < 1e-6;
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+/* ---------------- problems ---------------- */
+const SUPER = ['', '¹', '²', '³', '⁴', '⁵'];
+
+/* Evaluate: bases 2 to 12, exponents 2 to 4, kept under 2000 so the
+   arithmetic stays worth doing. Base 1 and base 10 are seeded in on
+   purpose: 1 to any power stays 1, and the powers of 10 are the ones
+   she will lean on later. */
+const EVAL_POOL = [];
+for (let b = 2; b <= 12; b++){
+  for (let e = 2; e <= 4; e++){
+    if (Math.pow(b, e) < 2000) EVAL_POOL.push([b, e]);
+  }
+}
+const EVAL_SPECIALS = [[1,2],[1,3],[1,4],[10,2],[10,3]];
+
+/* The nine worth knowing cold. The speed round uses only these. */
+const NINE = [[2,2],[3,2],[4,2],[5,2],[10,2],[2,3],[3,3],[5,3],[10,3]];
+
+let mode = 'evaluate';
+let problem = null;
+let missed = false, hintsUsed = 0, answered = false;
+
+function makeEvaluate(){
+  const pair = Math.random() < 0.2
+    ? EVAL_SPECIALS[rand(0, EVAL_SPECIALS.length - 1)]
+    : EVAL_POOL[rand(0, EVAL_POOL.length - 1)];
+  const [b, e] = pair;
+  return {
+    mode: 'evaluate', base: b, exp: e,
+    label: b + '^' + e,
+    fields: [{key:'value', label:'Value', answer: Math.pow(b, e)}]
+  };
+}
+
+function makePower(){
+  /* Two ways in. The expanded list asks her to count copies; the value
+     form asks the same question from the other end. */
+  if (Math.random() < 0.6){
+    const b = rand(2, 12), e = rand(2, 5);
+    return {
+      mode: 'power', kind: 'expand', base: b, exp: e,
+      label: new Array(e).fill(b).join(' × '),
+      fields: [
+        {key:'base', label:'Base', answer: b},
+        {key:'exp', label:'Exponent', answer: e}
+      ]
+    };
+  }
+  const pair = EVAL_POOL[rand(0, EVAL_POOL.length - 1)];
+  const [b, e] = pair;
+  return {
+    mode: 'power', kind: 'value', base: b, exp: e, value: Math.pow(b, e),
+    label: b + '^? = ' + Math.pow(b, e),
+    fields: [{key:'exp', label:'Exponent', answer: e}]
+  };
+}
+
+function makeSpeed(pair){
+  const [b, e] = pair;
+  return {
+    mode: 'speed', base: b, exp: e,
+    label: b + '^' + e,
+    fields: [{key:'value', label:'Value', answer: Math.pow(b, e)}]
+  };
+}
+
+/* ---------------- drawing the problem ---------------- */
+const promptBox = document.getElementById('promptBox');
+const sheet = document.getElementById('sheet');
+const trapTip = document.getElementById('trapTip');
+const hintTip = document.getElementById('hintTip');
+const banner = document.getElementById('banner');
+const checkBtn = document.getElementById('check');
+const nextBtn = document.getElementById('next');
+const hintBtn = document.getElementById('hint');
+
+function powerMarkup(base, exp, blankExp, tail){
+  const span = document.createElement('span');
+  span.className = 'power';
+  span.append(String(base));
+  const sup = document.createElement('sup');
+  if (blankExp){ sup.className = 'blank'; sup.textContent = '?'; }
+  else sup.textContent = SUPER[exp] || String(exp);
+  span.append(sup);
+  if (tail) span.append(tail);
+  return span;
+}
+
+function drawPrompt(){
+  promptBox.textContent = '';
+  if (!problem) return;
+
+  if (problem.mode === 'evaluate' || problem.mode === 'speed'){
+    promptBox.append(powerMarkup(problem.base, problem.exp, false));
+    const sub = document.createElement('p');
+    sub.className = 'prompt-sub';
+    sub.textContent = 'What is it worth?';
+    promptBox.append(sub);
+    return;
+  }
+
+  if (problem.kind === 'expand'){
+    const line = document.createElement('div');
+    line.className = 'expanded';
+    line.textContent = problem.label;
+    const sub = document.createElement('p');
+    sub.className = 'prompt-sub';
+    sub.textContent = 'Write this as a power.';
+    promptBox.append(line, sub);
+    return;
+  }
+
+  const sub = document.createElement('p');
+  sub.className = 'prompt-sub';
+  sub.textContent = 'The base is ' + problem.base + '. How many of them?';
+  promptBox.append(powerMarkup(problem.base, problem.exp, true, ' = ' + problem.value), sub);
+}
+
+function drawSheet(){
+  sheet.textContent = '';
+  if (!problem) return;
+  problem.fields.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.field = f.key;
+
+    const label = document.createElement('label');
+    label.setAttribute('for', 'in-' + f.key);
+    label.textContent = f.label;
+
+    const input = document.createElement('input');
+    input.id = 'in-' + f.key;
+    input.setAttribute('inputmode', 'numeric');
+    input.setAttribute('autocomplete', 'off');
+
+    const state = document.createElement('span');
+    state.className = 'state';
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ e.preventDefault(); checkAll(); }
+    });
+    input.addEventListener('input', () => {
+      row.classList.remove('wrong');
+      state.textContent = '';
+      trapTip.hidden = true;
+    });
+
+    row.append(label, input, state);
+    sheet.append(row);
+  });
+}
+
+/* ---------------- checking ----------------
+   Never prints the right answer. A wrong try gets a nudge, except for the
+   one misconception worth naming, which gets called out by name. */
+function fieldOf(key){ return problem.fields.find(f => f.key === key); }
+
+function checkField(key, showMiss){
+  const row = sheet.querySelector('.row[data-field="' + key + '"]');
+  const input = row.querySelector('input');
+  const state = row.querySelector('.state');
+  const typed = parseNum(input.value);
+  if (typed === null){ row.classList.remove('right','wrong'); state.textContent = ''; return null; }
+
+  const ok = near(typed, fieldOf(key).answer);
+  row.classList.remove('right','wrong');
+  if (ok){
+    row.classList.add('right');
+    state.textContent = 'correct';
+    input.disabled = true;
+  } else if (showMiss){
+    row.classList.add('wrong');
+    missed = true;
+    state.textContent = 'not yet';
+    showTrapIf(key, typed);
+  }
+  return ok;
+}
+
+/* The 4 cubed reads as 4 times 3 mistake. Worth naming out loud rather
+   than leaving under a generic "not yet", because the wrong answer is
+   the interesting part. */
+function showTrapIf(key, typed){
+  if (problem.mode !== 'evaluate' || key !== 'value') return;
+  const b = problem.base, e = problem.exp;
+  if (!near(typed, b * e) || near(b * e, Math.pow(b, e))) return;
+  trapTip.textContent = '';
+  const lead = document.createElement('b');
+  lead.textContent = 'That is ' + b + ' × ' + e + '.';
+  trapTip.append(lead, ' The little ' + e + ' is not something you multiply by. It counts how many '
+    + b + 's there are, so it means ' + new Array(e).fill(b).join(' × ') + '.');
+  trapTip.hidden = false;
+}
+
+function checkAll(){
+  if (!problem || answered) return;
+  const results = problem.fields.map(f => checkField(f.key, true));
+  if (results.some(r => r === null)) return;      /* nothing typed yet */
+  const allRight = results.every(r => r === true);
+
+  if (mode === 'speed'){
+    if (!speedOn) return;
+    answered = true;
+    /* a short pause so the mark is visible, then on to the next one, so a
+       fact she does not know costs a moment rather than the whole round */
+    setTimeout(()=>{ if (speedOn) speedScored(allRight); }, allRight ? 120 : 450);
+    return;
+  }
+  if (!allRight) return;
+
+  answered = true;
+  solved++;
+  if (!missed && hintsUsed === 0) clean++;
+  saveProgress();
+  drawTally();
+  pushRecord({
+    t: Date.now(), mode: problem.mode, problem: problem.label,
+    first: !missed, hints: hintsUsed
+  });
+  banner.className = 'banner show';
+  banner.textContent = (!missed && hintsUsed === 0)
+    ? 'Right, first try, no hints.'
+    : 'Right.';
+  checkBtn.disabled = true;
+  hintBtn.disabled = true;
+}
+
+/* ---------------- hints ----------------
+   Three levels, same escalation as the other practice page. Level three
+   is concrete but still stops short of the answer being asked for. */
+function hintText(){
+  const b = problem.base, e = problem.exp, lvl = hintsUsed;
+  if (problem.mode === 'evaluate'){
+    if (lvl === 1) return 'The little number is a count. It tells you how many ' + b
+      + 's to write down. It is not a number you multiply by.';
+    if (lvl === 2) return 'Write it out in full: ' + new Array(e).fill(b).join(' × ')
+      + '. Then multiply two at a time, left to right.';
+    return e === 2
+      ? 'It is just ' + b + ' × ' + b + '. Work that one out.'
+      : b + ' × ' + b + ' = ' + (b * b) + '. Now multiply that by ' + b + ', '
+        + (e - 2) + (e - 2 === 1 ? ' more time.' : ' more times.');
+  }
+  if (problem.kind === 'expand'){
+    if (lvl === 1) return 'The base is the number that keeps repeating. The exponent counts how many times it shows up.';
+    if (lvl === 2) return 'Every number in that list is the same, so that number is the base. Now you only have to count them.';
+    return 'Point at them one at a time and count out loud. The number you land on is the exponent.';
+  }
+  if (lvl === 1) return 'You are looking for how many ' + b + 's multiply together to make ' + problem.value + '.';
+  if (lvl === 2) return 'Build it up and keep a running total: ' + b + ', then ' + b + ' × ' + b
+    + ', then times ' + b + ' again. Count the steps.';
+  return b + ' × ' + b + ' = ' + (b * b) + '. Keep multiplying by ' + b
+    + ' until you reach ' + problem.value + ', then count how many ' + b + 's you used.';
+}
+
+hintBtn.onclick = ()=>{
+  if (mode === 'speed' || !problem || answered || hintsUsed >= 3) return;
+  hintsUsed++;
+  hintTip.textContent = hintText();
+  hintTip.hidden = false;
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- speed round ---------------- */
+const SPEED_SECONDS = 45;
+const speedBar = document.getElementById('speedBar');
+let speedOn = false, speedScore = 0, speedSeen = 0, speedQueue = [], speedTimer = 0, speedEndsAt = 0;
+
+function drawSpeedBar(){
+  document.getElementById('score').textContent = speedScore;
+  document.getElementById('best').textContent = best;
+}
+
+function shuffledNine(){
+  const q = NINE.slice();
+  for (let i = q.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const swap = q[i]; q[i] = q[j]; q[j] = swap;
+  }
+  return q;
+}
+
+function nextSpeedProblem(){
+  if (!speedQueue.length) speedQueue = shuffledNine();
+  problem = makeSpeed(speedQueue.shift());
+  answered = false; missed = false; hintsUsed = 0;
+  trapTip.hidden = true; hintTip.hidden = true;
+  drawPrompt(); drawSheet();
+  const input = sheet.querySelector('input');
+  if (input) input.focus();
+}
+
+function speedScored(right){
+  if (right) speedScore++;
+  speedSeen++;
+  drawSpeedBar();
+  if (speedOn) nextSpeedProblem();
+}
+
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0; speedQueue = shuffledNine();
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  banner.className = 'banner';
+  checkBtn.disabled = false;
+  nextBtn.textContent = 'Stop';
+  drawSpeedBar();
+  tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  nextSpeedProblem();
+}
+
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer);
+  speedTimer = 0;
+  checkBtn.disabled = true;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar();
+  drawTally();
+  pushRecord({
+    t: Date.now(), mode: 'speed',
+    problem: SPEED_SECONDS + ' second round',
+    score: speedScore, seen: speedSeen, first: null, hints: 0
+  });
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest
+    ? speedScore + ' correct. That is a new best.'
+    : speedScore + ' correct. Best so far is ' + best + '.';
+  promptBox.textContent = '';
+  sheet.textContent = '';
+}
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  {key:'evaluate', tab:'Evaluate',
+   note:'A power is shown. Work out what it is worth.'},
+  {key:'power', tab:'Write it as a power',
+   note:'Either a list of the same number over and over, or a value with the base given. Say it as a power.'},
+  {key:'speed', tab:'Speed round',
+   note:'The nine you should know cold, for 45 seconds. No hints in here. Do this one every day.'}
+];
+
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mode-tab';
+  b.type = 'button';
+  b.textContent = m.tab;
+  b.setAttribute('aria-pressed', String(m.key === mode));
+  b.onclick = ()=> setMode(m.key);
+  modesEl.append(b);
+});
+
+function setMode(next){
+  if (speedOn) stopSpeed(false);
+  mode = next;
+  [...modesEl.children].forEach((b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  speedBar.hidden = mode !== 'speed';
+  hintBtn.disabled = mode === 'speed';
+  banner.className = 'banner';
+
+  if (mode === 'speed'){
+    problem = null;
+    promptBox.textContent = '';
+    sheet.textContent = '';
+    trapTip.hidden = true; hintTip.hidden = true;
+    checkBtn.disabled = true;
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0;
+    drawSpeedBar();
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+
+function newProblem(){
+  problem = mode === 'evaluate' ? makeEvaluate() : makePower();
+  answered = false; missed = false; hintsUsed = 0;
+  trapTip.hidden = true;
+  hintTip.hidden = true;
+  banner.className = 'banner';
+  checkBtn.disabled = false;
+  hintBtn.disabled = false;
+  hintBtn.textContent = 'Hint';
+  drawPrompt();
+  drawSheet();
+}
+
+checkBtn.onclick = checkAll;
+nextBtn.onclick = ()=>{
+  if (mode !== 'speed'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+
+/* ---------------- Start over ----------------
+   Asks first; a second tap within four seconds erases. */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){
+  clearTimeout(armed); armed = 0;
+  clearBtn.classList.remove('arming');
+  clearBtn.textContent = 'Start over';
+}
+clearBtn.onclick = ()=>{
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming');
+  clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportBtn = document.getElementById('export');
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+
+exportBtn.onclick = async ()=>{
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length
+      + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(()=>{ exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text;
+    exportBox.hidden = false;
+    exportBox.focus();
+    exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+loadProgress();
+loadLog();
+drawTally();
+drawSpeedBar();
+drawLog();
+setMode('evaluate');
+</script>
+</body>
+</html>

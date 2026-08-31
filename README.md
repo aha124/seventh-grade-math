@@ -37,9 +37,9 @@ vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```
 
 `shared/style.css` holds the palette and type tokens, the base reset, the
-navy masthead, the sorting rail and card with all of its drag states, the
-`.btn` family, and the focus ring. Anything only one page uses stays in a
-`<style>` block in that page.
+navy masthead and its back link, the sorting rail and card with all of its
+drag states, the `.btn` family, and the focus ring. Anything only one page
+uses stays in a `<style>` block in that page.
 
 Card geometry is exposed as custom properties (`--card-w`, `--card-h`,
 `--rail-min-height`, and friends) and each page sets its own values. The
@@ -57,8 +57,9 @@ edit: `index.html` renders whatever is in that array.
 2. Copy `lesson-01/practice.html` (or `cards.html`) into it as a starting
    point. Each is self-contained: problem generator, answer sheet, hints,
    and saved progress are all in the one file.
-3. Keep `<link rel="stylesheet" href="../shared/style.css">`. It assumes
-   the page is one folder deep; a page nested deeper needs another `../`.
+3. Keep `<link rel="stylesheet" href="../shared/style.css">` and the
+   `.board-nav` back link at the top of the masthead. Both assume the page
+   is one folder deep; a page nested deeper needs another `../` on each.
 4. Keep the `:root` block of card geometry if the page sorts cards.
    Adjust the clamps if it shows a different number of them, and check at
    a 375px-wide viewport that a full row still fits on one line.

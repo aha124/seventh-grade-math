@@ -63,6 +63,24 @@ body{
 }
 .mark span{color:var(--ice)}
 
+/* Back link. Every page except the hub carries one as the first child of
+   .board .wrap; it takes its own flex line, so the title and the
+   right-hand slot still sit on one baseline the way they always have.
+   The 44px minimum is the tap target on an iPad. The negative margins pull
+   that box back over the wrap's row gap so the bar grows by the link's own
+   height and not much more. */
+.board-nav{flex:0 0 100%;margin:-.55rem 0 -.35rem}
+.backlink{
+  display:inline-flex;align-items:center;gap:.4rem;
+  min-height:44px;
+  margin-left:-.2rem;padding:0 .2rem;
+  font-family:var(--body);font-size:.92rem;font-weight:600;
+  letter-spacing:.02em;color:var(--ice);text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.backlink::before{content:"\2190";font-size:1.1em;line-height:1}
+.backlink:hover{color:#fff;text-decoration:underline}
+
 /* ---- the sorting deck ---- */
 .rail{
   display:flex;

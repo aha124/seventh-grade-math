@@ -45,6 +45,12 @@ const LESSONS = [
         name: "One step at a time",
         blurb: "Three worked examples, one tap at a time. Choose the operation that goes next and watch that piece collapse into its value. A wrong tap says which rule you reached past.",
         cta: "Start stepping"
+      },
+      {
+        href: "lesson-01/order-practice.html",
+        name: "Your move",
+        blurb: "Generated expressions, graded and never answered for you. Step one all the way through, or run the 60 second round where all you do is pick what goes next.",
+        cta: "Start practicing"
       }
     ]
   }

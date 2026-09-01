@@ -35,6 +35,7 @@ lesson-01/practice.html  generated practice problems with hints and checking
 lesson-01/exponents.html an exponent to build a tile at a time, not graded
 lesson-01/exponents-practice.html   graded powers drill, three modes
 lesson-01/order-lesson.html         order of operations, three worked examples
+lesson-01/order-practice.html       graded order of operations, two modes
 shared/style.css         design tokens and the components every page shares
 vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```

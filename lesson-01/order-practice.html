@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your Move — Order of Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+  --tok-size:clamp(1.5rem,6vw,2.4rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+.stepline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);
+  letter-spacing:.04em;
+}
+.stepline b{color:var(--board);font-weight:700;font-variant-numeric:tabular-nums}
+.ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}   /* a class that sets display beats the hidden attribute */
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+/* ---- the expression board ----
+   One node per token in a wrapping row. Numbers and brackets are inert;
+   only the operations are buttons, because tapping an operation is the
+   decision being graded. */
+.strip{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:.2rem .12rem;
+  min-height:9rem;margin:.5rem 0 0;padding:1.2rem .6rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.tok{
+  font-family:var(--display);font-weight:700;line-height:1;
+  font-size:var(--tok-size);color:var(--board);
+  font-variant-numeric:tabular-nums;border-radius:3px;
+}
+.tok.num{padding:.4rem .18rem}
+/* brackets hug what they hold, so 7(3) reads the way the book prints it
+   rather than as three loose pieces */
+.tok.paren{padding:.4rem 0;margin:0 -.2rem;color:var(--board-soft)}
+button.tok{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;padding:.2rem .35rem;
+  background:var(--rink);border:1.5px solid var(--line);color:var(--edge);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative;
+}
+button.tok.pow sup{font-size:.58em;vertical-align:super;line-height:0;margin-left:.03em}
+
+/* The implicit multiply in 7(3) has no glyph, so it takes no visible room.
+   The overlay gives it a 44px hit area that spills over the number and the
+   bracket on either side. Both of those are inert, so nothing is stolen. */
+button.tok.imp{
+  min-width:0;width:1px;padding:0;margin:0 -2px;
+  background:none;border:none;align-self:stretch;z-index:2;
+}
+button.tok.imp::after{content:"";position:absolute;left:-21px;right:-21px;top:-6px;bottom:-6px}
+
+.tok.lit{background:#FBF5EA;box-shadow:inset 0 0 0 2px rgba(192,134,43,.45)}
+button.tok.lit-op{background:var(--gold);border-color:var(--gold);color:#fff}
+button.tok.imp.lit-op{background:none;border:none}
+
+.tok.going,.answer.going{animation:fold .22s ease-in forwards}
+@keyframes fold{to{transform:scale(.5);opacity:0}}
+.tok.arriving{animation:land .26s ease-out}
+@keyframes land{from{transform:scale(.55);opacity:.15}to{transform:scale(1);opacity:1}}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.tok.shake,.ansbox.shake{animation:shake .38s ease-in-out}
+@media (prefers-reduced-motion:reduce){
+  .tok.going,.answer.going,.tok.arriving,.tok.shake,.ansbox.shake{animation:none}
+  .tok.going,.answer.going{opacity:0}
+}
+
+.answer{display:inline-flex;align-items:center;gap:.3rem;margin:0 .1rem}
+.answer .eq{font-family:var(--display);font-weight:700;font-size:var(--tok-size);color:var(--gold)}
+.ansbox{
+  width:4.4rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:calc(var(--tok-size) * .9);
+  border:1.5px solid var(--gold);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.ansbox.miss{background:#FBF0DF}
+.answer .ok{
+  min-width:44px;min-height:44px;padding:0;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--edge)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy-note{margin:0 0 .5rem;font-size:.88rem;color:#7C93A5}
+
+/* the line the other practice pages do not have: the rule she reaches
+   past most often, named in plain words */
+.slip{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#F6FAFC;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .slips{font-size:.8em;color:var(--gold);font-weight:600}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+.export-box[hidden]{display:none}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Your <span>Move</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div class="stepline">
+    <span id="stepCount"></span>
+    <span class="ask" id="ask"></span>
+  </div>
+
+  <div class="strip" id="strip" role="group" aria-label="Expression"></div>
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="accuracy-note" id="accuracyNote"></p>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Right operation on the first tap, per step">Decisions</th>
+              <th scope="col" title="Right value on the first try, per step">Arithmetic</th>
+              <th scope="col" title="Wrong taps by kind">Slips</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. Every problem here divides evenly and every step lands on a whole number, so a fraction means a step went out of order.</p>
+</main>
+
+<script>
+/* ---------------- the expression model ----------------
+   A token list, flat. Grouping is written down rather than nested, because
+   the board draws the tokens in one row and every step has to point at a
+   slice of that row:
+
+     {k:'num', v, g}                    a number
+     {k:'op', op, show, g, implicit}    an operation
+     {k:'lp', id} {k:'rp', id}          one pair of parentheses
+
+   g is the id of the group a token sits inside, or null out at the top
+   level. Parentheses never nest on these pages, so g is enough on its own;
+   there is never an outer group to walk up to. Nothing here goes through
+   eval: the generator builds token lists and the reducer below is the only
+   thing that turns them into numbers. */
+
+const N  = (v, g) => ({k:'num', v:v, g:g || null});
+const O  = (op, show, g, imp) => ({k:'op', op:op, show:show, g:g || null, implicit:!!imp});
+const LP = id => ({k:'lp', id:id, g:null});
+const RP = id => ({k:'rp', id:id, g:null});
+
+/* Four ranks, low number first. Multiply and divide share one; so do add
+   and subtract. Nothing anywhere on this page ranks them apart. */
+const RANK = {'^':2, '*':3, '/':3, '+':4, '-':4};
+const SUPER = ['', '¹', '²', '³', '⁴', '⁵'];
+
+function opIndexes(toks){
+  const out = [];
+  toks.forEach((t, i) => { if (t.k === 'op') out.push(i); });
+  return out;
+}
+
+/* The one operation that is allowed next. Anything inside parentheses wins
+   outright; otherwise it is the lowest rank still on the board, and among
+   equals the leftmost, which is what makes left to right a rule and not a
+   preference. */
+function pendingIndex(toks){
+  const all = opIndexes(toks);
+  if (!all.length) return -1;
+  const grouped = all.filter(i => toks[i].g !== null);
+  const scope = grouped.length
+    ? grouped.filter(i => toks[i].g === toks[grouped[0]].g)
+    : all.filter(i => toks[i].g === null);
+  let best = scope[0];
+  for (let n = 1; n < scope.length; n++){
+    if (RANK[toks[scope[n]].op] < RANK[toks[best].op]) best = scope[n];
+  }
+  return best;
+}
+
+/* Which slice of the row an operand covers. It is one number, except for
+   the bracketed number on the right of an implicit multiply, which is
+   three tokens: ( 3 ). */
+function spanOf(toks, i, dir){
+  const j = i + dir;
+  const t = toks[j];
+  if (dir < 0 && t.k === 'rp'){
+    let s = j;
+    while (!(toks[s].k === 'lp' && toks[s].id === t.id)) s--;
+    return [s, j];
+  }
+  if (dir > 0 && t.k === 'lp'){
+    let e = j;
+    while (!(toks[e].k === 'rp' && toks[e].id === t.id)) e++;
+    return [j, e];
+  }
+  return [j, j];
+}
+
+function spanValue(toks, sp){
+  for (let i = sp[0]; i <= sp[1]; i++) if (toks[i].k === 'num') return toks[i].v;
+  return 0;
+}
+
+function compute(op, a, b){
+  if (op === '^') return Math.pow(a, b);
+  if (op === '*') return a * b;
+  if (op === '/') return a / b;
+  if (op === '+') return a + b;
+  return a - b;
+}
+
+function stepAt(toks, i){
+  const L = spanOf(toks, i, -1), R = spanOf(toks, i, 1);
+  const a = spanValue(toks, L), b = spanValue(toks, R);
+  return {
+    i:i, L:L, R:R, a:a, b:b,
+    op: toks[i].op, show: toks[i].show, implicit: !!toks[i].implicit,
+    g: toks[i].g, value: compute(toks[i].op, a, b)
+  };
+}
+
+/* A pair of brackets holding a single number has no work left in it, so it
+   comes off. The exception is the pair in 7(3): those brackets are the
+   multiplication sign, and taking them away early would hide the thing
+   that makes that form worth practising. */
+function dissolve(toks){
+  for (let i = 0; i < toks.length - 2; i++){
+    if (toks[i].k === 'lp' && toks[i+1].k === 'num' && toks[i+2].k === 'rp'){
+      const prev = toks[i-1];
+      if (prev && prev.k === 'op' && prev.implicit) continue;
+      toks[i+1].g = null;
+      toks.splice(i, 3, toks[i+1]);
+      i--;
+    }
+  }
+}
+
+function applyStep(toks, st){
+  const out = toks.map(t => Object.assign({}, t));
+  out.splice(st.L[0], st.R[1] - st.L[0] + 1, {k:'num', v:st.value, g:st.g, fresh:true});
+  dissolve(out);
+  return out;
+}
+
+/* The reducer. Every value on this page comes out of here: the board, the
+   answer being checked, and the generator's own screening. */
+function reduceAll(start){
+  let toks = start.map(t => Object.assign({}, t));
+  dissolve(toks);
+  const steps = [];
+  for (let guard = 0; guard < 60; guard++){
+    const i = pendingIndex(toks);
+    if (i < 0) break;
+    const st = stepAt(toks, i);
+    steps.push(st);
+    toks = applyStep(toks, st);
+  }
+  const nums = toks.filter(t => t.k === 'num');
+  return {value: nums.length === 1 && toks.length === 1 ? nums[0].v : NaN, steps: steps, tokens: toks};
+}
+
+function exprText(toks){
+  let s = '';
+  toks.forEach((t, i) => {
+    if (t.k === 'num'){
+      if (toks[i-1] && toks[i-1].k === 'op' && toks[i-1].op === '^') s += (SUPER[t.v] || ('^' + t.v));
+      else s += t.v;
+    }
+    else if (t.k === 'lp') s += '(';
+    else if (t.k === 'rp') s += ')';
+    else if (t.op === '^' || t.implicit) s += '';
+    else s += ' ' + t.show + ' ';
+  });
+  return s.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim();
+}
+
+function pieceText(st){
+  if (st.op === '^') return st.a + (SUPER[st.b] || ('^' + st.b));
+  if (st.implicit) return st.a + '(' + st.b + ')';
+  return st.a + ' ' + st.show + ' ' + st.b;
+}
+
+/* ---------------- the four wrong taps ----------------
+   Every wrong tap is one of these four and gets its own line. A tap that
+   only says "not that one" teaches nothing; the useful part is which rule
+   she reached past. The tallies go into the log under these same keys. */
+const CATS = ['paren', 'outranked', 'leftright', 'exponent'];
+const WRONG = {
+  paren:     'Parentheses first, always.',
+  outranked: 'Multiplication outranks addition, even when the addition comes first in line.',
+  leftright: 'Same rank. Work left to right.',
+  exponent:  'Exponents before multiplying.'
+};
+const CAT_SHORT = {paren:'Par', outranked:'Rank', leftright:'L→R', exponent:'Exp'};
+const CAT_LONG = {
+  paren:     'going outside the parentheses too early',
+  outranked: 'adding or subtracting while a multiplication was still waiting',
+  leftright: 'taking the right hand one of two operations that share a rank',
+  exponent:  'multiplying before settling the power'
+};
+
+function classifyWrong(toks, want, got){
+  const p = toks[want], t = toks[got];
+  if (p.g !== null && t.g !== p.g) return 'paren';
+  if (RANK[t.op] === RANK[p.op]) return 'leftright';
+  if (RANK[p.op] === 2 && RANK[t.op] === 3) return 'exponent';
+  return 'outranked';
+}
+
+function emptyTally(){ return {paren:0, outranked:0, leftright:0, exponent:0}; }
+
+/* ---------------- the generator ----------------
+   An expression is built as a run of terms joined by + and −. Each term is
+   a small shape with a value worked out as it is built, which is what makes
+   the two hard promises cheap to keep: every division comes out exact
+   because the dividend is built as a multiple, and no running total ever
+   goes negative because the signs are chosen against the total so far.
+   Whatever comes out is then run through the reducer above and thrown away
+   if a single step lands on a fraction or below zero. */
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const mulGlyph = () => Math.random() < 0.25 ? '·' : '×';
+
+function tNum(){
+  const v = rand(1, 24);
+  return {toks:[N(v)], val:v, ops:0, kind:'plain'};
+}
+function tMul(){
+  const a = rand(2, 9), b = rand(2, 9);
+  return {toks:[N(a), O('*', mulGlyph()), N(b)], val:a*b, ops:1, kind:'mul'};
+}
+function tDiv(){
+  const b = rand(2, 9), q = rand(2, 12);
+  return {toks:[N(b*q), O('/', '÷'), N(b)], val:q, ops:1, kind:'div'};
+}
+/* the divide-then-multiply shape, which is the whole reason this page
+   exists: she has to take the ÷ first even though × looks stronger */
+function tDivMul(){
+  const b = rand(2, 9), q = rand(2, 10), c = rand(2, 4);
+  return {toks:[N(b*q), O('/', '÷'), N(b), O('*', mulGlyph()), N(c)], val:q*c, ops:2, kind:'divmul'};
+}
+function tMulDiv(){
+  const a = rand(2, 9), b = rand(2, 9), p = a * b;
+  const divs = [];
+  for (let c = 2; c <= 9; c++) if (p % c === 0 && p / c >= 2) divs.push(c);
+  if (!divs.length) return null;
+  const c = pick(divs);
+  return {toks:[N(a), O('*', mulGlyph()), N(b), O('/', '÷'), N(c)], val:p/c, ops:2, kind:'muldiv'};
+}
+function tPow(){
+  const b = rand(2, 5), e = rand(2, 3);
+  return {toks:[N(b), O('^', '^'), N(e)], val:Math.pow(b, e), ops:1, kind:'pow'};
+}
+function tPowTimes(){
+  const b = rand(2, 5), e = rand(2, 3), p = Math.pow(b, e);
+  if (p > 27) return null;
+  const k = rand(2, 4);
+  return {toks:[N(k), O('*', mulGlyph()), N(b), O('^', '^'), N(e)], val:k*p, ops:2, kind:'powtimes'};
+}
+function tParen(g){
+  const id = g.id++;
+  const roll = Math.random();
+  if (roll < 0.4){
+    const a = rand(3, 14), b = rand(2, 12);
+    return {toks:[LP(id), N(a,id), O('+','+',id), N(b,id), RP(id)], val:a+b, ops:1, kind:'paren'};
+  }
+  if (roll < 0.8){
+    const a = rand(5, 18), b = rand(2, a - 1);
+    return {toks:[LP(id), N(a,id), O('-','−',id), N(b,id), RP(id)], val:a-b, ops:1, kind:'paren'};
+  }
+  const a = rand(2, 7), b = rand(2, 7);
+  return {toks:[LP(id), N(a,id), O('*',mulGlyph(),id), N(b,id), RP(id)], val:a*b, ops:1, kind:'paren'};
+}
+/* 9 ÷ (7 − 4), straight out of the coursebook: brackets first, and then
+   the division is waiting on what came out of them */
+function tDivParen(g){
+  const id = g.id++;
+  const m = rand(2, 9), b = rand(1, 9), a = m + b, q = rand(2, 9);
+  if (a > 18) return null;
+  return {toks:[N(m*q), O('/','÷'), LP(id), N(a,id), O('-','−',id), N(b,id), RP(id)],
+          val:q, ops:2, kind:'divparen'};
+}
+function tImplicit(g){
+  const id = g.id++;
+  const n = rand(2, 9), m = rand(2, 9);
+  return {toks:[N(n), O('*','',null,true), LP(id), N(m,id), RP(id)], val:n*m, ops:1, kind:'implicit'};
+}
+
+/* w is how often a shape is reached for. group:true means the term brings
+   parentheses with an operation inside; only one of those is allowed per
+   expression, so a wrong tap always has one unambiguous bracket to be
+   outside of. */
+const SHAPES = [
+  {f:tNum,      w:3},
+  {f:tMul,      w:3},
+  {f:tDiv,      w:2},
+  {f:tDivMul,   w:3},
+  {f:tMulDiv,   w:2},
+  {f:tPow,      w:3, power:true},
+  {f:tPowTimes, w:2, power:true},
+  {f:tParen,    w:3, group:true},
+  {f:tDivParen, w:2, group:true},
+  {f:tImplicit, w:1, implicit:true}
+];
+
+function weighted(pool){
+  let total = 0;
+  pool.forEach(p => { total += p.w; });
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++){
+    r -= pool[i].w;
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+
+const MIN_OPS = 4, MAX_OPS = 6, MAX_ANSWER = 200, MAX_RUNNING = 250;
+
+function makeExpression(){
+  /* most problems, not all, carry a same-rank decision, because that is
+     the trap being trained and a page of nothing else gets predictable */
+  const wantTrap = Math.random() < 0.85;
+
+  for (let attempt = 0; attempt < 800; attempt++){
+    const g = {id:1};
+    const nTerms = rand(2, 4);
+    const terms = [];
+    let power = false, group = false, implicit = false, ops = 0, broke = false;
+
+    for (let i = 0; i < nTerms; i++){
+      const pool = SHAPES.filter(s =>
+        !(s.power && power) && !(s.group && group) && !(s.implicit && implicit));
+      const shape = weighted(pool);
+      const term = shape.f(g);
+      if (!term){ broke = true; break; }
+      if (shape.power) power = true;
+      if (shape.group) group = true;
+      if (shape.implicit) implicit = true;
+      terms.push(term);
+      ops += term.ops;
+    }
+    if (broke) continue;
+    ops += nTerms - 1;
+    if (ops < MIN_OPS || ops > MAX_OPS) continue;
+
+    /* signs, chosen against the running total so no intermediate is ever
+       negative and nothing balloons on the way to the answer */
+    let total = terms[0].val, bust = false;
+    const signs = [];
+    for (let i = 1; i < terms.length; i++){
+      let s = Math.random() < 0.45 ? '-' : '+';
+      if (s === '-' && total - terms[i].val < 0) s = '+';
+      const next = s === '+' ? total + terms[i].val : total - terms[i].val;
+      if (next > MAX_RUNNING){ bust = true; break; }
+      total = next;
+      signs.push(s);
+    }
+    if (bust || total < 0 || total > MAX_ANSWER) continue;
+
+    if (wantTrap){
+      const hasTrap = terms.some(t => t.kind === 'divmul')
+        || signs.some((s, i) => s === '-' && signs.indexOf('+', i + 1) >= 0);
+      if (!hasTrap) continue;
+    }
+
+    let toks = terms[0].toks.slice();
+    for (let i = 1; i < terms.length; i++){
+      toks.push(O(signs[i-1], signs[i-1] === '+' ? '+' : '−'));
+      toks = toks.concat(terms[i].toks);
+    }
+
+    /* last word goes to the reducer, not to the arithmetic above */
+    const r = reduceAll(toks);
+    if (!Number.isInteger(r.value) || r.value < 0 || r.value > MAX_ANSWER) continue;
+    if (r.steps.length < MIN_OPS || r.steps.length > MAX_OPS) continue;
+    if (r.steps.some(st => !Number.isInteger(st.value) || st.value < 0)) continue;
+    return {toks: toks, steps: r.steps.length, value: r.value};
+  }
+  return {toks: FALLBACK(), steps: 8, value: 23};
+}
+
+/* Used only if 800 tries somehow come up empty. It is the coursebook's own
+   first example, so it is known good. */
+const FALLBACK = () => [
+  N(5), O('+','+'),
+  LP(1), N(3,1), O('*','×',1), N(5,1), RP(1),
+  O('-','−'), N(17),
+  O('+','+'), N(4), O('^','^'), N(2),
+  O('+','+'), N(10), O('/','÷'), N(5), O('*','×'), N(2)
+];
+
+/* The three worked examples out of the coursebook, kept here as the
+   reducer's test case. They run at load; if one of them ever stops
+   agreeing with the book the page says so instead of quietly drilling the
+   wrong order. */
+const BOOK = [
+  {expect: 23, build: FALLBACK},
+  {expect: 22, build: () => [
+    N(7), O('*','',null,true), LP(1), N(3,1), RP(1),
+    O('-','−'), N(20), O('+','+'), N(4), O('^','^'), N(2),
+    O('+','+'), LP(2), N(7,2), O('-','−',2), N(2,2), RP(2)
+  ]},
+  {expect: 1, build: () => [
+    N(16), O('+','+'), N(9), O('/','÷'),
+    LP(1), N(7,1), O('-','−',1), N(4,1), RP(1),
+    O('-','−'), N(2), O('*','·'), N(3), O('^','^'), N(2)
+  ]}
+];
+function selfCheck(){
+  const bad = BOOK.filter(b => reduceAll(b.build()).value !== b.expect);
+  if (bad.length) say('bad', 'This page has a problem:', 'the reducer no longer agrees with the '
+    + 'worked examples in the book. Do not use it until that is fixed.');
+  return bad.length === 0;
+}
+
+/* ---------------- saved progress ----------------
+   Its own key, so the other lesson 1 pages are untouched. best is the Next
+   move high score and lives in the same object. Every touch of storage is
+   wrapped; with storage off the page still works, the numbers just stop
+   surviving a reload. */
+const STORE_KEY = 'seventh-grade-math:order';
+let solved = 0, clean = 0, best = 0;
+
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.solved)) solved = Math.max(0, Math.floor(saved.solved));
+    if (Number.isFinite(saved.clean))  clean  = Math.max(0, Math.floor(saved.clean));
+    if (Number.isFinite(saved.best))   best   = Math.max(0, Math.floor(saved.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+function saveProgress(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({solved, clean, best})); }
+  catch (e) { /* nothing to do; the numbers stay in memory for this visit */ }
+}
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally(); drawSpeedBar(); clearLog();
+}
+function drawTally(){
+  document.getElementById('tally').textContent =
+    `Solved ${solved} \u00A0/\u00A0 Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   Same shape and the same 200 cap as the other practice pages, under its
+   own key. Trimmed on read as well as on write, so a hand-edited key
+   cannot grow past the cap. */
+const LOG_KEY = 'seventh-grade-math:order-log';
+const LOG_CAP = 200;
+const LOG_SHOWN = 20;
+const MODE_LABEL = {solve:'Solve it', next:'Next move'};
+let log = [];
+
+function validRecord(r){
+  return r && typeof r === 'object'
+    && typeof r.t === 'number' && isFinite(r.t)
+    && typeof r.mode === 'string'
+    && typeof r.problem === 'string';
+}
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+function saveLog(){
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); }
+  catch (e) { /* full or switched off; the log stays in memory for this visit */ }
+}
+function clearLog(){
+  log = [];
+  try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+  drawLog();
+}
+function pushRecord(rec){
+  log.push(rec);
+  if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+  saveLog();
+  drawLog();
+}
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'})
+      + ', ' + d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  } catch (e) { return ''; }
+}
+function tallyOf(r){
+  const w = r && r.wrong ? r.wrong : {};
+  const out = emptyTally();
+  CATS.forEach(c => { out[c] = Number(w[c]) || 0; });
+  return out;
+}
+
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const note = document.getElementById('accuracyNote');
+  const slip = document.getElementById('slip');
+  const empty = document.getElementById('logEmpty');
+  const scroll = document.querySelector('.log-scroll');
+
+  rows.textContent = '';
+  accuracy.textContent = '';
+  slip.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  empty.hidden = log.length > 0;
+  scroll.hidden = log.length === 0;
+  slip.hidden = log.length === 0;
+  if (!log.length){ note.textContent = ''; return; }
+
+  const solves = log.filter(r => r.mode === 'solve');
+  const stepsTotal = solves.reduce((n, r) => n + (Number(r.steps) || 0), 0);
+  if (stepsTotal){
+    const dec = solves.reduce((n, r) => n + (Number(r.dec) || 0), 0);
+    const ari = solves.reduce((n, r) => n + (Number(r.arith) || 0), 0);
+    [['Decisions', dec], ['Arithmetic', ari]].forEach(pair => {
+      const li = document.createElement('li');
+      const b = document.createElement('b');
+      b.textContent = Math.round(pair[1] * 100 / stepsTotal) + '%';
+      li.append(pair[0] + ' ', b);
+      accuracy.append(li);
+    });
+  }
+  const rounds = log.filter(r => r.mode === 'next');
+  if (rounds.length){
+    const li = document.createElement('li');
+    const b = document.createElement('b');
+    b.textContent = String(Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+    li.append('Best next move ', b);
+    accuracy.append(li);
+  }
+  note.textContent = stepsTotal
+    ? 'Right on the first try, across ' + stepsTotal
+      + (stepsTotal === 1 ? ' step of Solve it. ' : ' steps of Solve it. ')
+      + 'The decision and the arithmetic are counted apart, because they go wrong for different reasons.'
+    : 'No Solve it steps logged yet.';
+
+  /* the line the other practice pages do not have */
+  const totals = emptyTally();
+  log.forEach(r => { const w = tallyOf(r); CATS.forEach(c => { totals[c] += w[c]; }); });
+  const worst = CATS.reduce((a, b) => totals[b] > totals[a] ? b : a, CATS[0]);
+  const sum = CATS.reduce((n, c) => n + totals[c], 0);
+  if (!sum){
+    slip.textContent = 'No wrong taps logged yet.';
+  } else {
+    const lead = document.createElement('b');
+    lead.textContent = 'Most often: ' + CAT_LONG[worst] + '.';
+    slip.append(lead, ' ' + totals[worst] + ' of ' + sum + ' wrong taps. '
+      + '(' + CATS.map(c => CAT_SHORT[c] + ' ' + totals[c]).join(', ') + ')');
+  }
+
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = text => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+
+    if (r.mode === 'next'){
+      const td = document.createElement('td');
+      const s = document.createElement('span');
+      s.className = 'score';
+      s.textContent = (Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0);
+      td.append(s);
+      tr.append(td, cell('—'));
+    } else {
+      [['dec', r.dec], ['arith', r.arith]].forEach(pair => {
+        const td = document.createElement('td');
+        const s = document.createElement('span');
+        const full = Number(pair[1]) === Number(r.steps);
+        s.className = full ? 'yes' : 'no';
+        s.textContent = (Number(pair[1]) || 0) + ' of ' + (Number(r.steps) || 0);
+        td.append(s);
+        tr.append(td);
+      });
+    }
+
+    const w = tallyOf(r);
+    const slips = document.createElement('td');
+    const hit = CATS.filter(c => w[c] > 0);
+    if (hit.length){
+      const s = document.createElement('span');
+      s.className = 'slips';
+      s.textContent = hit.map(c => CAT_SHORT[c] + ' ' + w[c]).join(' · ');
+      slips.append(s);
+    } else {
+      const s = document.createElement('span');
+      s.className = 'none';
+      s.textContent = 'none';
+      slips.append(s);
+    }
+    tr.append(slips);
+
+    const hints = document.createElement('td');
+    const used = Number(r.hints) || 0;
+    if (used){
+      const h = document.createElement('span');
+      h.className = 'hints';
+      h.textContent = '+' + used;
+      hints.append(h);
+    }
+    tr.append(hints);
+    rows.append(tr);
+  });
+}
+
+/* ---------------- export ----------------
+   The copied text is exactly what sits under LOG_KEY, so on another device
+   it can go straight back into that key. navigator.clipboard is not always
+   available from a file:// page, hence the two fallbacks. */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- page state ---------------- */
+const strip     = document.getElementById('strip');
+const sayEl     = document.getElementById('say');
+const banner    = document.getElementById('banner');
+const stepCount = document.getElementById('stepCount');
+const askEl     = document.getElementById('ask');
+const hintBtn   = document.getElementById('hint');
+const nextBtn   = document.getElementById('next');
+const speedBar  = document.getElementById('speedBar');
+
+let mode = 'solve';
+let toks = [], problemText = '', step = null, stage = 'pick';
+let taken = 0, total = 0;
+let decFirst = 0, arithFirst = 0, missedThisStep = false, missedThisValue = false;
+let wrong = emptyTally(), hintsUsed = 0;
+
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+/* ---------------- drawing the row ---------------- */
+function opLabel(t){
+  if (t.implicit) return 'multiply, written as brackets';
+  if (t.op === '^') return 'the power';
+  if (t.op === '*') return 'multiply';
+  if (t.op === '/') return 'divide';
+  if (t.op === '+') return 'add';
+  return 'subtract';
+}
+
+function draw(){
+  strip.textContent = '';
+  let i = 0;
+  while (i < toks.length){
+    const t = toks[i];
+
+    /* a power is drawn as one button, base and little number together,
+       because the operation she is choosing is that whole power */
+    if (t.k === 'num' && toks[i+1] && toks[i+1].k === 'op' && toks[i+1].op === '^'){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tok op pow';
+      b.dataset.from = i; b.dataset.to = i + 2; b.dataset.op = i + 1;
+      b.append(String(t.v));
+      const sup = document.createElement('sup');
+      sup.textContent = SUPER[toks[i+2].v] || String(toks[i+2].v);
+      b.append(sup);
+      b.setAttribute('aria-label', t.v + ' to the power of ' + toks[i+2].v);
+      if (t.fresh) b.classList.add('arriving');
+      strip.append(b);
+      i += 3;
+      continue;
+    }
+
+    let el;
+    if (t.k === 'op'){
+      el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'tok op' + (t.implicit ? ' imp' : '');
+      el.dataset.op = i;
+      el.textContent = t.show;
+      el.setAttribute('aria-label', opLabel(t));
+    } else {
+      el = document.createElement('span');
+      el.className = 'tok ' + (t.k === 'num' ? 'num' : 'paren');
+      el.textContent = t.k === 'num' ? String(t.v) : (t.k === 'lp' ? '(' : ')');
+      if (t.fresh) el.classList.add('arriving');
+    }
+    el.dataset.from = i; el.dataset.to = i;
+    strip.append(el);
+    i++;
+  }
+  toks.forEach(t => { delete t.fresh; });
+  strip.setAttribute('aria-label', 'Expression: ' + exprText(toks));
+
+  if (step) lightStep();
+
+  stepCount.textContent = '';
+  if (mode === 'next'){
+    askEl.textContent = speedOn ? 'Tap the one that goes next. Nothing to work out.' : '';
+    return;
+  }
+  const label = document.createElement('b');
+  if (stage === 'done'){ label.textContent = 'Done'; stepCount.append(label); }
+  else { label.textContent = 'Step ' + (taken + 1); stepCount.append(label, ' of ' + total); }
+  askEl.textContent = stage === 'answer'
+    ? 'Now work out just that piece.'
+    : (stage === 'done' ? '' : 'Tap the operation you would do next.');
+}
+
+function lightStep(){
+  Array.prototype.forEach.call(strip.children, n => {
+    const f = +n.dataset.from, t = +n.dataset.to;
+    if (n.dataset.op !== undefined && +n.dataset.op === step.i){ n.classList.add('lit-op'); return; }
+    if ((f >= step.L[0] && t <= step.L[1]) || (f >= step.R[0] && t <= step.R[1])) n.classList.add('lit');
+  });
+  if (mode === 'solve') openAnswer();
+}
+
+function openAnswer(){
+  const after = Array.prototype.filter.call(strip.children, n => +n.dataset.to === step.R[1]).pop();
+  if (!after) return;
+  const wrap = document.createElement('span');
+  wrap.className = 'answer';
+  const eq = document.createElement('span');
+  eq.className = 'eq';
+  eq.textContent = '=';
+  const inp = document.createElement('input');
+  inp.className = 'ansbox';
+  inp.id = 'ansbox';
+  inp.setAttribute('inputmode', 'numeric');
+  inp.setAttribute('autocomplete', 'off');
+  inp.setAttribute('aria-label', 'What is ' + pieceText(step) + '?');
+  const ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'ok';
+  ok.textContent = '✓';
+  ok.setAttribute('aria-label', 'Check this step');
+  wrap.append(eq, inp, ok);
+  after.after(wrap);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit(); } });
+  inp.addEventListener('input', () => inp.classList.remove('miss'));
+  ok.onclick = submit;
+  inp.focus();
+}
+
+/* ---------------- taps ---------------- */
+function shake(nodes){
+  nodes.forEach(n => {
+    n.classList.add('shake');
+    setTimeout(() => n.classList.remove('shake'), 420);
+  });
+}
+
+strip.addEventListener('click', e => {
+  const btn = e.target.closest('button.op');
+  if (!btn || stage !== 'pick') return;
+  if (mode === 'next' && !speedOn) return;
+  const got = +btn.dataset.op;
+  const want = pendingIndex(toks);
+  if (got === want){ accept(want); return; }
+
+  const cat = classifyWrong(toks, want, got);
+  wrong[cat]++;
+  missedThisStep = true;
+
+  /* shake the piece she reached for, both numbers included, because with
+     7(3) the operation itself has no width to shake */
+  const L = spanOf(toks, got, -1), R = spanOf(toks, got, 1);
+  const hit = Array.prototype.filter.call(strip.children, n => {
+    const f = +n.dataset.from, t = +n.dataset.to;
+    return n === btn || (f >= L[0] && t <= L[1]) || (f >= R[0] && t <= R[1]);
+  });
+  shake(hit);
+  say('bad', WRONG[cat]);
+});
+
+function accept(i){
+  step = stepAt(toks, i);
+  const firstTry = !missedThisStep;
+  if (mode === 'next'){ speedFirstTry = firstTry; collapse(); return; }
+  if (firstTry) decFirst++;
+  stage = 'answer';
+  missedThisValue = false;
+  say('', '');
+  draw();
+}
+
+function submit(){
+  if (stage !== 'answer') return;
+  const inp = document.getElementById('ansbox');
+  const raw = String(inp.value).replace(/[\s,]/g, '');
+  if (!raw) return;
+  if (!/^[-+]?\d*\.?\d+$/.test(raw) || Math.abs(parseFloat(raw) - step.value) > 1e-9){
+    inp.classList.add('miss', 'shake');
+    setTimeout(() => inp.classList.remove('shake'), 420);
+    missedThisValue = true;
+    say('bad', 'Not that.', 'Work out only the piece that is lit up: ' + pieceText(step) + '.');
+    inp.select();
+    return;
+  }
+  if (!missedThisValue) arithFirst++;
+  collapse();
+}
+
+function collapse(){
+  const done = step;
+  const going = Array.prototype.filter.call(strip.children,
+    n => n.classList.contains('lit') || n.classList.contains('lit-op') || n.classList.contains('answer'));
+  going.forEach(n => n.classList.add('going'));
+
+  const wait = reduced() ? 0 : (mode === 'next' ? 120 : 230);
+  setTimeout(() => {
+    toks = applyStep(toks, done);
+    taken++;
+    step = null;
+    stage = 'pick';
+    missedThisStep = false;
+
+    if (mode === 'next'){
+      stage = 'done';          /* nothing tappable during the hand-off */
+      draw();
+      say('good', pieceText(done) + ' = ' + done.value + '.');
+      speedScored();
+      return;
+    }
+
+    const over = pendingIndex(toks) < 0;
+    stage = over ? 'done' : 'pick';
+    draw();
+    hintBtn.textContent = 'Hint';
+    hintBtn.disabled = over || hintsUsed >= 3;
+    if (over) finish();
+  }, wait);
+}
+
+function finish(){
+  solved++;
+  const cleanRun = decFirst === total && arithFirst === total && hintsUsed === 0;
+  if (cleanRun) clean++;
+  saveProgress();
+  drawTally();
+  pushRecord({
+    t: Date.now(), mode: 'solve', problem: problemText,
+    steps: total, dec: decFirst, arith: arithFirst,
+    wrong: wrong, hints: hintsUsed
+  });
+  banner.className = 'banner show';
+  banner.textContent = cleanRun
+    ? 'Every step right, first try, no hints.'
+    : 'Solved. ' + decFirst + ' of ' + total + ' decisions and '
+      + arithFirst + ' of ' + total + ' values on the first try.';
+  say('good', 'Done.', 'Tap New problem for another.');
+}
+
+/* ---------------- hints ----------------
+   Three levels, and none of them names the operation. Level three gets as
+   close as it can without pointing: how many are left at the rank she is
+   on, and which end to start from. */
+function countAtRank(i){
+  const t = toks[i];
+  if (t.g !== null) return toks.filter(x => x.k === 'op' && x.g === t.g).length;
+  return toks.filter(x => x.k === 'op' && x.g === null && RANK[x.op] === RANK[t.op]).length;
+}
+
+function hintText(){
+  const i = pendingIndex(toks);
+  if (i < 0) return '';
+  const t = toks[i];
+  if (hintsUsed === 1){
+    return 'Four ranks, in this order: parentheses; exponents; multiply and divide, '
+      + 'left to right; add and subtract, left to right.';
+  }
+  if (hintsUsed === 2){
+    if (t.g !== null) return 'There is still work inside the parentheses. That is the rank you are on.';
+    if (t.op === '^') return 'You are on the exponent rank. Something on the board is still a power.';
+    if (RANK[t.op] === 3) return 'You are on the multiply and divide rank.';
+    return 'Only adding and subtracting left. You are on the last rank.';
+  }
+  const n = countAtRank(i);
+  if (t.g !== null){
+    return n === 1
+      ? 'One operation is still inside the parentheses. Nothing outside them counts until it is gone.'
+      : n + ' operations are still inside the parentheses. Take the leftmost of those.';
+  }
+  return n === 1
+    ? 'Exactly one operation is left at that rank, so there is nothing to choose between.'
+    : n + ' operations are left at that rank. They are tied, so take the leftmost one.';
+}
+
+hintBtn.onclick = () => {
+  if (mode === 'next' || stage === 'done' || hintsUsed >= 3) return;
+  hintsUsed++;
+  say('', hintText());
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- Next move ----------------
+   Decisions only. One expression, one tap, and on to the next, so a minute
+   in here is sixty judgements about rank rather than sixty sums. */
+const SPEED_SECONDS = 60;
+let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+/* whether the tap that just landed was her first on this expression. Read
+   in speedScored, which runs after collapse has cleared the live flag. */
+let speedFirstTry = false;
+
+function drawSpeedBar(){
+  document.getElementById('score').textContent = speedScore;
+  document.getElementById('best').textContent = best;
+}
+
+function nextSpeedProblem(){
+  const made = makeExpression();
+  toks = made.toks;
+  dissolve(toks);
+  problemText = exprText(toks);
+  total = made.steps;
+  taken = 0; step = null; stage = 'pick';
+  missedThisStep = false;
+  draw();
+}
+
+function speedScored(){
+  speedSeen++;
+  if (speedFirstTry) speedScore++;
+  drawSpeedBar();
+  setTimeout(() => { if (speedOn) nextSpeedProblem(); }, reduced() ? 0 : 260);
+}
+
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0;
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  wrong = emptyTally();
+  banner.className = 'banner';
+  nextBtn.textContent = 'Stop';
+  drawSpeedBar();
+  tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  say('', 'Tap the operation that goes next.', 'No arithmetic in here, just the decision.');
+  nextSpeedProblem();
+}
+
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer);
+  speedTimer = 0;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar();
+  drawTally();
+  pushRecord({
+    t: Date.now(), mode: 'next', problem: SPEED_SECONDS + ' second round',
+    score: speedScore, seen: speedSeen, steps: speedSeen,
+    dec: speedScore, arith: null, wrong: wrong, hints: 0
+  });
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest
+    ? speedScore + ' right first tap. That is a new best.'
+    : speedScore + ' right first tap. Best so far is ' + best + '.';
+  toks = []; step = null; stage = 'pick';
+  draw();
+  say('', '');
+}
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  {key:'solve', tab:'Solve it',
+   note:'Tap the operation that goes next, then work out only that piece. The expression shrinks until there is one number left.'},
+  {key:'next', tab:'Next move',
+   note:'Sixty seconds of decisions and no arithmetic. Tap the operation that goes next and the answer arrives on its own. No hints in here.'}
+];
+
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mode-tab';
+  b.type = 'button';
+  b.textContent = m.tab;
+  b.setAttribute('aria-pressed', String(m.key === mode));
+  b.onclick = () => setMode(m.key);
+  modesEl.append(b);
+});
+
+function setMode(nextMode){
+  if (speedOn) stopSpeed(false);
+  mode = nextMode;
+  Array.prototype.forEach.call(modesEl.children,
+    (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  speedBar.hidden = mode !== 'next';
+  hintBtn.disabled = mode === 'next';
+  banner.className = 'banner';
+
+  if (mode === 'next'){
+    toks = []; step = null; stage = 'pick';
+    wrong = emptyTally();
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0;
+    drawSpeedBar();
+    draw();
+    say('', 'Sixty seconds.', 'Tap Start the round when you are ready.');
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+
+function newProblem(){
+  const made = makeExpression();
+  toks = made.toks;
+  dissolve(toks);
+  problemText = exprText(toks);
+  total = made.steps;
+  taken = 0; step = null; stage = 'pick';
+  decFirst = 0; arithFirst = 0;
+  missedThisStep = false; missedThisValue = false;
+  wrong = emptyTally(); hintsUsed = 0;
+  banner.className = 'banner';
+  hintBtn.disabled = false;
+  hintBtn.textContent = 'Hint';
+  draw();
+  say('', 'Read it through first.', 'Then tap the one operation that has to happen before any of the others.');
+}
+
+nextBtn.onclick = () => {
+  if (mode !== 'next'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+
+/* ---------------- Start over ----------------
+   Asks first; a second tap within four seconds erases. */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){
+  clearTimeout(armed); armed = 0;
+  clearBtn.classList.remove('arming');
+  clearBtn.textContent = 'Start over';
+}
+clearBtn.onclick = () => {
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming');
+  clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportBtn = document.getElementById('export');
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+
+exportBtn.onclick = async () => {
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length
+      + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(() => { exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text;
+    exportBox.hidden = false;
+    exportBox.focus();
+    exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+loadProgress();
+loadLog();
+drawTally();
+drawSpeedBar();
+drawLog();
+setMode('solve');
+selfCheck();
+</script>
+</body>
+</html>

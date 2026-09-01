@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One Step at a Time — Order of Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+  --tok-size:clamp(1.5rem,6vw,2.4rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em}
+
+.lede{margin:1.3rem 0 .2rem;max-width:56ch;font-size:1.05rem}
+
+/* ---- which example ---- */
+.picks{display:flex;gap:.4rem;margin:1.2rem 0 0;flex-wrap:wrap}
+.pick{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.pick .tick{color:var(--ice)}
+.pick[aria-pressed="true"] .tick{color:var(--ice)}
+
+.stepline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);
+  letter-spacing:.04em;
+}
+.stepline b{color:var(--board);font-weight:700;font-variant-numeric:tabular-nums}
+.ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+/* ---- the expression board ----
+   One node per token, laid out in a wrapping row. Numbers and parentheses
+   are inert; only the operations are buttons, because tapping an operation
+   is the whole decision this page is about. */
+.strip{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:.2rem .12rem;
+  min-height:9rem;margin:.5rem 0 0;padding:1.2rem .6rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.tok{
+  font-family:var(--display);font-weight:700;line-height:1;
+  font-size:var(--tok-size);color:var(--board);
+  font-variant-numeric:tabular-nums;border-radius:3px;
+}
+.tok.num{padding:.4rem .18rem}
+/* brackets hug what they hold, so 7(3) reads the way the book prints it
+   rather than as three loose pieces */
+.tok.paren{padding:.4rem 0;margin:0 -.2rem;color:var(--board-soft)}
+button.tok{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;padding:.2rem .35rem;
+  background:var(--rink);border:1.5px solid var(--line);color:var(--edge);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative;
+}
+button.tok.pow sup{font-size:.58em;vertical-align:super;line-height:0;margin-left:.03em}
+
+/* The implicit multiply in 7(3) has no glyph, so it takes no visible room.
+   The overlay gives it a 44px hit area that spills over the number and the
+   bracket on either side. Both of those are inert, so nothing is stolen. */
+button.tok.imp{
+  min-width:0;width:1px;padding:0;margin:0 -2px;
+  background:none;border:none;align-self:stretch;z-index:2;
+}
+button.tok.imp::after{content:"";position:absolute;left:-21px;right:-21px;top:-6px;bottom:-6px}
+
+.tok.lit{background:#FBF5EA;box-shadow:inset 0 0 0 2px rgba(192,134,43,.45)}
+button.tok.lit-op{background:var(--gold);border-color:var(--gold);color:#fff}
+button.tok.imp.lit-op{background:none;border:none}
+
+.tok.going,.answer.going{animation:fold .22s ease-in forwards}
+@keyframes fold{to{transform:scale(.5);opacity:0}}
+.tok.arriving{animation:land .26s ease-out}
+@keyframes land{from{transform:scale(.55);opacity:.15}to{transform:scale(1);opacity:1}}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.tok.shake,.ansbox.shake{animation:shake .38s ease-in-out}
+@media (prefers-reduced-motion:reduce){
+  .tok.going,.answer.going,.tok.arriving,.tok.shake,.ansbox.shake{animation:none}
+  .tok.going,.answer.going{opacity:0}
+}
+
+/* the small input that opens on the piece she just chose */
+.answer{display:inline-flex;align-items:center;gap:.3rem;margin:0 .1rem}
+.answer .eq{font-family:var(--display);font-weight:700;font-size:var(--tok-size);color:var(--gold)}
+.ansbox{
+  width:4.4rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:calc(var(--tok-size) * .9);
+  border:1.5px solid var(--gold);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.ansbox.miss{background:#FBF0DF}
+.answer .ok{
+  min-width:44px;min-height:44px;padding:0;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--edge)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+
+.done{
+  margin:1rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.done.show{display:block}
+.actions{display:flex;gap:.6rem;margin:1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+
+/* ---- the reference card, four ranks and never six letters ---- */
+details.ranks{margin:1.8rem 0 0;background:var(--paper);border:1.5px solid var(--line);border-radius:3px;padding:.2rem .9rem .1rem}
+details.ranks summary{
+  font-family:var(--display);font-size:1.2rem;font-weight:600;color:var(--board);
+  cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;
+  min-height:44px;display:flex;align-items:center;
+}
+details.ranks summary::-webkit-details-marker{display:none}
+details.ranks summary::before{content:"▸ ";color:var(--edge)}
+details.ranks[open] summary::before{content:"▾ ";color:var(--edge)}
+.rank-list{list-style:none;margin:.2rem 0 .6rem;padding:0}
+.rank-list li{
+  display:grid;grid-template-columns:2.1rem 1fr;gap:.1rem .6rem;
+  align-items:baseline;padding:.5rem 0;border-top:1px solid var(--line);
+}
+.rank-list li:first-child{border-top:none}
+.rank-list .r{
+  grid-row:span 2;align-self:center;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.5rem;color:#fff;
+  background:var(--edge);border-radius:3px;padding:.1rem 0;
+}
+.rank-list .n{font-family:var(--display);font-weight:700;font-size:1.3rem;color:var(--board);line-height:1.1}
+.rank-list .s{font-size:.92rem;color:var(--board-soft)}
+.ranks-note{margin:.2rem 0 .9rem;font-size:.95rem;color:var(--board-soft);max-width:58ch}
+
+details.notes{max-width:660px;margin:2.4rem auto 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.notes summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.notes summary::-webkit-details-marker{display:none}
+details.notes summary::before{content:"▸ ";color:var(--ice)}
+details.notes[open] summary::before{content:"▾ ";color:var(--ice)}
+details.notes .body{font-size:.98rem;color:var(--board-soft);max-width:60ch}
+details.notes h4{font-family:var(--display);font-size:1.15rem;margin:1.1rem 0 .2rem;color:var(--board)}
+details.notes p{margin:.35rem 0}
+details.notes ul{margin:.35rem 0;padding-left:1.1rem;list-style:none}
+details.notes li{margin:.45rem 0}
+details.notes .cat{font-family:var(--display);font-size:1.05rem;font-weight:600;color:var(--board)}
+details.notes code{font-family:var(--display);font-size:1.05rem;color:var(--board);font-weight:600}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">One Step at a <span>Time</span></h1>
+    <div class="sess">Lesson 1 &nbsp;/&nbsp; Order of operations</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="lede">Do not work it out in your head. Tap the one operation you would do next, and only that one. It collapses into its value and the expression gets shorter.</p>
+
+  <div class="picks" id="picks"></div>
+
+  <div class="stepline">
+    <span id="stepCount"></span>
+    <span class="ask" id="ask"></span>
+  </div>
+
+  <div class="strip" id="strip" role="group" aria-label="Expression"></div>
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="done" id="done"></div>
+
+  <div class="actions">
+    <button class="btn ghost" id="restart" type="button">Start this one over</button>
+    <button class="btn primary" id="onward" type="button" hidden>Next example</button>
+  </div>
+
+  <details class="ranks" open>
+    <summary>The four ranks</summary>
+    <ol class="rank-list">
+      <li><span class="r">1</span><span class="n">Parentheses</span><span class="s">whatever is inside them, before anything outside</span></li>
+      <li><span class="r">2</span><span class="n">Exponents</span><span class="s">the powers you built yesterday</span></li>
+      <li><span class="r">3</span><span class="n">Multiply and divide</span><span class="s">left to right, whichever one comes first</span></li>
+      <li><span class="r">4</span><span class="n">Add and subtract</span><span class="s">left to right, whichever one comes first</span></li>
+    </ol>
+    <p class="ranks-note">Four ranks, not six separate steps. Multiplying and dividing share rank 3, so neither one outranks the other and the one further left goes first. Adding and subtracting share rank 4 the same way.</p>
+  </details>
+
+  <details class="notes">
+    <summary>Teacher notes</summary>
+    <div class="body">
+      <h4>Run all three, in this order</h4>
+      <p><b>Example 1</b> is the plain sweep through all four ranks. Let her tap the parentheses first without saying anything, then stop at <code>10 ÷ 5 × 2</code> at the end and ask which of those two goes first. That is the whole point of the example. If she says the multiplication because it feels bigger, do not correct her yet, let her tap it and read the message.</p>
+      <p><b>Example 2</b> is here for one reason: <code>7(3)</code>. Ask her what it means before she taps anything. Most seventh graders read it as a parentheses step because there are brackets on the page. It is multiplication with the times sign left out, and it waits its turn at rank 3 like any other multiplication. The <code>(7 − 2)</code> at the far right is the real parentheses step, and it goes first even though it is last in line.</p>
+      <p><b>Example 3</b> is the hardest of the three because the exponent is buried at the end, inside <code>2 · 3²</code>. She has to see the exponent before the multiplication that is sitting right next to it. The middle dot is another way to write times, worth pointing out once.</p>
+      <p>Do all three in one sitting if she has the patience. If not, one and two together, then three the next day, because example three leans on both of the first two.</p>
+
+      <h4>The four wrong taps and what each one tells you</h4>
+      <ul>
+        <li><span class="cat">Parentheses first, always.</span> She tapped somewhere outside the brackets while there was still an operation inside them. This is usually reading left to right out of habit rather than a misunderstanding. It fades fast.</li>
+        <li><span class="cat">Multiplication outranks addition.</span> She tapped a plus or a minus while a times, a divide, or an exponent was still waiting. This is the real error, not a slip. It means she is scanning for the leftmost operation instead of the highest ranked one. Slow down and name the rank out loud before every tap for a while.</li>
+        <li><span class="cat">Same rank. Work left to right.</span> She tapped the right hand one of a pair that share a rank, so a times before a divide, or a plus before a minus. This is the mistake that PEMDAS itself causes, because the letters look like six ranked steps and two of those pairs are actually ties. If she is hitting this one, the fix is the reference card on this page, not more problems.</li>
+        <li><span class="cat">Exponents before multiplying.</span> She tapped a times or a divide while a power was still unresolved. Often she just did not see the little number. Point at it rather than explaining anything.</li>
+      </ul>
+      <p>Watch which of the four she repeats. One category showing up over and over is a rule she has not got yet; one of each scattered around is ordinary carelessness and will settle on its own.</p>
+
+      <h4>Why exponents came first</h4>
+      <p>Yesterday's page was powers, and that was on purpose. Exponents are rank 2 here, so every expression on this page needs her to be able to look at <code>4²</code> and know it is 16 without stopping to think. If she is still working out powers by counting copies, this page turns into two hard things at once. Go back and run the speed round for a minute before starting, and it will not.</p>
+    </div>
+  </details>
+</main>
+
+<script>
+/* ---------------- the expression model ----------------
+   A token list, flat. Grouping is written down rather than nested, because
+   the board draws the tokens in one row and every step has to point at a
+   slice of that row:
+
+     {k:'num', v, g}                    a number
+     {k:'op', op, show, g, implicit}    an operation
+     {k:'lp', id} {k:'rp', id}          one pair of parentheses
+
+   g is the id of the group a token sits inside, or null out at the top
+   level. Parentheses never nest on these pages, so g is enough on its own;
+   there is never an outer group to walk up to. */
+
+const N  = (v, g) => ({k:'num', v:v, g:g || null});
+const O  = (op, show, g, imp) => ({k:'op', op:op, show:show, g:g || null, implicit:!!imp});
+const LP = id => ({k:'lp', id:id, g:null});
+const RP = id => ({k:'rp', id:id, g:null});
+
+/* Four ranks, low number first. Multiply and divide share one; so do add
+   and subtract. Nothing anywhere on this page ranks them apart. */
+const RANK = {'^':2, '*':3, '/':3, '+':4, '-':4};
+const SUPER = ['', '¹', '²', '³', '⁴', '⁵'];
+
+function opIndexes(toks){
+  const out = [];
+  toks.forEach((t, i) => { if (t.k === 'op') out.push(i); });
+  return out;
+}
+
+/* The one operation that is allowed next. Anything inside parentheses wins
+   outright; otherwise it is the lowest rank still on the board, and among
+   equals the leftmost, which is what makes left to right a rule and not a
+   preference. */
+function pendingIndex(toks){
+  const all = opIndexes(toks);
+  if (!all.length) return -1;
+  const grouped = all.filter(i => toks[i].g !== null);
+  const scope = grouped.length
+    ? grouped.filter(i => toks[i].g === toks[grouped[0]].g)
+    : all.filter(i => toks[i].g === null);
+  let best = scope[0];
+  for (let n = 1; n < scope.length; n++){
+    if (RANK[toks[scope[n]].op] < RANK[toks[best].op]) best = scope[n];
+  }
+  return best;
+}
+
+/* Which slice of the row an operand covers. It is one number, except for
+   the bracketed number on the right of an implicit multiply, which is
+   three tokens: ( 3 ). */
+function spanOf(toks, i, dir){
+  const j = i + dir;
+  const t = toks[j];
+  if (dir < 0 && t.k === 'rp'){
+    let s = j;
+    while (!(toks[s].k === 'lp' && toks[s].id === t.id)) s--;
+    return [s, j];
+  }
+  if (dir > 0 && t.k === 'lp'){
+    let e = j;
+    while (!(toks[e].k === 'rp' && toks[e].id === t.id)) e++;
+    return [j, e];
+  }
+  return [j, j];
+}
+
+function spanValue(toks, sp){
+  for (let i = sp[0]; i <= sp[1]; i++) if (toks[i].k === 'num') return toks[i].v;
+  return 0;
+}
+
+function compute(op, a, b){
+  if (op === '^') return Math.pow(a, b);
+  if (op === '*') return a * b;
+  if (op === '/') return a / b;
+  if (op === '+') return a + b;
+  return a - b;
+}
+
+function stepAt(toks, i){
+  const L = spanOf(toks, i, -1), R = spanOf(toks, i, 1);
+  const a = spanValue(toks, L), b = spanValue(toks, R);
+  return {
+    i:i, L:L, R:R, a:a, b:b,
+    op: toks[i].op, show: toks[i].show, implicit: !!toks[i].implicit,
+    g: toks[i].g, value: compute(toks[i].op, a, b)
+  };
+}
+
+/* A pair of brackets holding a single number has no work left in it, so it
+   comes off. The exception is the pair in 7(3): those brackets are the
+   multiplication sign, and taking them away early would hide the very
+   thing example 2 is about. */
+function dissolve(toks){
+  for (let i = 0; i < toks.length - 2; i++){
+    if (toks[i].k === 'lp' && toks[i+1].k === 'num' && toks[i+2].k === 'rp'){
+      const prev = toks[i-1];
+      if (prev && prev.k === 'op' && prev.implicit) continue;
+      toks[i+1].g = null;
+      toks.splice(i, 3, toks[i+1]);
+      i--;
+    }
+  }
+}
+
+function applyStep(toks, st){
+  const out = toks.map(t => Object.assign({}, t));
+  out.splice(st.L[0], st.R[1] - st.L[0] + 1, {k:'num', v:st.value, g:st.g, fresh:true});
+  dissolve(out);
+  return out;
+}
+
+/* The reducer. Every value on both of these pages comes out of here: the
+   board, the answer being checked, and the self check below. */
+function reduceAll(start){
+  let toks = start.map(t => Object.assign({}, t));
+  dissolve(toks);
+  const steps = [];
+  for (let guard = 0; guard < 60; guard++){
+    const i = pendingIndex(toks);
+    if (i < 0) break;
+    const st = stepAt(toks, i);
+    steps.push(st);
+    toks = applyStep(toks, st);
+  }
+  const nums = toks.filter(t => t.k === 'num');
+  return {value: nums.length === 1 && toks.length === 1 ? nums[0].v : NaN, steps: steps, tokens: toks};
+}
+
+/* The expression written out, for reading aloud and for labels. */
+function exprText(toks){
+  let s = '';
+  toks.forEach((t, i) => {
+    if (t.k === 'num'){
+      if (toks[i-1] && toks[i-1].k === 'op' && toks[i-1].op === '^') s += (SUPER[t.v] || ('^' + t.v));
+      else s += t.v;
+    }
+    else if (t.k === 'lp') s += '(';
+    else if (t.k === 'rp') s += ')';
+    else if (t.op === '^' || t.implicit) s += '';
+    else s += ' ' + t.show + ' ';
+  });
+  return s.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim();
+}
+
+/* What one step looks like written down: 3 × 5, or 4², or 7(3). */
+function pieceText(st){
+  if (st.op === '^') return st.a + (SUPER[st.b] || ('^' + st.b));
+  if (st.implicit) return st.a + '(' + st.b + ')';
+  return st.a + ' ' + st.show + ' ' + st.b;
+}
+
+/* ---------------- the four wrong taps ----------------
+   Every wrong tap is one of these four and gets its own line. A tap that
+   only says "not that one" teaches nothing; the useful part is which rule
+   she reached past. */
+const WRONG = {
+  paren:     'Parentheses first, always.',
+  outranked: 'Multiplication outranks addition, even when the addition comes first in line.',
+  leftright: 'Same rank. Work left to right.',
+  exponent:  'Exponents before multiplying.'
+};
+
+function classifyWrong(toks, want, got){
+  const p = toks[want], t = toks[got];
+  if (p.g !== null && t.g !== p.g) return 'paren';
+  if (RANK[t.op] === RANK[p.op]) return 'leftright';
+  if (RANK[p.op] === 2 && RANK[t.op] === 3) return 'exponent';
+  return 'outranked';
+}
+
+/* ---------------- the three examples out of the coursebook ---------------- */
+const EXAMPLES = [
+  {
+    name: 'Example 1',
+    expect: 23,
+    build: () => [
+      N(5), O('+','+'),
+      LP(1), N(3,1), O('*','×',1), N(5,1), RP(1),
+      O('-','−'), N(17),
+      O('+','+'), N(4), O('^','^'), N(2),
+      O('+','+'), N(10), O('/','÷'), N(5), O('*','×'), N(2)
+    ]
+  },
+  {
+    name: 'Example 2',
+    expect: 22,
+    build: () => [
+      N(7), O('*','',null,true), LP(1), N(3,1), RP(1),
+      O('-','−'), N(20),
+      O('+','+'), N(4), O('^','^'), N(2),
+      O('+','+'), LP(2), N(7,2), O('-','−',2), N(2,2), RP(2)
+    ]
+  },
+  {
+    name: 'Example 3',
+    expect: 1,
+    build: () => [
+      N(16), O('+','+'), N(9), O('/','÷'),
+      LP(1), N(7,1), O('-','−',1), N(4,1), RP(1),
+      O('-','−'), N(2), O('*','·'), N(3), O('^','^'), N(2)
+    ]
+  }
+];
+
+/* The three answers are checked against the reducer at load rather than
+   trusted from the book. If one of them ever stops matching, the page says
+   so out loud instead of quietly teaching the wrong thing. */
+function selfCheck(){
+  const bad = EXAMPLES.filter(ex => reduceAll(ex.build()).value !== ex.expect);
+  if (bad.length){
+    say('bad', 'This page has a problem: ' + bad.map(b => b.name).join(', ')
+      + ' no longer works out to the printed answer. Do not use it until that is fixed.');
+  }
+  return bad.length === 0;
+}
+
+/* ---------------- page state ---------------- */
+const strip     = document.getElementById('strip');
+const sayEl     = document.getElementById('say');
+const doneEl    = document.getElementById('done');
+const stepCount = document.getElementById('stepCount');
+const askEl     = document.getElementById('ask');
+const onward    = document.getElementById('onward');
+const picksEl   = document.getElementById('picks');
+
+let which = 0;          /* which of the three examples */
+let toks = [];          /* the row as it stands right now */
+let step = null;        /* the operation she has chosen, waiting on its value */
+let stage = 'pick';     /* pick | answer | done */
+let taken = 0, total = 0;
+const finished = [false, false, false];
+
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+/* ---------------- drawing the row ---------------- */
+function opLabel(t){
+  if (t.implicit) return 'multiply, written as brackets';
+  if (t.op === '^') return 'the power';
+  if (t.op === '*') return 'multiply';
+  if (t.op === '/') return 'divide';
+  if (t.op === '+') return 'add';
+  return 'subtract';
+}
+
+function draw(){
+  strip.textContent = '';
+  let i = 0;
+  while (i < toks.length){
+    const t = toks[i];
+
+    /* a power is drawn as one button, base and little number together,
+       because the operation she is choosing is that whole power */
+    if (t.k === 'num' && toks[i+1] && toks[i+1].k === 'op' && toks[i+1].op === '^'){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tok op pow';
+      b.dataset.from = i; b.dataset.to = i + 2; b.dataset.op = i + 1;
+      b.append(String(t.v));
+      const sup = document.createElement('sup');
+      sup.textContent = SUPER[toks[i+2].v] || String(toks[i+2].v);
+      b.append(sup);
+      b.setAttribute('aria-label', t.v + ' to the power of ' + toks[i+2].v);
+      if (t.fresh) b.classList.add('arriving');
+      strip.append(b);
+      i += 3;
+      continue;
+    }
+
+    let el;
+    if (t.k === 'op'){
+      el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'tok op' + (t.implicit ? ' imp' : '');
+      el.dataset.op = i;
+      el.textContent = t.show;
+      el.setAttribute('aria-label', opLabel(t));
+    } else {
+      el = document.createElement('span');
+      el.className = 'tok ' + (t.k === 'num' ? 'num' : 'paren');
+      el.textContent = t.k === 'num' ? String(t.v) : (t.k === 'lp' ? '(' : ')');
+      if (t.fresh) el.classList.add('arriving');
+    }
+    el.dataset.from = i; el.dataset.to = i;
+    strip.append(el);
+    i++;
+  }
+  toks.forEach(t => { delete t.fresh; });
+  strip.setAttribute('aria-label', 'Expression: ' + exprText(toks));
+
+  if (step) lightStep();
+  stepCount.textContent = '';
+  const label = document.createElement('b');
+  if (stage === 'done'){ label.textContent = 'Done'; stepCount.append(label); }
+  else { label.textContent = 'Step ' + (taken + 1); stepCount.append(label, ' of ' + total); }
+  askEl.textContent = stage === 'answer'
+    ? 'Now work out just that piece.'
+    : (stage === 'done' ? '' : 'Tap the operation you would do next.');
+}
+
+function lightStep(){
+  Array.prototype.forEach.call(strip.children, n => {
+    const f = +n.dataset.from, t = +n.dataset.to;
+    if (n.dataset.op !== undefined && +n.dataset.op === step.i){ n.classList.add('lit-op'); return; }
+    if ((f >= step.L[0] && t <= step.L[1]) || (f >= step.R[0] && t <= step.R[1])) n.classList.add('lit');
+  });
+  openAnswer();
+}
+
+/* the small input, dropped in right after the piece she chose */
+function openAnswer(){
+  const after = Array.prototype.filter.call(strip.children, n => +n.dataset.to === step.R[1]).pop();
+  if (!after) return;
+  const wrap = document.createElement('span');
+  wrap.className = 'answer';
+  const eq = document.createElement('span');
+  eq.className = 'eq';
+  eq.textContent = '=';
+  const inp = document.createElement('input');
+  inp.className = 'ansbox';
+  inp.id = 'ansbox';
+  inp.setAttribute('inputmode', 'numeric');
+  inp.setAttribute('autocomplete', 'off');
+  inp.setAttribute('aria-label', 'What is ' + pieceText(step) + '?');
+  const ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'ok';
+  ok.textContent = '✓';
+  ok.setAttribute('aria-label', 'Check this step');
+  wrap.append(eq, inp, ok);
+  after.after(wrap);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit(); } });
+  inp.addEventListener('input', () => inp.classList.remove('miss'));
+  ok.onclick = submit;
+  inp.focus();
+}
+
+/* ---------------- taps ---------------- */
+function shake(nodes){
+  nodes.forEach(n => {
+    n.classList.add('shake');
+    setTimeout(() => n.classList.remove('shake'), 420);
+  });
+}
+
+strip.addEventListener('click', e => {
+  const btn = e.target.closest('button.op');
+  if (!btn || stage !== 'pick') return;
+  const got = +btn.dataset.op;
+  const want = pendingIndex(toks);
+  if (got === want){ accept(want); return; }
+
+  /* wrong operation. Shake the piece she reached for, including both of
+     its numbers, because with 7(3) the operation itself has no width. */
+  const L = spanOf(toks, got, -1), R = spanOf(toks, got, 1);
+  const hit = Array.prototype.filter.call(strip.children, n => {
+    const f = +n.dataset.from, t = +n.dataset.to;
+    return n === btn || (f >= L[0] && t <= L[1]) || (f >= R[0] && t <= R[1]);
+  });
+  shake(hit);
+  say('bad', WRONG[classifyWrong(toks, want, got)]);
+});
+
+function accept(i){
+  step = stepAt(toks, i);
+  stage = 'answer';
+  const t = toks[i];
+  if (t.g !== null) say('good', 'Parentheses first, always.', 'Nothing outside them can go before this.');
+  else if (t.op === '^') say('good', 'Exponents next.', 'A power is settled before anything multiplies it.');
+  else if (RANK[t.op] === 3) say('good', 'Multiply and divide, left to right.', 'This is the leftmost one of that rank.');
+  else say('good', 'Add and subtract, left to right.', 'Last rank, and this is the leftmost one left.');
+  draw();
+}
+
+function submit(){
+  if (stage !== 'answer') return;
+  const inp = document.getElementById('ansbox');
+  const raw = String(inp.value).replace(/[\s,]/g, '');
+  if (!raw) return;
+  if (!/^[-+]?\d*\.?\d+$/.test(raw) || Math.abs(parseFloat(raw) - step.value) > 1e-9){
+    inp.classList.add('miss', 'shake');
+    setTimeout(() => inp.classList.remove('shake'), 420);
+    say('bad', 'Not that.', 'Work out only the piece that is lit up: ' + pieceText(step) + '.');
+    inp.select();
+    return;
+  }
+  collapse();
+}
+
+function collapse(){
+  const done = step;
+  const going = Array.prototype.filter.call(strip.children,
+    n => n.classList.contains('lit') || n.classList.contains('lit-op') || n.classList.contains('answer'));
+  going.forEach(n => n.classList.add('going'));
+
+  const wait = reduced() ? 0 : 230;
+  setTimeout(() => {
+    toks = applyStep(toks, done);
+    taken++;
+    step = null;
+    const over = pendingIndex(toks) < 0;
+    stage = over ? 'done' : 'pick';
+    draw();
+
+    let note = '';
+    if (done.implicit) note = 'Those brackets are a multiplication sign with the × left out, not a grouping to do first.';
+    else if (done.op === '^') note = 'That is the power gone, and now it is just a number like any other.';
+    else if (over) note = 'Nothing left to do. That is the value of the whole expression.';
+    say('good', pieceText(done) + ' = ' + done.value + '.', note);
+
+    if (over) finish();
+  }, wait);
+}
+
+function finish(){
+  finished[which] = true;
+  drawPicks();
+  doneEl.className = 'done show';
+  doneEl.textContent = 'The whole thing comes to ' + toks[0].v + '.';
+  const next = finished.indexOf(false);
+  onward.hidden = next < 0;
+  if (next >= 0) onward.textContent = 'Go on to ' + EXAMPLES[next].name.toLowerCase();
+}
+
+/* ---------------- picking an example ---------------- */
+function drawPicks(){
+  picksEl.textContent = '';
+  EXAMPLES.forEach((ex, n) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pick';
+    b.setAttribute('aria-pressed', String(n === which));
+    b.append(ex.name);
+    if (finished[n]){
+      const tick = document.createElement('span');
+      tick.className = 'tick';
+      tick.textContent = ' ✓';
+      b.append(tick);
+    }
+    b.onclick = () => load(n);
+    picksEl.append(b);
+  });
+}
+
+function load(n){
+  which = n;
+  toks = EXAMPLES[n].build();
+  dissolve(toks);
+  total = reduceAll(EXAMPLES[n].build()).steps.length;
+  taken = 0;
+  step = null;
+  stage = 'pick';
+  doneEl.className = 'done';
+  onward.hidden = true;
+  drawPicks();
+  draw();
+  say('', 'Read it through first.', 'Then tap the one operation that has to happen before any of the others.');
+}
+
+document.getElementById('restart').onclick = () => load(which);
+onward.onclick = () => {
+  const next = finished.indexOf(false);
+  if (next >= 0) load(next);
+};
+
+load(0);
+selfCheck();
+</script>
+</body>
+</html>

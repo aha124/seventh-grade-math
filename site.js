@@ -39,6 +39,12 @@ const LESSONS = [
         name: "Powers practice",
         blurb: "Work out powers, write them from a list of factors, or run the 45 second speed round on the nine worth knowing cold.",
         cta: "Start practicing"
+      },
+      {
+        href: "lesson-01/order-lesson.html",
+        name: "One step at a time",
+        blurb: "Three worked examples, one tap at a time. Choose the operation that goes next and watch that piece collapse into its value. A wrong tap says which rule you reached past.",
+        cta: "Start stepping"
       }
     ]
   }

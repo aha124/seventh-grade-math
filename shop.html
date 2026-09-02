@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prize Counter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/style.css">
+<style>
+/* The one page that is for her and only her. Same navy masthead, same
+   type, but the ground is warm cream, corners are round, and the cards
+   are big. Everything here is still plain CSS: no images, no libraries. */
+:root{
+  --cream:#FFF6E5;
+  --cream-deep:#FBEBCB;
+  --honey:#E9B84C;
+  --amber:#8A5F1E;
+  --amber-soft:#B07F3A;
+  --card-line:#EFD9A9;
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.9rem,6.5vw,2.9rem);
+}
+body{background:var(--cream)}
+.board{border-bottom-color:var(--gold)}
+.wrap{max-width:900px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:#FFE7A8;letter-spacing:.06em}
+
+/* the bank: how many she has, and how to get more */
+.bank{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  margin:1.4rem 0 0;padding:1rem 1.2rem;
+  background:linear-gradient(135deg,#FFFBF1,var(--cream-deep));
+  border:1.5px solid var(--card-line);border-radius:14px;
+  box-shadow:0 3px 0 rgba(120,75,10,.12);
+}
+.bank .big-coin{
+  flex:0 0 auto;width:3.6rem;height:3.6rem;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#FFE7A8 0,var(--honey) 45%,#B77A1E 100%);
+  box-shadow:inset 0 0 0 .42rem rgba(120,75,10,.3),0 3px 0 rgba(0,0,0,.18);
+}
+.bank .have{flex:1 1 10rem;min-width:0}
+.bank .have b{
+  display:block;font-family:var(--display);font-weight:700;
+  font-size:clamp(2.4rem,9vw,3.4rem);line-height:1;color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.bank .have span{font-family:var(--display);font-size:1.15rem;color:var(--amber);letter-spacing:.04em}
+.bank .how{flex:1 1 16rem;font-size:.95rem;color:#5E4A28;max-width:34ch;margin:0}
+.bank .how b{color:var(--amber);font-weight:600}
+
+/* the counter itself */
+.counter-head{
+  margin:1.8rem 0 .7rem;
+  font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1.1;color:var(--board);
+}
+.items{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));
+  gap:1rem;margin:0;padding:0;list-style:none;
+}
+.item{perspective:1200px;min-height:15rem}
+.flip{
+  position:relative;height:100%;
+  transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.35,.9,.3,1.05);
+}
+.item.pending .flip{transform:rotateY(180deg)}
+.face{
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:16px;
+}
+.front{
+  display:flex;flex-direction:column;width:100%;height:100%;
+  padding:0;margin:0;text-align:left;font:inherit;color:inherit;
+  background:var(--paper);
+  border:1.5px solid var(--card-line);
+  box-shadow:0 4px 0 rgba(120,75,10,.14);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  overflow:hidden;
+}
+.front:hover,.front:focus-visible{border-color:var(--honey);box-shadow:0 6px 0 rgba(120,75,10,.18);transform:translateY(-2px)}
+.front{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+/* picture slot. A photo fills it edge to edge; until then the emoji sits
+   in the middle on a warm ground. Fixed aspect so cards line up. */
+.pic{
+  display:flex;align-items:center;justify-content:center;
+  aspect-ratio:4/3;width:100%;
+  background:linear-gradient(160deg,#FFF3D6,#FBE3B4);
+  overflow:hidden;
+}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pic .icon{font-size:clamp(3.4rem,14vw,4.6rem);line-height:1;filter:drop-shadow(0 4px 0 rgba(120,75,10,.15))}
+.body{display:flex;flex-direction:column;gap:.35rem;padding:.8rem .95rem .95rem}
+.name{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.05;color:var(--board)}
+.cost{display:inline-flex;align-items:center;gap:.35rem;font-family:var(--display);font-weight:700;font-size:1.25rem;color:var(--amber);font-variant-numeric:tabular-nums}
+.cost .coin{font-size:1.05rem}
+.meter{height:.5rem;border-radius:999px;background:#F3E6CB;overflow:hidden}
+.meter .fill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--honey),var(--gold));transition:width .5s ease}
+.status{
+  margin-top:auto;padding-top:.35rem;
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;color:var(--good);
+}
+.item.short .status{color:var(--amber-soft)}
+.item.short .front{background:#FFFDF8}
+
+.back{
+  position:absolute;inset:0;
+  transform:rotateY(180deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
+  padding:1.2rem;text-align:center;
+  background:linear-gradient(160deg,var(--board),#1D3B58);
+  color:var(--cream);border:1.5px solid var(--board);
+  box-shadow:0 4px 0 rgba(16,36,58,.25);
+}
+.back .tick{
+  width:3rem;height:3rem;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--honey);color:var(--board);
+  font-family:var(--display);font-size:2rem;font-weight:700;line-height:1;
+}
+.back .wait{font-family:var(--display);font-size:1.5rem;font-weight:700;line-height:1.05;margin-top:.3rem}
+.back .hand{font-size:.92rem;color:var(--ice);max-width:20ch}
+.back .bname{font-size:.9rem;color:#FFE7A8;margin-top:.4rem}
+
+/* the pop on redeem, and the coins that fly off the card */
+.item.pop .front{animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+.burst{
+  position:absolute;left:50%;top:45%;width:1.1rem;height:1.1rem;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#FFE7A8 0,var(--honey) 45%,#B77A1E 100%);
+  box-shadow:inset 0 0 0 .15rem rgba(120,75,10,.35);
+  pointer-events:none;z-index:3;
+  animation:fly .9s cubic-bezier(.2,.8,.4,1) forwards;
+}
+@keyframes fly{
+  0%{transform:translate(-50%,-50%) scale(.6);opacity:1}
+  70%{opacity:1}
+  100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.1);opacity:0}
+}
+
+.empty{margin:1rem 0 0;padding:1.2rem;text-align:center;color:#7A5A22;background:#FFFBF1;border:1.5px dashed var(--card-line);border-radius:14px}
+.empty[hidden]{display:none}
+
+/* the confirm sheet. Bottom sheet on a phone, centered box wider up. */
+.veil{
+  position:fixed;inset:0;z-index:40;
+  background:rgba(16,36,58,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;transition:opacity .2s ease;
+}
+.veil[hidden]{display:none}
+.veil.on{opacity:1}
+.sheet{
+  width:100%;max-width:26rem;
+  background:var(--paper);
+  border-radius:18px 18px 0 0;
+  padding:1.2rem 1.25rem calc(1.2rem + env(safe-area-inset-bottom));
+  box-shadow:0 -12px 40px rgba(16,36,58,.3);
+  transform:translateY(2rem);transition:transform .28s cubic-bezier(.2,.9,.3,1.1);
+}
+.veil.on .sheet{transform:translateY(0)}
+@media (min-width:640px){
+  .veil{align-items:center;padding:1rem}
+  .sheet{border-radius:18px;padding-bottom:1.2rem}
+}
+.sheet .s-icon{font-size:2.6rem;line-height:1;text-align:center}
+.sheet .s-name{font-family:var(--display);font-weight:700;font-size:1.6rem;line-height:1.05;text-align:center;margin:.4rem 0 .8rem}
+.s-rows{display:grid;grid-template-columns:1fr auto;gap:.35rem .8rem;font-size:1.02rem;margin:0 0 1rem}
+.s-rows dt{color:#5E4A28}
+.s-rows dd{margin:0;font-family:var(--display);font-weight:700;font-size:1.2rem;text-align:right;font-variant-numeric:tabular-nums}
+.s-rows dd.left{color:var(--good)}
+.s-rows dd.more{color:var(--amber)}
+.s-note{margin:0 0 1rem;font-size:.95rem;color:#5E4A28;text-align:center}
+.s-actions{display:flex;gap:.6rem;flex-wrap:wrap}
+.s-actions .btn{flex:1 1 8rem;min-height:48px;border-radius:12px;font-size:1.3rem}
+.btn.honey{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn.plain{background:var(--paper);border-color:var(--card-line);color:var(--amber)}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#9A7B4C;max-width:56ch}
+
+@media (prefers-reduced-motion:reduce){
+  .flip,.front,.meter .fill,.veil,.sheet{transition:none}
+  .item.pop .front,.burst{animation:none}
+  .burst{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="index.html">All lessons</a></div>
+    <h1 class="mark">Prize <span>Counter</span></h1>
+    <div class="sess">Spend your tokens</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="bank" aria-label="Your tokens">
+    <span class="big-coin" aria-hidden="true"></span>
+    <div class="have"><b id="have">0</b><span id="haveWord">tokens</span></div>
+    <p class="how" id="how"></p>
+  </section>
+
+  <h2 class="counter-head">What’s on the counter</h2>
+  <ul class="items" id="items"></ul>
+  <p class="empty" id="empty" hidden>The counter is empty right now. Ask a grown-up to stock it.</p>
+
+  <p class="foot">Tap something to get it. A grown-up hands it over for real, so show them your screen.</p>
+</main>
+
+<div class="veil" id="veil" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sName">
+    <div class="s-icon" id="sIcon" aria-hidden="true"></div>
+    <h3 class="s-name" id="sName"></h3>
+    <dl class="s-rows" id="sRows"></dl>
+    <p class="s-note" id="sNote"></p>
+    <div class="s-actions" id="sActions"></div>
+  </div>
+</div>
+
+<script src="shared/tokens.js"></script>
+<script src="shared/items.js"></script>
+<script>
+(function(){
+  const C = Tokens.CONFIG;
+  const items = (typeof SHOP_ITEMS !== 'undefined' && Array.isArray(SHOP_ITEMS) ? SHOP_ITEMS : [])
+    .filter(i => i && i.visible && i.id && Number.isFinite(i.cost) && i.cost > 0);
+
+  const host = document.getElementById('items');
+  const empty = document.getElementById('empty');
+  const have = document.getElementById('have');
+  const haveWord = document.getElementById('haveWord');
+  const veil = document.getElementById('veil');
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.getElementById('how').textContent =
+    'Every solve on a practice page earns tokens: ' + C.cleanSolve + ' for a clean one, '
+    + C.solve + ' otherwise, up to ' + C.dailyCap + ' a day. Beat your best in a speed round for '
+    + C.bestBonus + ' extra.';
+
+  function coin(){
+    const c = document.createElement('span');
+    c.className = 'coin'; c.setAttribute('aria-hidden', 'true');
+    return c;
+  }
+  function el(tag, cls, text){
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+
+  /* one pending record per item at a time; while it waits the card is
+     flipped and cannot be tapped again */
+  function pendingFor(id){
+    return Tokens.ledger().find(r => r.kind === 'redeem' && r.item === id && r.status === 'pending');
+  }
+
+  const cards = new Map();
+
+  function buildCard(item){
+    const li = el('li', 'item');
+    const flip = el('div', 'flip');
+
+    const front = el('button', 'face front');
+    front.type = 'button';
+    const pic = el('span', 'pic');
+    if (item.photo){
+      const img = document.createElement('img');
+      img.src = item.photo; img.alt = '';
+      pic.append(img);
+    } else {
+      pic.append(el('span', 'icon', item.icon || '\u{1F381}'));
+    }
+    const body = el('span', 'body');
+    const cost = el('span', 'cost');
+    cost.append(coin(), document.createTextNode(String(item.cost)));
+    const meter = el('span', 'meter');
+    const fill = el('span', 'fill');
+    meter.append(fill);
+    const status = el('span', 'status');
+    body.append(el('span', 'name', item.name), cost, meter, status);
+    front.append(pic, body);
+    front.addEventListener('click', () => openSheet(item));
+
+    const back = el('div', 'face back');
+    back.append(el('span', 'tick', '✓'), el('span', 'wait', 'Waiting for hand-off'),
+      el('span', 'hand', 'Show this to a grown-up and they will get it for you.'),
+      el('span', 'bname', item.name));
+
+    flip.append(front, back);
+    li.append(flip);
+    cards.set(item.id, { li, fill, status, front });
+    return li;
+  }
+
+  function drawAll(){
+    const bal = Tokens.balance();
+    have.textContent = String(bal);
+    haveWord.textContent = bal === 1 ? 'token' : 'tokens';
+    items.forEach(item => {
+      const c = cards.get(item.id);
+      const waiting = !!pendingFor(item.id);
+      const short = Math.max(0, item.cost - bal);
+      c.li.classList.toggle('pending', waiting);
+      c.li.classList.toggle('short', !waiting && short > 0);
+      c.fill.style.width = Math.min(100, Math.round(100 * bal / item.cost)) + '%';
+      c.status.textContent = waiting ? 'Waiting for hand-off'
+        : short > 0 ? short + ' more to go' : 'Tap to get it';
+      c.front.disabled = waiting;
+      c.front.setAttribute('aria-label', item.name + ', ' + item.cost + ' tokens. ' + c.status.textContent);
+    });
+  }
+
+  /* ---------------- the sheet ---------------- */
+  let current = null, lastFocus = null;
+  const sIcon = document.getElementById('sIcon');
+  const sName = document.getElementById('sName');
+  const sRows = document.getElementById('sRows');
+  const sNote = document.getElementById('sNote');
+  const sActions = document.getElementById('sActions');
+
+  function row(label, value, cls){
+    const dt = el('dt', '', label);
+    const dd = el('dd', cls || '');
+    if (typeof value === 'number'){ dd.append(coin(), document.createTextNode(' ' + value)); }
+    else dd.textContent = value;
+    sRows.append(dt, dd);
+  }
+  function button(text, cls, onClick){
+    const b = el('button', 'btn ' + cls, text);
+    b.type = 'button';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function openSheet(item){
+    current = item;
+    lastFocus = document.activeElement;
+    const bal = Tokens.balance();
+    const short = item.cost - bal;
+    sIcon.textContent = item.icon || '\u{1F381}';
+    sName.textContent = item.name;
+    sRows.textContent = '';
+    sActions.textContent = '';
+    row('Costs', item.cost);
+    row('You have', bal);
+    if (short > 0){
+      row('Still need', short, 'more');
+      sNote.textContent = short === 1
+        ? 'One more token and it is yours.'
+        : 'Keep going. A clean solve is ' + C.cleanSolve + ', so that is about '
+          + Math.ceil(short / C.cleanSolve) + ' more of those.';
+      sActions.append(button('Okay', 'honey', closeSheet));
+    } else {
+      row('You’d have left', bal - item.cost, 'left');
+      sNote.textContent = 'A grown-up hands it over for real. Ready?';
+      sActions.append(button('Not now', 'plain', closeSheet), button('Get it!', 'honey', confirm));
+    }
+    veil.hidden = false;
+    void veil.offsetWidth;
+    veil.classList.add('on');
+    const first = sActions.querySelector('.honey') || sActions.firstChild;
+    if (first) first.focus();
+  }
+
+  function closeSheet(){
+    veil.classList.remove('on');
+    const done = () => { veil.hidden = true; };
+    if (reduced()) done(); else setTimeout(done, 200);
+    current = null;
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  function confirm(){
+    const item = current;
+    if (!item) return;
+    const res = Tokens.redeem(item);
+    closeSheet();
+    if (!res.ok){ drawAll(); return; }
+    celebrate(item);
+  }
+
+  function celebrate(item){
+    const c = cards.get(item.id);
+    if (!c) return;
+    if (reduced()){ drawAll(); return; }
+    c.li.classList.add('pop');
+    for (let i = 0; i < 9; i++){
+      const b = el('span', 'burst');
+      const angle = (i / 9) * Math.PI * 2 + Math.random() * .5;
+      const dist = 5 + Math.random() * 4;
+      b.style.setProperty('--dx', (Math.cos(angle) * dist).toFixed(2) + 'rem');
+      b.style.setProperty('--dy', (Math.sin(angle) * dist).toFixed(2) + 'rem');
+      b.style.animationDelay = (i * 25) + 'ms';
+      c.li.append(b);
+      setTimeout(() => b.remove(), 1200);
+    }
+    setTimeout(() => { c.li.classList.remove('pop'); drawAll(); }, 320);
+  }
+
+  veil.addEventListener('click', e => { if (e.target === veil) closeSheet(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !veil.hidden) closeSheet(); });
+
+  if (!items.length) empty.hidden = false;
+  const frag = document.createDocumentFragment();
+  items.forEach(item => frag.append(buildCard(item)));
+  host.append(frag);
+  drawAll();
+  Tokens.onChange(drawAll);
+})();
+</script>
+</body>
+</html>

@@ -29,14 +29,18 @@ system faces and everything still works.
 
 ```
 index.html               hub; builds its list from site.js at load
-site.js                  the registry: every lesson and page is one entry here
+site.js                  the registry: every lesson, its five days, and their pages
 lesson-01/cards.html     guided card sorting for mean, median, mode, range
 lesson-01/practice.html  generated practice problems with hints and checking
 lesson-01/exponents.html an exponent to build a tile at a time, not graded
 lesson-01/exponents-practice.html   graded powers drill, three modes
 lesson-01/order-lesson.html         order of operations, three worked examples
 lesson-01/order-practice.html       graded order of operations, two modes
+shop.html                the prize counter: spend tokens on items from shared/items.js
+grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares
+shared/tokens.js         earning, balance, the masthead chip, the +N toast
+shared/items.js          the shop's stock, one object per item
 vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```
 
@@ -51,6 +55,28 @@ drag code measures one slot width from the gap between the first two
 cards, so a row of cards must never wrap to a second line. If a page shows
 more cards, tighten those clamps rather than letting the rail wrap.
 
+## Tokens
+
+Every solve on a practice page earns tokens, and the prize counter on
+`shop.html` spends them. All of it is `shared/tokens.js`: the numbers
+(2 for a clean solve, 1 otherwise, 20 a day, a 5 token bonus for a new
+speed-round best at most once per mode per day) sit in one config object
+at the top of that file. A practice page earns by calling
+`Tokens.earnSolve({ clean })` right where it writes its log record, and
+`Tokens.earnBest('page:mode')` where it decides a round was a new best.
+Loading the script is what puts the balance chip in the masthead, so
+every page loads it, lessons included.
+
+Balances are plain localStorage (`seventh-grade-math:tokens` and
+`seventh-grade-math:redemptions`) and anyone with dev tools can edit
+them. That is fine: nothing is handed over until a person hands it over,
+and `grown-ups.html` is where they do that. Everything is per device, so
+open that page on hers.
+
+To stock the counter, edit `shared/items.js`: flip an item to
+`visible: true`, add a `photo` path if there is one, and set the test
+item back to `visible: false`.
+
 ## Adding a page
 
 One folder per lesson, and one entry in `site.js`. There is no markup to
@@ -62,16 +88,22 @@ edit: `index.html` renders whatever is in that array.
    point. Each is self-contained: problem generator, answer sheet, hints,
    and saved progress are all in the one file.
 3. Keep `<link rel="stylesheet" href="../shared/style.css">` and the
-   `.board-nav` back link at the top of the masthead. Both assume the page
-   is one folder deep; a page nested deeper needs another `../` on each.
+   `.board-nav` back link at the top of the masthead, and the
+   `<script src="../shared/tokens.js">` just before the page's own
+   script. All three assume the page is one folder deep; a page nested
+   deeper needs another `../` on each.
 4. Keep the `:root` block of card geometry if the page sorts cards.
    Adjust the clamps if it shows a different number of them, and check at
    a 375px-wide viewport that a full row still fits on one line.
 5. If the page saves progress, give it its own key under the same
    namespace (`seventh-grade-math:<name>`), and keep every localStorage
    call inside a `try`/`catch` so the page still works with storage off.
-6. Register it in `site.js`. Add to an existing lesson's `pages`, or push
-   a new `{ n, title, pages }` object. Order does not matter; the hub
-   sorts on `n` and shows the newest lesson first.
+6. Register it in `site.js`. Every lesson is five days (three teaching
+   days, a review day, a test day) and each day has its own `pages`
+   array, so add the page to the day it belongs to. A new lesson is a
+   new `{ n, title, days }` object with all five days written out; a day
+   with no pages carries a `note` instead, and the hub shows that note
+   in the row. Lesson order does not matter; the hub sorts on `n` and
+   shows the newest lesson first.
 7. Open `index.html` from the filesystem, click into the new page, and
    click the back link to make sure the relative paths are right.

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grown-ups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.06em}
+
+.notice{
+  margin:1.4rem 0 0;padding:.8rem 1rem;
+  background:#FBF5EA;border:1.5px solid var(--gold);border-radius:3px;
+  color:#8A5F1E;font-size:.98rem;max-width:60ch;
+}
+.notice b{font-weight:600}
+
+h2{
+  font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1.1;
+  margin:2rem 0 .7rem;padding-bottom:.4rem;border-bottom:1.5px solid var(--line);color:var(--board);
+}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));gap:.7rem;margin:0;padding:0;list-style:none}
+.stat{background:var(--paper);border:1.5px solid var(--line);border-left:5px solid var(--edge);border-radius:3px;padding:.7rem .9rem}
+.stat b{display:block;font-family:var(--display);font-weight:700;font-size:1.9rem;line-height:1;color:var(--board);font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:.25rem;font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7C93A5}
+
+.list{margin:0;padding:0;list-style:none}
+.rec{
+  display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;
+  padding:.7rem 0;border-bottom:1px solid var(--line);
+}
+.rec .what{flex:1 1 14rem;min-width:0}
+.rec .name{font-family:var(--display);font-weight:600;font-size:1.25rem;line-height:1.1;color:var(--board)}
+.rec .when{font-size:.85rem;color:#7C93A5}
+.rec .why{font-size:.92rem;color:var(--board-soft)}
+.rec .amt{font-family:var(--display);font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums;color:var(--board);min-width:3.5rem;text-align:right}
+.rec .amt.plus{color:var(--good)}
+.rec .amt.minus{color:#8A5F1E}
+.rec .btn{min-height:44px;font-size:1.1rem;padding:.45rem 1rem}
+.none{margin:.4rem 0 0;color:var(--board-soft)}
+
+/* adjust form */
+.adjust{display:grid;gap:.7rem;max-width:34rem}
+.seg{display:flex;gap:.4rem}
+.seg button{
+  flex:1 1 0;min-height:44px;
+  font-family:var(--display);font-size:1.1rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.seg button[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.field{display:flex;flex-direction:column;gap:.25rem}
+.field label{font-size:.85rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#7C93A5}
+.field input{
+  min-height:44px;padding:.4rem .7rem;
+  font-family:var(--body);font-size:1.05rem;color:var(--board);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.field input:focus{border-color:var(--edge)}
+.adjust .btn{min-height:44px;justify-self:start}
+.msg{min-height:1.5em;margin:0;font-size:.95rem;color:#8A5F1E}
+.msg.ok{color:var(--good)}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="index.html">All lessons</a></div>
+    <h1 class="mark">Grown-<span>ups</span></h1>
+    <div class="sess">The prize counter, from behind it</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="notice"><b>Open this on her device.</b> Tokens and redemptions are saved in this browser only, on the device she practices on. Nothing syncs, so this page is empty anywhere else.</p>
+
+  <h2>Right now</h2>
+  <ul class="stats" id="stats"></ul>
+
+  <h2>Waiting for hand-off</h2>
+  <ul class="list" id="pending"></ul>
+  <p class="none" id="pendingNone" hidden>Nothing waiting.</p>
+
+  <h2>Add or take back tokens</h2>
+  <form class="adjust" id="adjust" autocomplete="off">
+    <div class="seg" role="group" aria-label="Direction">
+      <button type="button" id="dirAdd" aria-pressed="true">Add</button>
+      <button type="button" id="dirTake" aria-pressed="false">Take back</button>
+    </div>
+    <div class="field">
+      <label for="amount">How many</label>
+      <input id="amount" type="number" inputmode="numeric" min="1" step="1" required>
+    </div>
+    <div class="field">
+      <label for="reason">Reason, one line</label>
+      <input id="reason" type="text" maxlength="120" required placeholder="Helped with the dishes">
+    </div>
+    <button class="btn primary" type="submit">Apply</button>
+    <p class="msg" id="msg" aria-live="polite"></p>
+  </form>
+
+  <h2>History</h2>
+  <ul class="list" id="history"></ul>
+  <p class="none" id="historyNone" hidden>Nothing yet.</p>
+
+  <p class="foot">The numbers are plain localStorage and anyone with the browser's developer tools can change them. That is fine: nothing here is handed over until you hand it over.</p>
+</main>
+
+<script src="shared/tokens.js"></script>
+<script>
+(function(){
+  const C = Tokens.CONFIG;
+  const stats = document.getElementById('stats');
+  const pending = document.getElementById('pending');
+  const pendingNone = document.getElementById('pendingNone');
+  const history = document.getElementById('history');
+  const historyNone = document.getElementById('historyNone');
+
+  function el(tag, cls, text){
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function when(t){
+    try {
+      return new Date(t).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch (e) { return String(t); }
+  }
+  function stat(value, label){
+    const li = el('li', 'stat');
+    li.append(el('b', '', String(value)), el('span', '', label));
+    return li;
+  }
+
+  function drawStats(){
+    const s = Tokens.state();
+    const ledger = Tokens.ledger();
+    const spent = ledger.filter(r => r.kind === 'redeem').reduce((n, r) => n + r.cost, 0);
+    const handed = ledger.filter(r => r.kind === 'redeem' && r.status === 'fulfilled').length;
+    const adjusted = ledger.filter(r => r.kind === 'adjust').reduce((n, r) => n + r.delta, 0);
+    stats.textContent = '';
+    stats.append(
+      stat(s.balance, 'Balance'),
+      stat(Tokens.earnedToday() + ' of ' + C.dailyCap, 'Earned today'),
+      stat(s.earned, 'Earned, all time'),
+      stat(spent, 'Spent on prizes'),
+      stat(handed, 'Handed over'),
+      stat((adjusted >= 0 ? '+' : '−') + Math.abs(adjusted), 'Adjusted by you')
+    );
+  }
+
+  function redeemRow(r, withButton){
+    const li = el('li', 'rec');
+    const what = el('div', 'what');
+    what.append(el('div', 'name', r.name), el('div', 'when', when(r.t)
+      + (r.status === 'fulfilled' && r.done ? ' · handed over ' + when(r.done) : '')));
+    li.append(what, el('span', 'amt minus', '−' + r.cost));
+    if (withButton){
+      const b = el('button', 'btn primary', 'Handed over');
+      b.type = 'button';
+      b.addEventListener('click', () => { Tokens.fulfill(r.id); drawAll(); });
+      li.append(b);
+    }
+    return li;
+  }
+  function adjustRow(r){
+    const li = el('li', 'rec');
+    const what = el('div', 'what');
+    what.append(el('div', 'name', r.delta >= 0 ? 'Tokens added' : 'Tokens taken back'),
+      el('div', 'why', r.reason), el('div', 'when', when(r.t)));
+    li.append(what, el('span', 'amt ' + (r.delta >= 0 ? 'plus' : 'minus'),
+      (r.delta >= 0 ? '+' : '−') + Math.abs(r.delta)));
+    return li;
+  }
+
+  function drawLists(){
+    const ledger = Tokens.ledger().slice().reverse();     /* newest first */
+    pending.textContent = '';
+    history.textContent = '';
+    const open = ledger.filter(r => r.kind === 'redeem' && r.status === 'pending');
+    open.forEach(r => pending.append(redeemRow(r, true)));
+    pendingNone.hidden = open.length > 0;
+    const past = ledger.filter(r => r.kind === 'adjust' || r.status === 'fulfilled');
+    past.forEach(r => history.append(r.kind === 'adjust' ? adjustRow(r) : redeemRow(r, false)));
+    historyNone.hidden = past.length > 0;
+  }
+
+  function drawAll(){ drawStats(); drawLists(); }
+
+  /* ---------------- adjust ---------------- */
+  const dirAdd = document.getElementById('dirAdd');
+  const dirTake = document.getElementById('dirTake');
+  const amount = document.getElementById('amount');
+  const reason = document.getElementById('reason');
+  const msg = document.getElementById('msg');
+  let sign = 1;
+  function setDir(s){
+    sign = s;
+    dirAdd.setAttribute('aria-pressed', String(s > 0));
+    dirTake.setAttribute('aria-pressed', String(s < 0));
+  }
+  dirAdd.addEventListener('click', () => setDir(1));
+  dirTake.addEventListener('click', () => setDir(-1));
+
+  document.getElementById('adjust').addEventListener('submit', e => {
+    e.preventDefault();
+    msg.className = 'msg';
+    const n = Math.floor(Number(amount.value));
+    const why = reason.value.trim();
+    if (!Number.isFinite(n) || n < 1){ msg.textContent = 'How many? A whole number, one or more.'; amount.focus(); return; }
+    if (!why){ msg.textContent = 'A reason is required. One line is plenty.'; reason.focus(); return; }
+    const rec = Tokens.adjust(sign * n, why);
+    if (!rec){ msg.textContent = 'That did not go through.'; return; }
+    msg.className = 'msg ok';
+    msg.textContent = (rec.delta >= 0 ? 'Added ' : 'Took back ') + Math.abs(rec.delta)
+      + (Math.abs(rec.delta) !== n ? ' (the balance cannot go below zero)' : '')
+      + '. Balance is now ' + Tokens.balance() + '.';
+    amount.value = '';
+    reason.value = '';
+    drawAll();
+  });
+
+  drawAll();
+  Tokens.onChange(drawAll);
+})();
+</script>
+</body>
+</html>

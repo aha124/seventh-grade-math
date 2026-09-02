@@ -272,6 +272,7 @@ details.log[open] summary::before{content:"▾ ";color:var(--ice)}
   <p class="foot">Answers are checked, never shown. Every problem here divides evenly and every step lands on a whole number, so a fraction means a step went out of order.</p>
 </main>
 
+<script src="../shared/tokens.js"></script>
 <script>
 /* ---------------- the expression model ----------------
    A token list, flat. Grouping is written down rather than nested, because
@@ -1121,6 +1122,7 @@ function finish(){
     steps: total, dec: decFirst, arith: arithFirst,
     wrong: wrong, hints: hintsUsed
   });
+  if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'order' });
   banner.className = 'banner show';
   banner.textContent = cleanRun
     ? 'Every step right, first try, no hints.'
@@ -1243,6 +1245,7 @@ function stopSpeed(ranOut){
     score: speedScore, seen: speedSeen, steps: speedSeen,
     dec: speedScore, arith: null, wrong: wrong, hints: 0
   });
+  if (isBest && window.Tokens) Tokens.earnBest('order:next');
   banner.className = 'banner show' + (isBest ? ' best' : '');
   banner.textContent = isBest
     ? speedScore + ' right first tap. That is a new best.'

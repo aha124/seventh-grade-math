@@ -17,7 +17,7 @@
 /* One section per lesson, newest first. The heading carries the lesson
    number and topic so a tile never has to say which lesson it belongs to. */
 .lesson{margin:2.1rem 0 0}
-.lesson-head{margin:0 0 .9rem;padding-bottom:.5rem;border-bottom:1.5px solid var(--line)}
+.lesson-head{margin:0;padding-bottom:.5rem;border-bottom:1.5px solid var(--line)}
 .lnum{
   display:block;
   font-family:var(--body);font-size:.72rem;font-weight:600;
@@ -30,12 +30,47 @@
   margin-top:.15rem;
 }
 
-/* The tile grid fills across as many columns as fit, so a third and a
-   fourth page in a lesson just drop in. Nothing here counts the tiles. */
+/* Five rows per lesson, one per school day. Each row is a label on the
+   left and that day's tiles on the right; below 640px the label sits
+   above the tiles instead. A day with no pages shows its note in the
+   tile slot, so the week keeps its shape. */
+.days{margin:0;padding:0;list-style:none}
+.day{
+  display:grid;grid-template-columns:1fr;gap:.55rem;
+  padding:.85rem 0;
+  border-bottom:1px solid var(--line);
+}
+@media (min-width:640px){
+  .day{grid-template-columns:11.5rem 1fr;gap:1.1rem;align-items:start}
+}
+.day-label{display:flex;flex-direction:column;gap:.1rem;padding-top:.15rem}
+.dnum{
+  font-family:var(--body);font-size:.72rem;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--edge);
+}
+.dname{
+  font-family:var(--display);font-weight:600;
+  font-size:1.25rem;line-height:1.15;color:var(--board);
+}
+.day.empty .dnum{color:#7C93A5}
+.day.empty .dname{color:var(--board-soft)}
+.day-note{
+  display:flex;align-items:center;
+  margin:0;min-height:2.4rem;
+  font-size:.98rem;color:var(--board-soft);
+}
+.day-note::before{
+  content:"";flex:0 0 auto;
+  width:.55rem;height:.55rem;margin-right:.7rem;
+  border-radius:50%;border:1.5px solid var(--line);background:var(--rink);
+}
+
+/* The tile grid fills across as many columns as fit, so a third page on
+   a day just drops in. Nothing here counts the tiles. */
 .tiles{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));
-  gap:.9rem;
+  grid-template-columns:repeat(auto-fill,minmax(13.5rem,1fr));
+  gap:.65rem;
   margin:0;
   padding:0;
   list-style:none;
@@ -47,24 +82,46 @@
   border:1.5px solid var(--line);
   border-left:5px solid var(--edge);
   border-radius:3px;
-  padding:1rem 1.1rem 1.1rem;
+  padding:.7rem .9rem .75rem;
   text-decoration:none;color:inherit;
   box-shadow:0 2px 0 rgba(16,36,58,.09);
 }
 .tile:hover,.tile:focus-visible{border-left-color:var(--gold);background:#FBFDFE}
 .tile h3{
   font-family:var(--display);font-weight:700;
-  font-size:1.7rem;line-height:1.05;letter-spacing:.01em;
-  margin:0 0 .45rem;color:var(--board);
+  font-size:1.35rem;line-height:1.05;letter-spacing:.01em;
+  margin:0 0 .3rem;color:var(--board);
 }
-.tile p{margin:0;font-size:1rem;color:var(--board-soft)}
+.tile p{margin:0;font-size:.92rem;line-height:1.4;color:var(--board-soft)}
 .tile .go{
-  margin-top:auto;padding-top:.8rem;
-  font-family:var(--display);font-size:1.1rem;font-weight:600;color:var(--edge);
+  margin-top:auto;padding-top:.55rem;
+  font-family:var(--display);font-size:1.02rem;font-weight:600;color:var(--edge);
 }
+
+/* The one row that is not a lesson: the shop. Warmer than the tiles on
+   purpose, so it reads as the reward and not as more work. */
+.counter{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  margin:1.4rem 0 0;padding:.85rem 1.1rem;min-height:44px;
+  background:linear-gradient(135deg,#FFF7E6,#FBEBCB);
+  border:1.5px solid #E9CF93;border-left:5px solid var(--gold);border-radius:6px;
+  text-decoration:none;color:var(--board);
+  box-shadow:0 2px 0 rgba(120,75,10,.12);
+}
+.counter:hover,.counter:focus-visible{background:linear-gradient(135deg,#FFFBF1,#FCF0D6)}
+.counter-coin{
+  flex:0 0 auto;width:2.4rem;height:2.4rem;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#FFE7A8 0,#E9B84C 45%,#B77A1E 100%);
+  box-shadow:inset 0 0 0 .28rem rgba(120,75,10,.3),0 2px 0 rgba(0,0,0,.2);
+}
+.counter-text{display:flex;flex-direction:column;flex:1 1 12rem;min-width:0}
+.counter-name{font-family:var(--display);font-weight:700;font-size:1.45rem;line-height:1.05}
+.counter-sub{font-size:.92rem;color:#7A5A22}
+.counter-go{font-family:var(--display);font-size:1.05rem;font-weight:600;color:#8A5F1E;white-space:nowrap}
 
 .nolist{margin:1.6rem 0 0;color:var(--board-soft)}
 .foot{margin:2.4rem 0 0;padding-top:1rem;border-top:1.5px solid var(--line);font-size:.95rem;color:#7C93A5;max-width:56ch}
+.foot-link{display:inline-block;min-height:44px;line-height:44px;margin-top:-.4rem;color:var(--edge);font-weight:600}
 </style>
 </head>
 <body>
@@ -79,13 +136,23 @@
 <main class="wrap">
   <p class="lede">Pick the one you want to work on. You can come back to any of them as many times as you like.</p>
 
+  <a class="counter" href="shop.html">
+    <span class="counter-coin" aria-hidden="true"></span>
+    <span class="counter-text">
+      <span class="counter-name">Prize counter</span>
+      <span class="counter-sub">Every solve earns tokens. Spend them here.</span>
+    </span>
+    <span class="counter-go">Open the shop →</span>
+  </a>
+
   <div id="lessons">
     <p class="nolist">The list could not load. Open <code>index.html</code> from the folder that holds <code>site.js</code>.</p>
   </div>
 
-  <p class="foot">Everything here runs in the browser. Nothing you type gets sent anywhere.</p>
+  <p class="foot">Everything here runs in the browser. Nothing you type gets sent anywhere. <a class="foot-link" href="grown-ups.html">Grown-ups</a></p>
 </main>
 
+<script src="shared/tokens.js"></script>
 <script src="site.js"></script>
 <script>
 /* Builds the list from LESSONS in site.js. If that file is missing the
@@ -93,6 +160,55 @@
 (function(){
   const host = document.getElementById('lessons');
   if (typeof LESSONS === 'undefined' || !Array.isArray(LESSONS)) return;
+
+  function tileFor(page){
+    const item = document.createElement('li');
+    const tile = document.createElement('a');
+    tile.className = 'tile';
+    tile.href = page.href;
+
+    const name = document.createElement('h3');
+    name.textContent = page.name;
+    const blurb = document.createElement('p');
+    blurb.textContent = page.blurb;
+    const go = document.createElement('span');
+    go.className = 'go';
+    go.textContent = (page.cta || 'Open') + ' →';
+
+    tile.append(name, blurb, go);
+    item.append(tile);
+    return item;
+  }
+
+  function rowFor(day){
+    const pages = Array.isArray(day.pages) ? day.pages : [];
+    const row = document.createElement('li');
+    row.className = 'day' + (pages.length ? '' : ' empty');
+
+    const label = document.createElement('div');
+    label.className = 'day-label';
+    const num = document.createElement('span');
+    num.className = 'dnum';
+    num.textContent = 'Day ' + day.d;
+    const name = document.createElement('span');
+    name.className = 'dname';
+    name.textContent = day.name;
+    label.append(num, name);
+    row.append(label);
+
+    if (pages.length){
+      const list = document.createElement('ul');
+      list.className = 'tiles';
+      pages.forEach(page => list.append(tileFor(page)));
+      row.append(list);
+    } else {
+      const note = document.createElement('p');
+      note.className = 'day-note';
+      note.textContent = day.note || 'Nothing on the site for this day.';
+      row.append(note);
+    }
+    return row;
+  }
 
   const frag = document.createDocumentFragment();
 
@@ -110,29 +226,11 @@
     title.textContent = lesson.title;
     head.append(num, title);
 
-    const list = document.createElement('ul');
-    list.className = 'tiles';
+    const days = document.createElement('ol');
+    days.className = 'days';
+    [...(lesson.days || [])].sort((a, b) => a.d - b.d).forEach(day => days.append(rowFor(day)));
 
-    (lesson.pages || []).forEach(page => {
-      const item = document.createElement('li');
-      const tile = document.createElement('a');
-      tile.className = 'tile';
-      tile.href = page.href;
-
-      const name = document.createElement('h3');
-      name.textContent = page.name;
-      const blurb = document.createElement('p');
-      blurb.textContent = page.blurb;
-      const go = document.createElement('span');
-      go.className = 'go';
-      go.textContent = (page.cta || 'Open') + ' →';
-
-      tile.append(name, blurb, go);
-      item.append(tile);
-      list.append(item);
-    });
-
-    section.append(head, list);
+    section.append(head, days);
     frag.append(section);
   });
 

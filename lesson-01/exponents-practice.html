@@ -216,6 +216,7 @@ details.log[open] summary::before{content:"▾ ";color:var(--ice)}
   <p class="foot">Answers are checked, never shown. Extra zeros and spaces do not matter: 125, 125.0 and 0125 all count as the same answer.</p>
 </main>
 
+<script src="../shared/tokens.js"></script>
 <script>
 /* ---------------- saved progress ----------------
    Its own key, so the mean/median/mode/range page is untouched. Best is
@@ -642,6 +643,7 @@ function checkAll(){
     t: Date.now(), mode: problem.mode, problem: problem.label,
     first: !missed, hints: hintsUsed
   });
+  if (window.Tokens) Tokens.earnSolve({ clean: !missed && hintsUsed === 0, source: 'exponents' });
   banner.className = 'banner show';
   banner.textContent = (!missed && hintsUsed === 0)
     ? 'Right, first try, no hints.'
@@ -761,6 +763,7 @@ function stopSpeed(ranOut){
     problem: SPEED_SECONDS + ' second round',
     score: speedScore, seen: speedSeen, first: null, hints: 0
   });
+  if (isBest && window.Tokens) Tokens.earnBest('exponents:speed');
   banner.className = 'banner show' + (isBest ? ' best' : '');
   banner.textContent = isBest
     ? speedScore + ' correct. That is a new best.'

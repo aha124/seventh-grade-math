@@ -147,3 +147,53 @@ body{
 .btn:disabled{opacity:.35;cursor:default}
 
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ---- tokens: the balance chip and the +N toast ----
+   Both are built by shared/tokens.js. The chip sits at the right end of
+   the back-link line; on a page with no back link the script makes a
+   line just for it. */
+.board-nav{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.board-nav.chip-only{justify-content:flex-end}
+.coin{
+  display:inline-block;width:1.05em;height:1.05em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#FFE7A8 0,#E9B84C 45%,#B77A1E 100%);
+  box-shadow:inset 0 0 0 .13em rgba(120,75,10,.35),0 1px 0 rgba(0,0,0,.25);
+  vertical-align:-.15em;flex:0 0 auto;
+}
+.coin-chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  min-height:44px;padding:0 .8rem 0 .65rem;
+  border:1.5px solid rgba(143,196,224,.45);border-radius:999px;
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.03em;
+  color:var(--rink);text-decoration:none;-webkit-tap-highlight-color:transparent;
+  font-variant-numeric:tabular-nums;
+}
+.coin-chip .coin{font-size:1.1rem}
+.coin-chip .coin-n{font-weight:700;font-size:1.2rem;color:#FFE7A8}
+.coin-chip .coin-word{font-family:var(--body);font-size:.82rem;font-weight:500;color:var(--ice);letter-spacing:.02em}
+.coin-chip:hover,.coin-chip:focus-visible{border-color:var(--gold);background:rgba(192,134,43,.12)}
+.coin-chip.bump{animation:coin-bump .5s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes coin-bump{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+.coin-toast{
+  position:fixed;left:50%;bottom:max(1.1rem,env(safe-area-inset-bottom));z-index:50;
+  display:flex;align-items:center;gap:.55rem;
+  max-width:calc(100vw - 2rem);padding:.55rem .95rem .55rem .75rem;
+  background:var(--board);color:var(--rink);
+  border:1.5px solid var(--gold);border-radius:999px;
+  box-shadow:0 12px 28px rgba(16,36,58,.32);
+  font-family:var(--display);font-size:1.1rem;letter-spacing:.02em;
+  opacity:0;pointer-events:none;
+  transform:translate(-50%,1.2rem) scale(.92);
+  transition:opacity .22s ease,transform .32s cubic-bezier(.2,.9,.3,1.3);
+}
+.coin-toast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.coin-toast .coin{font-size:1.25rem}
+.coin-toast .plus{font-size:1.45rem;font-weight:700;color:#FFE7A8}
+.coin-toast .why{font-family:var(--body);font-size:.92rem;font-weight:500}
+.coin-toast .bal{font-family:var(--body);font-size:.88rem;color:var(--ice);padding-left:.4rem;border-left:1px solid rgba(143,196,224,.4)}
+.coin-toast.quiet{border-color:rgba(143,196,224,.5);font-family:var(--body);font-size:.92rem;font-weight:500;padding:.6rem 1rem}
+@media (prefers-reduced-motion:reduce){
+  .coin-toast{transition:opacity .15s ease;transform:translate(-50%,0)}
+  .coin-chip.bump{animation:none}
+}

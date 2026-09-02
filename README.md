@@ -29,7 +29,7 @@ system faces and everything still works.
 
 ```
 index.html               hub; builds its list from site.js at load
-site.js                  the registry: every lesson and page is one entry here
+site.js                  the registry: every lesson, its five days, and their pages
 lesson-01/cards.html     guided card sorting for mean, median, mode, range
 lesson-01/practice.html  generated practice problems with hints and checking
 lesson-01/exponents.html an exponent to build a tile at a time, not graded
@@ -70,8 +70,12 @@ edit: `index.html` renders whatever is in that array.
 5. If the page saves progress, give it its own key under the same
    namespace (`seventh-grade-math:<name>`), and keep every localStorage
    call inside a `try`/`catch` so the page still works with storage off.
-6. Register it in `site.js`. Add to an existing lesson's `pages`, or push
-   a new `{ n, title, pages }` object. Order does not matter; the hub
-   sorts on `n` and shows the newest lesson first.
+6. Register it in `site.js`. Every lesson is five days (three teaching
+   days, a review day, a test day) and each day has its own `pages`
+   array, so add the page to the day it belongs to. A new lesson is a
+   new `{ n, title, days }` object with all five days written out; a day
+   with no pages carries a `note` instead, and the hub shows that note
+   in the row. Lesson order does not matter; the hub sorts on `n` and
+   shows the newest lesson first.
 7. Open `index.html` from the filesystem, click into the new page, and
    click the back link to make sure the relative paths are right.

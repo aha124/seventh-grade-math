@@ -97,5 +97,53 @@ const LESSONS = [
         note: "The test is on paper. Good luck."
       }
     ]
+  },
+  {
+    n: 2,
+    title: "Lowest common denominator; adding and subtracting fractions and mixed numbers",
+    days: [
+      {
+        d: 1,
+        name: "Adding and subtracting fractions",
+        pages: [
+          {
+            href: "lesson-02/bars.html",
+            name: "Make them match",
+            blurb: "Two fraction bars, one above the other. Split them until the cut lines line up, then watch the adding happen by counting. Five worked pairs, mixed numbers last.",
+            cta: "Start matching"
+          },
+          {
+            href: "lesson-02/fractions-practice.html",
+            name: "Same language",
+            blurb: "Generated add and subtract problems with scratch bars underneath, graded in lowest terms. Or run the 60 second round: two denominators, type the lowest common one.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 2,
+        name: "Coming up",
+        pages: [],
+        note: "Nothing on the site yet. Add this day's pages here once the book's next topic is set; the fraction input from day 1 is ready for them."
+      },
+      {
+        d: 3,
+        name: "Coming up",
+        pages: [],
+        note: "Nothing on the site yet. Same as day 2: register the pages here when they exist."
+      },
+      {
+        d: 4,
+        name: "Review day",
+        pages: [],
+        note: "Workbook day. The Match it round on Same language makes a good two-minute warm-up."
+      },
+      {
+        d: 5,
+        name: "Test day",
+        pages: [],
+        note: "The test is on paper. Lowest terms and mixed numbers, every answer."
+      }
+    ]
   }
 ];

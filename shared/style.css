@@ -197,3 +197,31 @@ body{
   .coin-toast{transition:opacity .15s ease;transform:translate(-50%,0)}
   .coin-chip.bump{animation:none}
 }
+
+/* ---- fraction input (shared/fraction-input.js) ----
+   Top box over bottom box with a real bar between, and a whole-number box
+   to the left that the script shows only for mixed numbers. Every box is
+   a 44px target; the whole box stretches to the height of the stack so
+   the group reads as one number. */
+.frac-input{display:inline-flex;align-items:stretch;gap:.5rem;vertical-align:middle}
+.frac-input input{
+  width:3.3rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.5rem;
+  border:1.5px solid var(--edge);border-radius:3px;padding:.1rem .2rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.frac-input .fi-whole{width:3.5rem;font-size:1.9rem}
+.frac-input .fi-whole[hidden]{display:none}
+.fi-stack{display:flex;flex-direction:column;align-items:stretch;gap:.3rem}
+.fi-bar{height:3px;background:var(--board);border-radius:2px}
+.frac-input.miss input{border-color:var(--gold);background:#FBF0DF}
+.frac-input.slip input{border-color:var(--gold);background:#FFF8E8}
+.frac-input.ok input{border-color:var(--good);background:#EEF7F1}
+.frac-input.off input{opacity:.5}
+@keyframes frac-shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.frac-input.shake{animation:frac-shake .38s ease-in-out}
+@media (prefers-reduced-motion:reduce){ .frac-input.shake{animation:none} }

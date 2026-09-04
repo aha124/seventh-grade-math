@@ -36,10 +36,13 @@ lesson-01/exponents.html an exponent to build a tile at a time, not graded
 lesson-01/exponents-practice.html   graded powers drill, three modes
 lesson-01/order-lesson.html         order of operations, three worked examples
 lesson-01/order-practice.html       graded order of operations, two modes
+lesson-02/bars.html      fraction bars: split until they match, then add by counting
+lesson-02/fractions-practice.html   graded adding and subtracting, plus the LCD speed round
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares
 shared/tokens.js         earning, balance, the masthead chip, the +N toast
+shared/fraction-input.js exact fractions (Rational) and the stacked fraction input
 shared/items.js          the shop's stock, one object per item
 vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```
@@ -54,6 +57,24 @@ Card geometry is exposed as custom properties (`--card-w`, `--card-h`,
 drag code measures one slot width from the gap between the first two
 cards, so a row of cards must never wrap to a second line. If a page shows
 more cards, tighten those clamps rather than letting the rail wrap.
+
+## Fractions
+
+`shared/fraction-input.js` is the second shared script, loaded the same
+way as `tokens.js`, on the pages that deal in fractions. It exposes two
+things. `Rational` is exact fraction arithmetic with integers only
+(`gcd`, `lcm`, `make`, `add`, `sub`, `cmp`, `eq`, `isReduced`,
+`toMixed`, `fromParts`, `text`); no decimal ever enters it, and
+`Rational.selfCheck()` runs its unit cases so every page that loads it
+can refuse to drill if one fails. `FractionInput.create()` is the entry
+control: a top box over a bottom box with a real bar between, plus a
+whole-number box for mixed numbers. It reports exactly what was typed,
+unreduced, so a page can tell `2/4` from `1/2` and say so. Its styles
+live in `shared/style.css` under "fraction input".
+
+The fraction bars on the two lesson 2 pages are not shared; each page
+draws its own, because the lesson page animates cells flying and
+draining and the practice page only needs splitting.
 
 ## Tokens
 

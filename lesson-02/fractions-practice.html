@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Same Language — Adding and Subtracting Fractions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+  --bar-h:clamp(30px,8vw,42px);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+.tierline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.tierline b{color:var(--board);font-weight:700}
+.tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+/* ---- inline stacked fractions ---- */
+.fx{display:inline-flex;align-items:center;gap:.18em;vertical-align:middle;font-family:var(--display);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.fx-s{display:inline-flex;flex-direction:column;align-items:center;font-size:.82em}
+.fx-n{padding:0 .22em .1em}
+.fx-d{padding:.1em .22em 0;border-top:2px solid currentColor}
+
+/* ---- the problem ---- */
+.problem{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:1rem .6rem;min-height:5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,7vw,2.6rem);color:var(--board);
+}
+.problem .op{color:var(--gold)}
+.problem .q{color:#93A9B8;font-weight:600}
+
+/* ---- the two bars, scratch work ---- */
+.stack{
+  display:grid;grid-template-columns:auto 1fr;gap:.35rem .6rem;align-items:center;
+  margin:.6rem 0 0;padding:.8rem 1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.stack-note{grid-column:1 / -1;margin:0;font-size:.85rem;color:#7C93A5}
+.frac-line{grid-column:1 / -1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-family:var(--display);font-size:1.2rem;font-weight:600;color:var(--board-soft);min-height:1.4em}
+.frac-line .fx{color:var(--board);font-size:1.3rem}
+.frac-line .eq{color:#7C93A5;font-weight:500}
+.wholes{display:flex;gap:.3rem;align-items:center;min-width:0}
+.whole{width:var(--bar-h);height:var(--bar-h);flex:0 0 auto;background:var(--edge);border:2px solid var(--board);border-radius:2px}
+.fbar{position:relative;height:var(--bar-h);border:2px solid var(--board);border-radius:2px;background:var(--paper);overflow:hidden;min-width:0}
+.fbar .cells{display:flex;height:100%}
+.fbar .cell{flex:1 1 0;min-width:0;background:transparent}
+.fbar .cell.filled{background:var(--edge)}
+.fbar .cuts{position:absolute;inset:0;pointer-events:none}
+.fbar .cut{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--board);transform-origin:50% 50%}
+.fbar .cut.new{animation:cutin .55s ease-out}
+@keyframes cutin{from{transform:scaleY(0);opacity:0}}
+.fbar .cut.pulse{animation:pulse 1s ease-out}
+@keyframes pulse{
+  0%{background:var(--gold);box-shadow:0 0 0 0 rgba(192,134,43,.7)}
+  55%{background:var(--gold);box-shadow:0 0 0 5px rgba(192,134,43,0)}
+  100%{background:var(--board)}
+}
+.controls{grid-column:1 / -1;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.chip{
+  font-family:var(--display);font-weight:600;font-size:1rem;letter-spacing:.02em;
+  min-height:44px;display:inline-flex;align-items:center;padding:0 .7rem;
+  border:1.5px solid var(--line);border-radius:999px;color:var(--board-soft);background:var(--rink);
+  transition:background .3s ease,border-color .3s ease,color .3s ease;
+}
+.chip.gold{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;box-shadow:inset 0 0 0 1px rgba(192,134,43,.35)}
+.splits{display:inline-flex;align-items:center;gap:.35rem;margin-left:auto}
+.splits-label{font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.split{
+  min-width:44px;min-height:44px;padding:0 .5rem;
+  font-family:var(--display);font-weight:600;font-size:1.1rem;
+  border:1.5px solid var(--edge);background:var(--paper);color:var(--edge);border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.split:disabled{opacity:.3;cursor:default}
+.opline{grid-column:1 / -1;font-family:var(--display);font-size:1.5rem;font-weight:700;color:var(--gold);line-height:1;padding:.1rem 0 0}
+@media (prefers-reduced-motion:reduce){ .fbar .cut.new,.fbar .cut.pulse{animation:none} }
+
+/* ---- the answer ---- */
+.answer-row{
+  display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;
+  margin:.9rem 0 0;padding:.8rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.answer-row .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+/* ---- match it ---- */
+.pairbox{
+  display:flex;flex-direction:column;align-items:center;gap:.7rem;
+  margin:.5rem 0 0;padding:1.2rem .8rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.pairbox .dens{font-family:var(--display);font-weight:700;font-size:clamp(2rem,9vw,3.2rem);color:var(--board);line-height:1;font-variant-numeric:tabular-nums}
+.pairbox .dens .and{font-size:.5em;color:#93A9B8;font-weight:600;margin:0 .3em}
+.pairbox .prompt{font-family:var(--body);font-size:.95rem;color:#7C93A5;margin:0}
+.lcd-row{display:flex;align-items:center;gap:.5rem}
+.lcdbox{
+  width:5rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.8rem;
+  border:1.5px solid var(--gold);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.lcdbox.miss{background:#FBF0DF}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.lcdbox.shake{animation:shake .38s ease-in-out}
+@media (prefers-reduced-motion:reduce){ .lcdbox.shake{animation:none} }
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.slip{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.slip b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+
+.slip{
+  margin:0 0 .6rem;padding:.55rem .75rem;border-radius:2px;
+  background:#FFF8E8;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+.bottoms{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#F6FAFC;border-left:4px solid var(--line);
+  font-size:.95rem;color:var(--board-soft);
+}
+.bottoms b{color:var(--board);font-weight:600}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+/* a class that sets display beats the hidden attribute */
+.export-box[hidden]{display:none}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Same <span>Language</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div id="solveView">
+    <div class="tierline">
+      <span id="tierName"></span>
+      <span class="ask" id="ask"></span>
+    </div>
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="stack" id="stack" role="group" aria-label="Scratch bars"></div>
+    <div class="answer-row">
+      <span class="lab">Your answer</span>
+      <span id="answerHost"></span>
+      <button class="ok" id="check" type="button" aria-label="Check my answer">✓</button>
+    </div>
+  </div>
+
+  <div id="matchView" hidden>
+    <div class="pairbox">
+      <p class="prompt">Lowest common denominator of</p>
+      <div class="dens" id="dens" aria-live="polite">—</div>
+      <div class="lcd-row">
+        <input class="lcdbox" id="lcdBox" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Lowest common denominator" disabled>
+        <button class="ok" id="lcdOk" type="button" aria-label="Check" disabled>✓</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="slip" id="slip"></p>
+      <p class="bottoms" id="bottoms"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Correct, reduce-slip, or miss">Result</th>
+              <th scope="col" title="Times the answer was the tops and bottoms combined straight across">Bottoms</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. The bars are scratch paper: split them all you like, nothing there is graded. What is graded is the answer, in lowest terms, as a mixed number if it is more than one.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script src="../shared/fraction-input.js"></script>
+<script>
+const R = window.Rational;
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- printing fractions ---------------- */
+function fx(w, n, d){
+  const s = document.createElement('span');
+  s.className = 'fx';
+  if (w){
+    const ws = document.createElement('span');
+    ws.textContent = String(w);
+    s.append(ws);
+    if (n === 0) return s;
+  }
+  if (d === 1 && !w){ s.textContent = String(n); return s; }
+  const st = document.createElement('span');
+  st.className = 'fx-s';
+  const top = document.createElement('span');
+  top.className = 'fx-n';
+  top.textContent = String(n);
+  const bot = document.createElement('span');
+  bot.className = 'fx-d';
+  bot.textContent = String(d);
+  st.append(top, bot);
+  s.append(st);
+  return s;
+}
+const fxOf = m => fx(m.w, m.n, m.d);
+const plainText = m => R.text(R.fromParts(m.w, m.n, m.d));
+
+/* ---------------- the generator ----------------
+   Denominators come from the book's set, and a pair is only used when
+   its lowest common denominator is 24 or under, so every bar on the page
+   stays readable and every answer stays in the range she meets on paper.
+   Tier 0 is proper fractions only. Tier 1 brings in mixed numbers: at
+   least one operand carries a whole. Subtraction never goes negative,
+   and in tier 1 the first fraction part is never smaller than the
+   second, because borrowing has not been taught yet. The answer to every
+   problem comes out of the Rational helper, never from arithmetic here. */
+const DENS = [2, 3, 4, 5, 6, 8, 10, 12];
+const LCD_MAX = 24;
+const DEN_PAIRS = [];
+DENS.forEach(x => DENS.forEach(y => { if (x !== y && R.lcm(x, y) <= LCD_MAX) DEN_PAIRS.push([x, y]); }));
+const SAME_BOTTOM_ODDS = 0.08;   /* now and then the bottoms already match; the book has those too */
+const TIER_NAME = ['Fractions', 'Mixed numbers'];
+const PROMOTE_AT = 3;
+
+function makeProblem(tier){
+  for (let attempt = 0; attempt < 600; attempt++){
+    let pr = pick(DEN_PAIRS);
+    let d1 = pr[0], d2 = pr[1];
+    if (Math.random() < SAME_BOTTOM_ODDS) d2 = d1;
+    const op = Math.random() < 0.5 ? '+' : '−';
+    const n1 = rand(1, d1 - 1), n2 = rand(1, d2 - 1);
+    let w1 = 0, w2 = 0;
+    if (tier === 1){
+      const roll = Math.random();
+      if (roll < 0.6){ w1 = rand(1, 4); w2 = rand(1, 3); }
+      else if (roll < 0.85){ w1 = rand(1, 4); }
+      else { w2 = rand(1, 3); }
+    }
+    let a = {w:w1, n:n1, d:d1}, b = {w:w2, n:n2, d:d2};
+    if (op === '−'){
+      /* larger first, so subtraction stays as common as addition instead
+         of being re-rolled away half the time; then the no-borrowing rule */
+      if (R.cmp(R.fromParts(a.w, a.n, a.d), R.fromParts(b.w, b.n, b.d)) < 0){ const t = a; a = b; b = t; }
+      const f1 = R.make(a.n, a.d), f2 = R.make(b.n, b.d);
+      if (tier === 0 && R.cmp(f1, f2) <= 0) continue;
+      if (tier === 1 && (a.w < b.w || R.cmp(f1, f2) < 0)) continue;
+    }
+    const ra = R.fromParts(a.w, a.n, a.d), rb = R.fromParts(b.w, b.n, b.d);
+    const answer = op === '+' ? R.add(ra, rb) : R.sub(ra, rb);
+    if (!answer || answer.n <= 0) continue;
+    return {a, b, op, answer, lcd: R.lcm(a.d, b.d), tier,
+            text: plainText(a) + ' ' + op + ' ' + plainText(b)};
+  }
+  const a = {w:0, n:1, d:2}, b = {w:0, n:1, d:4};
+  return {a, b, op:'+', answer:R.make(3, 4), lcd:4, tier:0, text:'1/2 + 1/4'};
+}
+
+/* The answer you get by combining tops and bottoms straight across. If
+   her wrong answer equals this, that is the error this lesson exists to
+   stop, and it gets named. */
+function straightAcross(p){
+  const s = p.op === '+' ? 1 : -1;
+  const out = [];
+  const n = p.a.n + s * p.b.n, w = p.a.w + s * p.b.w;
+  const d = p.a.d + s * p.b.d;
+  if (d > 0) out.push(R.fromParts(w, n, d));
+  if (p.op === '−' && p.a.d !== p.b.d) out.push(R.fromParts(w, n, Math.abs(p.a.d - p.b.d)));
+  return out.filter(r => r && r.n > 0);
+}
+
+/* ---------------- saved progress ---------------- */
+const STORE_KEY = 'seventh-grade-math:fractions';
+let solved = 0, clean = 0, best = 0;
+
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.solved)) solved = Math.max(0, Math.floor(saved.solved));
+    if (Number.isFinite(saved.clean))  clean  = Math.max(0, Math.floor(saved.clean));
+    if (Number.isFinite(saved.best))   best   = Math.max(0, Math.floor(saved.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+function saveProgress(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({solved, clean, best})); }
+  catch (e) { /* nothing to do; the numbers stay in memory for this visit */ }
+}
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally(); drawSpeedBar(); clearLog();
+}
+function drawTally(){
+  document.getElementById('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   Same shape and the same 200 cap as the other practice pages, under its
+   own key. A solve record carries its outcome (correct, slip, or miss),
+   how many misses and reduce-slips it took, how many of the misses were
+   the tops-and-bottoms-straight-across answer, and the hints used. */
+const LOG_KEY = 'seventh-grade-math:fractions-log';
+const LOG_CAP = 200;
+const LOG_SHOWN = 20;
+const MODE_LABEL = {solve:'Solve it', match:'Match it'};
+const OUTCOME_LABEL = {correct:'Correct', slip:'Reduce-slip', miss:'Miss'};
+let log = [];
+
+function validRecord(r){
+  return r && typeof r === 'object'
+    && typeof r.t === 'number' && isFinite(r.t)
+    && typeof r.mode === 'string'
+    && typeof r.problem === 'string';
+}
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+function saveLog(){
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); }
+  catch (e) { /* full or switched off; the log stays in memory for this visit */ }
+}
+function clearLog(){
+  log = [];
+  try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+  drawLog();
+}
+function pushRecord(rec){
+  log.push(rec);
+  if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+  saveLog();
+  drawLog();
+}
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'})
+      + ', ' + d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  } catch (e) { return ''; }
+}
+
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const slip = document.getElementById('slip');
+  const bottoms = document.getElementById('bottoms');
+  const empty = document.getElementById('logEmpty');
+  const scroll = document.querySelector('.log-scroll');
+
+  rows.textContent = '';
+  accuracy.textContent = '';
+  slip.textContent = '';
+  bottoms.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  empty.hidden = log.length > 0;
+  scroll.hidden = log.length === 0;
+  slip.hidden = log.length === 0;
+  bottoms.hidden = log.length === 0;
+  if (!log.length) return;
+
+  const solves = log.filter(r => r.mode === 'solve');
+  const nCorrect = solves.filter(r => r.outcome === 'correct').length;
+  const nSlip = solves.filter(r => r.outcome === 'slip').length;
+  const nMiss = solves.filter(r => r.outcome === 'miss').length;
+  const slipTotal = solves.reduce((n, r) => n + (Number(r.slips) || 0), 0);
+  const bottomsTotal = solves.reduce((n, r) => n + (Number(r.bottoms) || 0), 0);
+  const chip = (label, value, loud) => {
+    const li = document.createElement('li');
+    if (loud) li.className = 'loud';
+    const b = document.createElement('b');
+    b.textContent = String(value);
+    li.append(label + ' ', b);
+    accuracy.append(li);
+  };
+  if (solves.length){
+    chip('Correct', nCorrect + ' of ' + solves.length);
+    chip('Reduce-slips', nSlip, true);
+    chip('Misses', nMiss);
+    chip('Added the bottoms', bottomsTotal);
+  }
+  const rounds = log.filter(r => r.mode === 'match');
+  if (rounds.length) chip('Best match', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+
+  /* the two lines the other practice pages do not have */
+  if (!solves.length){
+    slip.textContent = 'No Solve it problems logged yet.';
+    bottoms.hidden = true;
+  } else if (!slipTotal){
+    const lead = document.createElement('b');
+    lead.textContent = 'No reduce-slips.';
+    slip.append(lead, ' Right amount and finished form, every time so far. That is the part a test quietly docks.');
+  } else {
+    const lead = document.createElement('b');
+    lead.textContent = 'Reduce-slips: ' + nSlip + ' of ' + solves.length + (solves.length === 1 ? ' problem.' : ' problems.');
+    slip.append(lead, ' The amount was right but the form was not finished: not lowest terms, or an improper fraction '
+      + 'where a mixed number was wanted. A test docks those even though the math was right, so finish every answer. '
+      + '(' + slipTotal + (slipTotal === 1 ? ' slip' : ' slips') + ' in all.)');
+  }
+  if (solves.length){
+    const lead = document.createElement('b');
+    if (!bottomsTotal){
+      lead.textContent = 'Never added the bottoms.';
+      bottoms.append(lead, ' That is the one error this lesson exists to stop, and it has not shown up.');
+    } else {
+      lead.textContent = 'Added the bottoms ' + bottomsTotal + (bottomsTotal === 1 ? ' time.' : ' times.');
+      bottoms.append(lead, ' The bottom is the size of the pieces. It never gets added; it gets matched.');
+    }
+  }
+
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = text => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+
+    const res = document.createElement('td');
+    const s = document.createElement('span');
+    if (r.mode === 'match'){
+      s.className = 'score';
+      s.textContent = (Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0);
+    } else {
+      s.className = r.outcome === 'correct' ? 'yes' : (r.outcome === 'slip' ? 'slipc' : 'no');
+      s.textContent = OUTCOME_LABEL[r.outcome] || String(r.outcome);
+      const extra = [];
+      if (Number(r.misses)) extra.push(r.misses + (r.misses === 1 ? ' miss' : ' misses'));
+      if (Number(r.slips)) extra.push(r.slips + (r.slips === 1 ? ' slip' : ' slips'));
+      if (extra.length) s.textContent += ' (' + extra.join(', ') + ')';
+    }
+    res.append(s);
+    tr.append(res);
+
+    const bt = document.createElement('td');
+    const bs = document.createElement('span');
+    if (r.mode === 'match'){ bs.className = 'none'; bs.textContent = '—'; }
+    else if (Number(r.bottoms)){ bs.className = 'no'; bs.textContent = String(r.bottoms); }
+    else { bs.className = 'none'; bs.textContent = 'none'; }
+    bt.append(bs);
+    tr.append(bt);
+
+    const hints = document.createElement('td');
+    const used = Number(r.hints) || 0;
+    if (used){
+      const h = document.createElement('span');
+      h.className = 'hints';
+      h.textContent = '+' + used;
+      hints.append(h);
+    }
+    tr.append(hints);
+    rows.append(tr);
+  });
+}
+
+/* ---------------- export ---------------- */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- page state ---------------- */
+const sayEl     = document.getElementById('say');
+const banner    = document.getElementById('banner');
+const hintBtn   = document.getElementById('hint');
+const nextBtn   = document.getElementById('next');
+const checkBtn  = document.getElementById('check');
+const speedBar  = document.getElementById('speedBar');
+const problemEl = document.getElementById('problem');
+const stack     = document.getElementById('stack');
+const solveView = document.getElementById('solveView');
+const matchView = document.getElementById('matchView');
+
+let mode = 'solve';
+let problem = null, A = null, B = null, stage = 'idle';   /* idle | open | done */
+let tier = 0, streak = 0;
+let misses = 0, slips = 0, bottomsHit = 0, hintsUsed = 0;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+const input = FractionInput.create({ mixed:true, label:'Your answer', onEnter: () => check() });
+document.getElementById('answerHost').append(input.el);
+
+/* ---------------- the scratch bars ----------------
+   Same picture as the lesson page: two bars at equal width, split
+   buttons under each, gold chips when the cell sizes match. Nothing here
+   is graded; it is the paper she works on. */
+const SPLITS = [2, 3, 5];
+const MAX_CELLS = 60;
+const els = {a:{}, b:{}};
+
+function buildStack(){
+  stack.textContent = '';
+  const note = document.createElement('p');
+  note.className = 'stack-note';
+  note.textContent = 'Scratch work. Split until the cut lines line up; none of this is graded.';
+  stack.append(note);
+  ['a', 'b'].forEach((side, idx) => {
+    const e = els[side];
+    e.line = document.createElement('div'); e.line.className = 'frac-line';
+    e.wholes = document.createElement('div'); e.wholes.className = 'wholes';
+    e.bar = document.createElement('div'); e.bar.className = 'fbar'; e.bar.setAttribute('role', 'img');
+    e.controls = document.createElement('div'); e.controls.className = 'controls';
+    e.chip = document.createElement('span'); e.chip.className = 'chip';
+    const splits = document.createElement('span'); splits.className = 'splits';
+    const lab = document.createElement('span'); lab.className = 'splits-label'; lab.textContent = 'split';
+    splits.append(lab);
+    e.splits = [];
+    SPLITS.forEach(k => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'split';
+      b.textContent = '×' + k;
+      b.setAttribute('aria-label', 'Cut every piece of the ' + (side === 'a' ? 'first' : 'second') + ' bar into ' + k);
+      b.onclick = () => split(side, k);
+      e.splits.push(b);
+      splits.append(b);
+    });
+    e.controls.append(e.chip, splits);
+    if (idx === 1){
+      const op = document.createElement('div');
+      op.className = 'opline';
+      op.textContent = problem.op;
+      stack.append(op);
+    }
+    stack.append(e.line, e.wholes, e.bar, e.controls);
+  });
+}
+function drawBar(side, newK){
+  const e = els[side], m = side === 'a' ? A : B;
+  e.bar.textContent = '';
+  const cells = document.createElement('div');
+  cells.className = 'cells';
+  for (let i = 0; i < m.d; i++){
+    const c = document.createElement('span');
+    c.className = 'cell' + (i < m.n ? ' filled' : '');
+    cells.append(c);
+  }
+  const cuts = document.createElement('div');
+  cuts.className = 'cuts';
+  for (let j = 1; j < m.d; j++){
+    const c = document.createElement('i');
+    c.className = 'cut' + (newK && j % newK !== 0 ? ' new' : '');
+    c.style.left = (100 * j / m.d) + '%';
+    cuts.append(c);
+  }
+  e.bar.append(cells, cuts);
+  e.bar.setAttribute('aria-label', m.n + ' of ' + m.d + ' cells filled');
+}
+function drawSide(side, newK){
+  const e = els[side], m = side === 'a' ? A : B, o = problem[side];
+  e.line.textContent = '';
+  e.line.append(fxOf(o));
+  if (m.d !== o.d){
+    const eq = document.createElement('span');
+    eq.className = 'eq';
+    eq.textContent = '=';
+    e.line.append(eq, fxOf(m));
+  }
+  e.wholes.textContent = '';
+  for (let i = 0; i < m.w; i++){
+    const s = document.createElement('span');
+    s.className = 'whole';
+    e.wholes.append(s);
+  }
+  drawBar(side, newK);
+  e.chip.textContent = R.pieceName(m.d);
+  e.chip.classList.toggle('gold', A.d === B.d);
+  e.splits.forEach((b, i) => { b.disabled = stage === 'done' || m.d * SPLITS[i] > MAX_CELLS; });
+}
+function split(side, k){
+  if (stage !== 'open') return;
+  const m = side === 'a' ? A : B;
+  if (m.d * k > MAX_CELLS) return;
+  m.n *= k; m.d *= k;
+  drawSide(side, k);
+  if (A.d === B.d){
+    drawSide(side === 'a' ? 'b' : 'a');
+    ['a', 'b'].forEach(s => els[s].bar.querySelectorAll('.cut').forEach(c => { c.classList.remove('new'); void c.offsetWidth; c.classList.add('pulse'); }));
+  }
+}
+
+/* ---------------- a problem ---------------- */
+function drawProblem(){
+  problemEl.textContent = '';
+  const op = document.createElement('span');
+  op.className = 'op';
+  op.textContent = problem.op;
+  const q = document.createElement('span');
+  q.className = 'q';
+  q.textContent = '= ?';
+  problemEl.append(fxOf(problem.a), op, fxOf(problem.b), q);
+  problemEl.setAttribute('aria-label', problem.text.replace('−', 'minus').replace('+', 'plus'));
+  const tn = document.getElementById('tierName');
+  tn.textContent = '';
+  const b = document.createElement('b');
+  b.textContent = TIER_NAME[tier];
+  tn.append(b);
+  if (tier === 0) tn.append(' · ' + streak + ' of ' + PROMOTE_AT + ' clean toward mixed numbers');
+  document.getElementById('ask').textContent = stage === 'done' ? '' : 'Lowest terms. Mixed number if it is more than one.';
+}
+
+function newProblem(){ loadProblem(makeProblem(tier)); }
+function loadProblem(p){
+  problem = p;
+  A = Object.assign({}, problem.a);
+  B = Object.assign({}, problem.b);
+  stage = 'open';
+  misses = 0; slips = 0; bottomsHit = 0; hintsUsed = 0;
+  banner.className = 'banner';
+  hintBtn.disabled = false;
+  hintBtn.textContent = 'Hint';
+  checkBtn.disabled = false;
+  input.clear();
+  input.setDisabled(false);
+  buildStack();
+  drawSide('a'); drawSide('b');
+  drawProblem();
+  say('', 'Match the bottoms first.', 'Then the ' + (problem.op === '+' ? 'adding' : 'subtracting') + ' is just counting tops.');
+}
+
+/* ---------------- checking ----------------
+   Three outcomes, not two. Equal and finished is correct. Equal but not
+   finished (not lowest terms, or improper where a mixed number is wanted)
+   is a reduce-slip: named loudly, logged apart, never counted as a miss.
+   Not equal is a miss, and if the miss is the tops and bottoms combined
+   straight across it is named as exactly that. */
+function shakeInput(){
+  input.el.classList.remove('shake');
+  void input.el.offsetWidth;
+  input.el.classList.add('shake');
+  setTimeout(() => input.el.classList.remove('shake'), 420);
+}
+
+function check(){
+  if (mode !== 'solve' || stage !== 'open') return;
+  const v = input.value();
+  const C = problem.answer;
+  if (v.w === null && v.n === null && v.d === null){ say('', 'Type an answer first.'); return; }
+  if ((v.n === null) !== (v.d === null)){ say('', 'A fraction needs a top and a bottom.', 'For a whole number on its own, leave both fraction boxes empty.'); return; }
+  if (v.d === 0){ say('', 'The bottom cannot be 0.', 'Zero-sized pieces are not pieces.'); return; }
+  const E = input.rational();
+  if (!E) return;
+
+  if (!R.eq(E, C)){
+    misses++;
+    input.mark('miss');
+    shakeInput();
+    const sa = straightAcross(problem);
+    if (sa.some(r => R.eq(E, r))){
+      bottomsHit++;
+      say('bad', 'You ' + (problem.op === '+' ? 'added' : 'subtracted') + ' the bottoms.',
+        'The bottom is the size of the pieces; matching sizes is the whole job. Split the bars until the cut lines line up, then count only the tops.');
+    } else {
+      say('bad', 'Not that.', 'Check the bars: are both bottoms the same size before you count? Then check the tops.');
+    }
+    return;
+  }
+
+  const fraction = v.n !== null;
+  if (fraction && v.n !== 0 && R.gcd(v.n, v.d) !== 1){
+    slips++;
+    input.mark('slip');
+    say('slip', 'Right amount. Not lowest terms yet.', 'Some number goes into both the top and the bottom. Divide them both by it and try again.');
+    return;
+  }
+  if (fraction && v.n >= v.d && v.d > 0){
+    slips++;
+    input.mark('slip');
+    say('slip', 'Right amount. Make it a mixed number.', 'The top is at least as big as the bottom, so there is a whole hiding in there. Pull it out to the left.');
+    return;
+  }
+  finish();
+}
+
+function finish(){
+  stage = 'done';
+  input.mark('ok');
+  input.setDisabled(true);
+  checkBtn.disabled = true;
+  hintBtn.disabled = true;
+  ['a', 'b'].forEach(s => els[s].splits.forEach(b => { b.disabled = true; }));
+  const outcome = misses ? 'miss' : (slips ? 'slip' : 'correct');
+  const cleanRun = outcome === 'correct' && hintsUsed === 0;
+  solved++;
+  if (cleanRun) clean++;
+  saveProgress();
+  drawTally();
+  pushRecord({
+    t: Date.now(), mode: 'solve', problem: problem.text, outcome: outcome,
+    misses: misses, slips: slips, bottoms: bottomsHit, hints: hintsUsed, tier: tier
+  });
+  if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'fractions' });
+
+  /* tiers: three clean in a row promotes, a miss demotes, a slip only
+     breaks the run */
+  let tierNote = '';
+  if (outcome === 'miss'){
+    if (tier === 1) tierNote = ' Back to plain fractions for a bit.';
+    tier = 0; streak = 0;
+  } else if (outcome === 'slip'){
+    streak = 0;
+  } else {
+    streak++;
+    if (tier === 0 && streak >= PROMOTE_AT){ tier = 1; streak = 0; tierNote = ' Three clean in a row: mixed numbers from here.'; }
+  }
+  drawProblem();
+  banner.className = 'banner show';
+  banner.textContent = cleanRun
+    ? 'Right, finished, first try, no hints.'
+    : (outcome === 'slip'
+      ? 'Right amount, and now the finished form too. On a test, write the finished form the first time.'
+      : 'Solved, after ' + misses + (misses === 1 ? ' miss' : ' misses') + '.');
+  say('good', 'That is it.', 'Tap New problem for another.' + tierNote);
+}
+
+/* ---------------- hints ----------------
+   Three levels. One restates the rule; two says the lowest common
+   denominator exists for this pair without saying what it is; three says
+   the number and nothing else. */
+function hintText(){
+  const p = problem;
+  if (p.a.d === p.b.d){
+    return hintsUsed === 1
+      ? 'The bottoms already match, so the pieces are the same size. Count the tops.'
+      : 'Same bottoms means no matching to do. ' + (p.op === '+' ? 'Add' : 'Subtract') + ' the tops, keep the bottom, then finish the form.';
+  }
+  if (hintsUsed === 1){
+    return 'The bottoms have to match before you can ' + (p.op === '+' ? 'add' : 'subtract') + ' anything. '
+      + 'The bottom is the size of the pieces, and only same-sized pieces can be counted together. Split the bars until the cut lines line up.';
+  }
+  if (hintsUsed === 2){
+    return 'Both of these can be cut into ___ths. There is a number that ' + p.a.d + ' and ' + p.b.d
+      + ' both go into evenly, and the smallest one is the lowest common denominator. Cut each bar to that many pieces.';
+  }
+  return 'Both of these can be cut into ' + R.pieceName(p.lcd) + '.';
+}
+hintBtn.onclick = () => {
+  if (mode !== 'solve' || stage !== 'open' || hintsUsed >= 3) return;
+  hintsUsed++;
+  say('', hintText());
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- Match it ----------------
+   Just the two bottoms, and she types the lowest common denominator.
+   Sixty seconds, instant check, next pair. This is the skill under
+   everything else on the page, and the daily warm-up. */
+const SPEED_SECONDS = 60;
+const MATCH_PAIRS = DEN_PAIRS.filter(p => p[0] < p[1]);
+let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+let current = null, lastPair = null;
+const lcdBox = document.getElementById('lcdBox');
+const lcdOk = document.getElementById('lcdOk');
+const densEl = document.getElementById('dens');
+
+function drawSpeedBar(){
+  document.getElementById('score').textContent = speedScore;
+  document.getElementById('best').textContent = best;
+}
+function drawDens(pair){
+  densEl.textContent = '';
+  if (!pair){ densEl.textContent = '—'; return; }
+  const and = document.createElement('span');
+  and.className = 'and';
+  and.textContent = 'and';
+  densEl.append(String(pair[0]), and, String(pair[1]));
+}
+function nextPair(){
+  let p = pick(MATCH_PAIRS);
+  for (let guard = 0; guard < 10 && lastPair && p[0] === lastPair[0] && p[1] === lastPair[1]; guard++) p = pick(MATCH_PAIRS);
+  lastPair = p;
+  current = {d1: p[0], d2: p[1], lcd: R.lcm(p[0], p[1])};
+  drawDens(p);
+  lcdBox.value = '';
+  lcdBox.classList.remove('miss');
+  lcdBox.disabled = false;
+  lcdOk.disabled = false;
+  lcdBox.focus();
+}
+function submitLcd(){
+  if (!speedOn || !current) return;
+  const raw = lcdBox.value.replace(/[^0-9]/g, '');
+  if (!raw) return;
+  const v = parseInt(raw, 10);
+  speedSeen++;
+  const right = v === current.lcd;
+  if (right){
+    speedScore++;
+    say('good', v + '. Yes.', current.d1 + ' and ' + current.d2 + ' both go into it, and nothing smaller works.');
+  } else {
+    lcdBox.classList.add('miss', 'shake');
+    setTimeout(() => lcdBox.classList.remove('shake'), 420);
+    say('bad', 'Not that.', 'Next pair.');
+  }
+  drawSpeedBar();
+  current = null;
+  lcdBox.disabled = true;
+  setTimeout(() => { if (speedOn) nextPair(); }, reduced() ? 0 : 260);
+}
+lcdBox.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submitLcd(); } });
+lcdBox.addEventListener('input', () => { lcdBox.value = lcdBox.value.replace(/[^0-9]/g, '').slice(0, 3); lcdBox.classList.remove('miss'); });
+lcdOk.onclick = submitLcd;
+
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0; lastPair = null;
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  banner.className = 'banner';
+  nextBtn.textContent = 'Stop';
+  drawSpeedBar();
+  tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  say('', 'Type the lowest common denominator.', 'Enter or the tick checks it.');
+  nextPair();
+}
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer);
+  speedTimer = 0;
+  current = null;
+  lcdBox.disabled = true;
+  lcdOk.disabled = true;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  drawDens(null);
+
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar();
+  drawTally();
+  pushRecord({ t: Date.now(), mode: 'match', problem: SPEED_SECONDS + ' second round', score: speedScore, seen: speedSeen });
+  if (isBest && window.Tokens) Tokens.earnBest('fractions:match');
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest
+    ? speedScore + ' right. That is a new best.'
+    : speedScore + ' right. Best so far is ' + best + '.';
+  say('', '');
+}
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  {key:'solve', tab:'Solve it',
+   note:'Add or subtract, then type the answer in lowest terms, as a mixed number if it is more than one. The bars underneath are scratch paper; split them all you like.'},
+  {key:'match', tab:'Match it',
+   note:'Sixty seconds of just the bottoms. Two denominators appear, you type the lowest common denominator, and the next pair comes up. No hints in here.'}
+];
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mode-tab';
+  b.type = 'button';
+  b.textContent = m.tab;
+  b.setAttribute('aria-pressed', String(m.key === mode));
+  b.onclick = () => setMode(m.key);
+  modesEl.append(b);
+});
+
+function setMode(nextMode){
+  if (speedOn) stopSpeed(false);
+  mode = nextMode;
+  Array.prototype.forEach.call(modesEl.children,
+    (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  speedBar.hidden = mode !== 'match';
+  solveView.hidden = mode !== 'solve';
+  matchView.hidden = mode !== 'match';
+  hintBtn.disabled = mode === 'match';
+  banner.className = 'banner';
+
+  if (mode === 'match'){
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0;
+    drawSpeedBar();
+    drawDens(null);
+    say('', 'Sixty seconds.', 'Tap Start the round when you are ready.');
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+
+nextBtn.onclick = () => {
+  if (mode !== 'match'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+checkBtn.onclick = check;
+
+/* ---------------- Start over ---------------- */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){
+  clearTimeout(armed); armed = 0;
+  clearBtn.classList.remove('arming');
+  clearBtn.textContent = 'Start over';
+}
+clearBtn.onclick = () => {
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming');
+  clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportBtn = document.getElementById('export');
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+exportBtn.onclick = async () => {
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(() => { exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text;
+    exportBox.hidden = false;
+    exportBox.focus();
+    exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+/* The rational helper is where every answer on this page comes from, so
+   its unit checks run first; if one fails the page says so and stops. */
+loadProgress();
+loadLog();
+drawTally();
+drawSpeedBar();
+drawLog();
+const failures = R.selfCheck();
+if (failures.length){
+  say('bad', 'This page has a problem:', 'the fraction arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+  nextBtn.disabled = true;
+  checkBtn.disabled = true;
+} else {
+  setMode('solve');
+}
+</script>
+</body>
+</html>

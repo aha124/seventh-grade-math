@@ -44,6 +44,7 @@ shared/style.css         design tokens and the components every page shares
 shared/tokens.js         earning, balance, the masthead chip, the +N toast
 shared/fraction-input.js exact fractions (Rational) and the stacked fraction input
 shared/items.js          the shop's stock, one object per item
+shop-img/                the stock's photos, 800px squares, no metadata
 vercel.json              cleanUrls, so /lesson-01/practice resolves
 ```
 
@@ -94,9 +95,12 @@ them. That is fine: nothing is handed over until a person hands it over,
 and `grown-ups.html` is where they do that. Everything is per device, so
 open that page on hers.
 
-To stock the counter, edit `shared/items.js`: flip an item to
-`visible: true`, add a `photo` path if there is one, and set the test
-item back to `visible: false`.
+To stock the counter, edit `shared/items.js`: one object per item, with
+`visible: true` and a `photo` path under `shop-img/`. Photos go in with
+a generic filename that names only the object, cropped square around the
+item at 800px and with every bit of metadata stripped (EXIF carries the GPS
+position and the time the picture was taken). Card names describe the
+item, never a person.
 
 ## Adding a page
 

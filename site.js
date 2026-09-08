@@ -104,7 +104,7 @@ const LESSONS = [
     days: [
       {
         d: 1,
-        name: "Adding and subtracting fractions",
+        name: "Adding and subtracting fractions and mixed numbers",
         pages: [
           {
             href: "lesson-02/bars.html",
@@ -124,7 +124,7 @@ const LESSONS = [
         d: 2,
         name: "Coming up",
         pages: [],
-        note: "Nothing on the site yet. Add this day's pages here once the book's next topic is set; the fraction input from day 1 is ready for them."
+        note: "Short week. This day was folded into day 1, which now covers fractions and mixed numbers together. Day 3's topic comes next."
       },
       {
         d: 3,

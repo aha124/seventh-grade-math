@@ -50,6 +50,15 @@
 }
 .tierline b{color:var(--board);font-weight:700}
 .tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+.tier-pick{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.45rem 0 0}
+.tier-pick .lab{font-family:var(--body);font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.pick{
+  font-family:var(--display);font-size:.95rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:999px;
+  min-height:44px;padding:0 .75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
 
 /* ---- inline stacked fractions ---- */
 .fx{display:inline-flex;align-items:center;gap:.18em;vertical-align:middle;font-family:var(--display);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
@@ -265,6 +274,7 @@ details.log[open] summary::before{content:"▾ ";color:var(--ice)}
       <span id="tierName"></span>
       <span class="ask" id="ask"></span>
     </div>
+    <div class="tier-pick" id="tierPick" role="group" aria-label="Which problems come up"></div>
     <div class="problem" id="problem" aria-live="polite"></div>
     <div class="stack" id="stack" role="group" aria-label="Scratch bars"></div>
     <div class="answer-row">
@@ -307,6 +317,7 @@ details.log[open] summary::before{content:"▾ ";color:var(--ice)}
               <th scope="col">When</th>
               <th scope="col">Mode</th>
               <th scope="col">Problem</th>
+              <th scope="col" title="Fractions, or mixed numbers">Tier</th>
               <th scope="col" title="Correct, reduce-slip, or miss">Result</th>
               <th scope="col" title="Times the answer was the tops and bottoms combined straight across">Bottoms</th>
               <th scope="col">Hints</th>
@@ -537,6 +548,12 @@ function drawLog(){
   };
   if (solves.length){
     chip('Correct', nCorrect + ' of ' + solves.length);
+    /* split by tier once both have shown up, so a pinned run reads right */
+    [0, 1].forEach(t => {
+      const inTier = solves.filter(r => r.tier === t);
+      if (inTier.length && inTier.length !== solves.length)
+        chip(TIER_NAME[t], inTier.filter(r => r.outcome === 'correct').length + ' of ' + inTier.length);
+    });
     chip('Reduce-slips', nSlip, true);
     chip('Misses', nMiss);
     chip('Added the bottoms', bottomsTotal);
@@ -578,6 +595,13 @@ function drawLog(){
       return td;
     };
     tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+
+    const tierCell = document.createElement('td');
+    const ts = document.createElement('span');
+    if (r.mode === 'solve' && TIER_NAME[r.tier] !== undefined){ ts.textContent = TIER_NAME[r.tier]; }
+    else { ts.className = 'none'; ts.textContent = '—'; }
+    tierCell.append(ts);
+    tr.append(tierCell);
 
     const res = document.createElement('td');
     const s = document.createElement('span');
@@ -768,6 +792,65 @@ function split(side, k){
   }
 }
 
+/* ---------------- which tier ----------------
+   Auto is the default and keeps the promotion rule below: three clean in
+   a row moves up to mixed numbers, a miss moves back. The other two pin
+   the generator to one tier. The choice is a setting, not progress, so
+   it has its own key and survives Start over. */
+const TIER_MODES = [
+  {key:'fractions', label:'Fractions only', tier:0},
+  {key:'mixed',     label:'Mix in mixed numbers', tier:1},
+  {key:'auto',      label:'Auto', tier:null}
+];
+const TIER_MODE_KEY = 'seventh-grade-math:fractions-tier-mode';
+let tierMode = 'auto';
+const pinnedTier = () => TIER_MODES.find(m => m.key === tierMode).tier;
+const tierPick = document.getElementById('tierPick');
+(function buildTierPick(){
+  const lab = document.createElement('span');
+  lab.className = 'lab';
+  lab.textContent = 'Problems';
+  tierPick.append(lab);
+  TIER_MODES.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pick';
+    b.textContent = m.label;
+    b.onclick = () => setTierMode(m.key);
+    tierPick.append(b);
+  });
+})();
+function drawTierPick(){
+  Array.prototype.forEach.call(tierPick.querySelectorAll('.pick'),
+    (b, i) => b.setAttribute('aria-pressed', String(TIER_MODES[i].key === tierMode)));
+}
+function loadTierMode(){
+  try {
+    const v = localStorage.getItem(TIER_MODE_KEY);
+    if (TIER_MODES.some(m => m.key === v)) tierMode = v;
+  } catch (e) {}
+  const pin = pinnedTier();
+  if (pin !== null) tier = pin;
+  drawTierPick();
+}
+function saveTierMode(){
+  try { localStorage.setItem(TIER_MODE_KEY, tierMode); } catch (e) {}
+}
+function setTierMode(next){
+  if (next === tierMode || !TIER_MODES.some(m => m.key === next)) return;
+  tierMode = next;
+  saveTierMode();
+  drawTierPick();
+  /* Auto picks up from whatever tier is showing; the run toward the next
+     promotion starts fresh either way */
+  const was = tier;
+  const pin = pinnedTier();
+  if (pin !== null) tier = pin;
+  streak = 0;
+  if (mode !== 'solve' || !problem) return;
+  if (tier !== was) newProblem(); else drawProblem();
+}
+
 /* ---------------- a problem ---------------- */
 function drawProblem(){
   problemEl.textContent = '';
@@ -784,7 +867,7 @@ function drawProblem(){
   const b = document.createElement('b');
   b.textContent = TIER_NAME[tier];
   tn.append(b);
-  if (tier === 0) tn.append(' · ' + streak + ' of ' + PROMOTE_AT + ' clean toward mixed numbers');
+  if (tierMode === 'auto' && tier === 0) tn.append(' · ' + streak + ' of ' + PROMOTE_AT + ' clean toward mixed numbers');
   document.getElementById('ask').textContent = stage === 'done' ? '' : 'Lowest terms. Mixed number if it is more than one.';
 }
 
@@ -880,10 +963,12 @@ function finish(){
   });
   if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'fractions' });
 
-  /* tiers: three clean in a row promotes, a miss demotes, a slip only
-     breaks the run */
+  /* tiers, in Auto only: three clean in a row promotes, a miss demotes,
+     a slip only breaks the run. A pinned tier stays put. */
   let tierNote = '';
-  if (outcome === 'miss'){
+  if (tierMode !== 'auto'){
+    /* nothing moves */
+  } else if (outcome === 'miss'){
     if (tier === 1) tierNote = ' Back to plain fractions for a bit.';
     tier = 0; streak = 0;
   } else if (outcome === 'slip'){
@@ -1127,6 +1212,7 @@ exportBtn.onclick = async () => {
    its unit checks run first; if one fails the page says so and stops. */
 loadProgress();
 loadLog();
+loadTierMode();
 drawTally();
 drawSpeedBar();
 drawLog();

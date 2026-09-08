@@ -38,6 +38,8 @@ lesson-01/order-lesson.html         order of operations, three worked examples
 lesson-01/order-practice.html       graded order of operations, two modes
 lesson-02/bars.html      fraction bars: split until they match, then add by counting
 lesson-02/fractions-practice.html   graded adding and subtracting, plus the LCD speed round
+lesson-02/decimal-lesson.html       multiplying decimals: slide the point, multiply, slide it back
+lesson-02/decimal-practice.html     graded decimal multiplication, plus the place-the-point speed round
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares

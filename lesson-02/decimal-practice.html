@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Point Placement — Multiplying Decimals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+.tierline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.tierline b{color:var(--board);font-weight:700}
+.tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+.tier-pick{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.45rem 0 0}
+.tier-pick .lab{font-family:var(--body);font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.pick{
+  font-family:var(--display);font-size:.95rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:999px;
+  min-height:44px;padding:0 .75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+
+/* ---- the problem ---- */
+.problem{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:1rem .6rem;min-height:5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.problem .op{color:var(--gold)}
+.problem .q{color:#93A9B8;font-weight:600}
+
+.steps{
+  margin:.6rem 0 0;padding:.6rem .9rem;
+  background:#F6FAFC;border:1.5px solid var(--line);border-radius:3px;
+  font-size:.92rem;color:var(--board-soft);
+}
+.steps b{color:var(--board);font-weight:600}
+.steps ol{margin:.2rem 0 0;padding-left:1.2rem}
+.steps li{margin:.15rem 0}
+
+/* ---- the answer ---- */
+.answer-row{
+  display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;
+  margin:.9rem 0 0;padding:.8rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.answer-row .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.decbox{
+  width:8rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.7rem;
+  border:1.5px solid var(--edge);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.decbox.miss{border-color:var(--gold);background:#FBF0DF}
+.decbox.point{border-color:var(--gold);background:#FFF8E8}
+.decbox.ok{border-color:var(--good);background:#EEF7F1}
+.decbox:disabled{opacity:.6}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.decbox.shake{animation:shake .38s ease-in-out}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+/* ---- place the point ----
+   The completed multiplication with the answer as bare digits, and a
+   fat tap target in every gap: before the first digit (that is the
+   leading-zero gap: "0." goes in front), between each pair, and after
+   the last. At 375 wide the whole row has to fit on one line with five
+   gaps at 44px each, so the digit boxes are narrow there and grow above
+   480. */
+.placebox{
+  display:flex;flex-direction:column;align-items:center;gap:.6rem;
+  margin:.5rem 0 0;padding:1rem .4rem 1.1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.placebox .prompt{font-family:var(--body);font-size:.95rem;color:#7C93A5;margin:0}
+.placebox .peq{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,6.5vw,2.3rem);color:var(--board);line-height:1;font-variant-numeric:tabular-nums}
+.placebox .peq .op{color:var(--gold);margin:0 .15em}
+.prow{display:flex;align-items:center;justify-content:center;flex-wrap:nowrap;max-width:100%}
+.pd{
+  width:22px;flex:0 0 auto;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:2rem;color:var(--board);line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.gap{
+  width:44px;min-width:44px;height:52px;flex:0 0 auto;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;
+  background:transparent;border:none;border-radius:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.gap::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--line);transition:background .15s ease,transform .15s ease}
+.gap:hover::before,.gap:focus-visible::before{background:var(--ice);transform:scale(1.3)}
+.gap.hit::before{background:var(--good);transform:scale(1.6)}
+.gap.miss::before{background:var(--gold);transform:scale(1.6)}
+.gap.want::before{background:var(--good);transform:scale(1.3);box-shadow:0 0 0 3px #EEF7F1}
+.gap:disabled{cursor:default}
+.placebox .streak{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);letter-spacing:.03em;font-variant-numeric:tabular-nums;min-height:1.4em}
+.placebox .streak b{color:var(--gold);font-weight:700}
+.placebox .idle{font-family:var(--body);font-size:.95rem;color:#7C93A5;margin:0;text-align:center;max-width:36ch}
+@media (min-width:480px){
+  .placebox{padding:1.1rem .8rem 1.2rem}
+  .pd{width:34px;font-size:2.4rem}
+  .gap{width:52px;height:56px}
+}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.point{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.point b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+
+.slip{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#FFF8E8;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+.slip[hidden]{display:none}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box[hidden]{display:none}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+@media (prefers-reduced-motion:reduce){ .decbox.shake{animation:none} .gap::before{transition:none} }
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Point <span>Placement</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div id="solveView">
+    <div class="tierline">
+      <span id="tierName"></span>
+      <span class="ask" id="ask"></span>
+    </div>
+    <div class="tier-pick" id="tierPick" role="group" aria-label="Which problems come up"></div>
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="steps">
+      <b>Every time:</b>
+      <ol>
+        <li>Estimate first. Round each number to a whole number and multiply those in your head.</li>
+        <li>Multiply the digits as whole numbers.</li>
+        <li>Count the decimal places in the problem. The answer has that many. Check it against your estimate.</li>
+      </ol>
+    </div>
+    <div class="answer-row">
+      <span class="lab">Your answer</span>
+      <input class="decbox" id="ansBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer">
+      <button class="ok" id="check" type="button" aria-label="Check my answer">✓</button>
+    </div>
+  </div>
+
+  <div id="placeView" hidden>
+    <div class="placebox">
+      <p class="prompt">Tap the gap where the point goes</p>
+      <div class="peq" id="peq" aria-live="polite">—</div>
+      <div class="prow" id="prow"></div>
+      <div class="streak" id="streak"></div>
+      <p class="idle" id="placeIdle">The digits are already multiplied. All you decide is where the point lands. Estimate, then tap.</p>
+    </div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="How many decimal places the problem had at most">Tier</th>
+              <th scope="col" title="Correct, point-slip, or miss">Result</th>
+              <th scope="col" title="Times the digits were right and the point was in the wrong place">Point</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. 4.32 and 4.320 are the same answer. If your digits are right and only the point is off, the page says exactly that, because that is the one mistake this lesson is about.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script>
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- exact decimals ----------------
+   A decimal is {core, places}: an integer and how many of its digits sit
+   right of the point. 3.12 is {312, 2}; 14 is {14, 0}. Multiplying is
+   core × core and places + places. Comparing puts both in canonical
+   form (no trailing zeros right of the point) and compares integers.
+   No float is ever made or compared on this page. */
+const POW10 = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000];
+function fmt(d){
+  if (d.places === 0) return String(d.core);
+  const s = String(d.core).padStart(d.places + 1, '0');
+  return s.slice(0, s.length - d.places) + '.' + s.slice(s.length - d.places);
+}
+function canon(d){
+  let core = d.core, places = d.places;
+  while (places > 0 && core % 10 === 0){ core = (core - core % 10) / 10; places--; }
+  return { core, places };
+}
+function same(a, b){
+  const x = canon(a), y = canon(b);
+  return x.core === y.core && x.places === y.places;
+}
+function mul(a, b){ return { core: a.core * b.core, places: a.places + b.places }; }
+function add(a, b){
+  const p = Math.max(a.places, b.places);
+  return { core: a.core * POW10[p - a.places] + b.core * POW10[p - b.places], places: p };
+}
+/* what she typed, as {core, places}, or null if it is not a number.
+   Digits and at most one point; a leading point is fine. */
+function parseDecimal(str){
+  const s = String(str).replace(/\s+/g, '');
+  if (!/^\d*\.?\d*$/.test(s) || s === '' || s === '.') return null;
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  const frac = i < 0 ? '' : s.slice(i + 1);
+  const digits = (whole + frac).replace(/^0+(?=\d)/, '');
+  if (digits.length > 9) return null;
+  return { core: parseInt(digits || '0', 10), places: frac.length };
+}
+/* If user = correct × 10^k for some k other than 0, that k. Otherwise
+   null. Same digits in the same order with the point somewhere else is
+   the one error this page is about, so it is detected exactly, in both
+   directions, on integers: strip trailing zeros from both cores and
+   compare the digit strings, then work out k from the place counts and
+   the lengths. */
+function pointShift(user, correct){
+  const u = canon(user), c = canon(correct);
+  if (u.core === 0 || c.core === 0) return null;
+  const su = String(u.core).replace(/0+$/, ''), sc = String(c.core).replace(/0+$/, '');
+  if (su !== sc) return null;
+  const k = (c.places - u.places) + (String(u.core).length - String(c.core).length);
+  return k === 0 ? null : k;
+}
+/* each factor rounded to a whole number, for the estimate line */
+function roundWhole(d){
+  if (d.places === 0) return d.core;
+  const half = 5 * POW10[d.places - 1];
+  const n = d.core + half;
+  return (n - n % POW10[d.places]) / POW10[d.places];
+}
+function estimateText(p){
+  const ra = roundWhole(p.a), rb = roundWhole(p.b);
+  if (ra === 0 && rb === 0) return 'Both are less than 1, so the answer is smaller than either of them.';
+  if (ra === 0) return fmt(p.a) + ' is less than 1, so the answer is less than ' + fmt(p.b) + '.';
+  if (rb === 0) return fmt(p.b) + ' is less than 1, so the answer is less than ' + fmt(p.a) + '.';
+  return 'About ' + ra + ' × ' + rb + ' = ' + (ra * rb) + '.';
+}
+
+/* ---------------- the generator ----------------
+   Each factor is under 100 and has 0 to 3 decimal places; the two
+   together have at least one, at most two in tier 0 and at most three
+   in tier 1. The whole-number product is under 10000 so the long way
+   fits on paper, and a product ending in 0 is thrown back because bare
+   digits with a trailing zero are a different lesson. A factor never
+   ends in 0 after the point (2.0 is 2). */
+const TIER_NAME = ['1 or 2 places', 'Up to 3 places'];
+const PROMOTE_AT = 3;
+const CORE_RANGE = [[2, 30], [2, 99], [11, 999], [101, 4999]];   /* by places */
+
+function factor(places){
+  const r = CORE_RANGE[places];
+  for (let t = 0; t < 40; t++){
+    const core = rand(r[0], r[1]);
+    if (places > 0 && core % 10 === 0) continue;
+    if (core >= 100 * POW10[places]) continue;
+    return { core, places };
+  }
+  return null;
+}
+function makeProblem(tier){
+  for (let attempt = 0; attempt < 600; attempt++){
+    const total = tier === 1 ? pick([1, 2, 2, 3, 3, 3]) : pick([1, 2, 2]);
+    const pa = rand(0, total), pb = total - pa;
+    const a = factor(pa), b = factor(pb);
+    if (!a || !b) continue;
+    const prod = a.core * b.core;
+    if (prod >= 10000 || prod % 10 === 0) continue;
+    return { a, b, answer: mul(a, b), tier, text: fmt(a) + ' × ' + fmt(b) };
+  }
+  const a = { core: 24, places: 1 }, b = { core: 13, places: 1 };
+  return { a, b, answer: mul(a, b), tier: 0, text: '2.4 × 1.3' };
+}
+
+/* ---------------- saved progress ---------------- */
+const STORE_KEY = 'seventh-grade-math:decimals';
+let solved = 0, clean = 0, best = 0;
+
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.solved)) solved = Math.max(0, Math.floor(saved.solved));
+    if (Number.isFinite(saved.clean))  clean  = Math.max(0, Math.floor(saved.clean));
+    if (Number.isFinite(saved.best))   best   = Math.max(0, Math.floor(saved.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+function saveProgress(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({solved, clean, best})); }
+  catch (e) { /* nothing to do; the numbers stay in memory for this visit */ }
+}
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally(); drawSpeedBar(); clearLog();
+}
+function drawTally(){
+  document.getElementById('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   Same shape and the same 200 cap as the other practice pages, under its
+   own key. A solve record carries its outcome (correct, point, or miss),
+   how many plain misses it took, how many of the wrong answers had the
+   right digits with the point in the wrong place, how many were the two
+   factors added instead of multiplied, and the hints used. A round
+   record carries score, seen, and the best streak in the round. */
+const LOG_KEY = 'seventh-grade-math:decimals-log';
+const LOG_CAP = 200;
+const LOG_SHOWN = 20;
+const MODE_LABEL = {solve:'Multiply', place:'Place the point'};
+const OUTCOME_LABEL = {correct:'Correct', point:'Point-slip', miss:'Miss'};
+let log = [];
+
+function validRecord(r){
+  return r && typeof r === 'object'
+    && typeof r.t === 'number' && isFinite(r.t)
+    && typeof r.mode === 'string'
+    && typeof r.problem === 'string';
+}
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+function saveLog(){
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); }
+  catch (e) { /* full or switched off; the log stays in memory for this visit */ }
+}
+function clearLog(){
+  log = [];
+  try { localStorage.removeItem(LOG_KEY); } catch (e) {}
+  drawLog();
+}
+function pushRecord(rec){
+  log.push(rec);
+  if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+  saveLog();
+  drawLog();
+}
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, {month:'short', day:'numeric'})
+      + ', ' + d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'});
+  } catch (e) { return ''; }
+}
+
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const slip = document.getElementById('slip');
+  const empty = document.getElementById('logEmpty');
+  const scroll = document.querySelector('.log-scroll');
+
+  rows.textContent = '';
+  accuracy.textContent = '';
+  slip.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  empty.hidden = log.length > 0;
+  scroll.hidden = log.length === 0;
+  slip.hidden = log.length === 0;
+  if (!log.length) return;
+
+  const solves = log.filter(r => r.mode === 'solve');
+  const nCorrect = solves.filter(r => r.outcome === 'correct').length;
+  const nPoint = solves.filter(r => r.outcome === 'point').length;
+  const nMiss = solves.filter(r => r.outcome === 'miss').length;
+  const pointTotal = solves.reduce((n, r) => n + (Number(r.point) || 0), 0);
+  const addedTotal = solves.reduce((n, r) => n + (Number(r.added) || 0), 0);
+  const chip = (label, value, loud) => {
+    const li = document.createElement('li');
+    if (loud) li.className = 'loud';
+    const b = document.createElement('b');
+    b.textContent = String(value);
+    li.append(label + ' ', b);
+    accuracy.append(li);
+  };
+  if (solves.length){
+    chip('Correct', nCorrect + ' of ' + solves.length);
+    [0, 1].forEach(t => {
+      const inTier = solves.filter(r => r.tier === t);
+      if (inTier.length && inTier.length !== solves.length)
+        chip(TIER_NAME[t], inTier.filter(r => r.outcome === 'correct').length + ' of ' + inTier.length);
+    });
+    chip('Point-slips', nPoint, true);
+    chip('Misses', nMiss);
+    chip('Added instead', addedTotal);
+  }
+  const rounds = log.filter(r => r.mode === 'place');
+  if (rounds.length) chip('Best round', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+
+  if (!solves.length){
+    slip.textContent = 'No Multiply problems logged yet.';
+  } else if (!pointTotal){
+    const lead = document.createElement('b');
+    lead.textContent = 'No point-slips.';
+    slip.append(lead, ' Every time the digits were right, the point was in the right place too. That is the whole skill.');
+  } else {
+    const lead = document.createElement('b');
+    lead.textContent = 'Point-slips: ' + nPoint + ' of ' + solves.length + (solves.length === 1 ? ' problem.' : ' problems.');
+    slip.append(lead, ' The multiplication was right and the point was not. Count the decimal places in the problem; '
+      + 'the answer has that many. And estimate first: a wrong point is always far from the estimate. '
+      + '(' + pointTotal + (pointTotal === 1 ? ' slip' : ' slips') + ' in all.)');
+  }
+
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = text => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+
+    const tierCell = document.createElement('td');
+    const ts = document.createElement('span');
+    if (r.mode === 'solve' && TIER_NAME[r.tier] !== undefined){ ts.textContent = TIER_NAME[r.tier]; }
+    else { ts.className = 'none'; ts.textContent = '—'; }
+    tierCell.append(ts);
+    tr.append(tierCell);
+
+    const res = document.createElement('td');
+    const s = document.createElement('span');
+    if (r.mode === 'place'){
+      s.className = 'score';
+      s.textContent = (Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0)
+        + (Number(r.streak) ? ', streak ' + r.streak : '');
+    } else {
+      s.className = r.outcome === 'correct' ? 'yes' : (r.outcome === 'point' ? 'slipc' : 'no');
+      s.textContent = OUTCOME_LABEL[r.outcome] || String(r.outcome);
+      const extra = [];
+      if (Number(r.misses)) extra.push(r.misses + (r.misses === 1 ? ' miss' : ' misses'));
+      if (Number(r.added)) extra.push('added ' + r.added + 'x');
+      if (extra.length) s.textContent += ' (' + extra.join(', ') + ')';
+    }
+    res.append(s);
+    tr.append(res);
+
+    const pt = document.createElement('td');
+    const ps = document.createElement('span');
+    if (r.mode === 'place'){ ps.className = 'none'; ps.textContent = '—'; }
+    else if (Number(r.point)){ ps.className = 'slipc'; ps.textContent = String(r.point); }
+    else { ps.className = 'none'; ps.textContent = 'none'; }
+    pt.append(ps);
+    tr.append(pt);
+
+    const hints = document.createElement('td');
+    const used = Number(r.hints) || 0;
+    if (used){
+      const h = document.createElement('span');
+      h.className = 'hints';
+      h.textContent = '+' + used;
+      hints.append(h);
+    }
+    tr.append(hints);
+    rows.append(tr);
+  });
+}
+
+/* ---------------- export ---------------- */
+async function copyText(text){
+  try {
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- page state ---------------- */
+const sayEl     = document.getElementById('say');
+const banner    = document.getElementById('banner');
+const hintBtn   = document.getElementById('hint');
+const nextBtn   = document.getElementById('next');
+const checkBtn  = document.getElementById('check');
+const speedBar  = document.getElementById('speedBar');
+const problemEl = document.getElementById('problem');
+const solveView = document.getElementById('solveView');
+const placeView = document.getElementById('placeView');
+const ansBox    = document.getElementById('ansBox');
+
+let mode = 'solve';
+let problem = null, stage = 'idle';   /* idle | open | done */
+let tier = 0, streak = 0;
+let misses = 0, pointHits = 0, addedHits = 0, hintsUsed = 0;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+/* ---------------- which tier ----------------
+   Auto is the default: three clean in a row moves up to three places, a
+   miss moves back, a point-slip only breaks the run. The other two pin
+   the generator. The choice is a setting, not progress, so it has its
+   own key and survives Start over. */
+const TIER_MODES = [
+  {key:'two',   label:'1 or 2 places', tier:0},
+  {key:'three', label:'Up to 3 places', tier:1},
+  {key:'auto',  label:'Auto', tier:null}
+];
+const TIER_MODE_KEY = 'seventh-grade-math:decimals-tier-mode';
+let tierMode = 'auto';
+const pinnedTier = () => TIER_MODES.find(m => m.key === tierMode).tier;
+const tierPick = document.getElementById('tierPick');
+(function buildTierPick(){
+  const lab = document.createElement('span');
+  lab.className = 'lab';
+  lab.textContent = 'Problems';
+  tierPick.append(lab);
+  TIER_MODES.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pick';
+    b.textContent = m.label;
+    b.onclick = () => setTierMode(m.key);
+    tierPick.append(b);
+  });
+})();
+function drawTierPick(){
+  Array.prototype.forEach.call(tierPick.querySelectorAll('.pick'),
+    (b, i) => b.setAttribute('aria-pressed', String(TIER_MODES[i].key === tierMode)));
+}
+function loadTierMode(){
+  try {
+    const v = localStorage.getItem(TIER_MODE_KEY);
+    if (TIER_MODES.some(m => m.key === v)) tierMode = v;
+  } catch (e) {}
+  const pin = pinnedTier();
+  if (pin !== null) tier = pin;
+  drawTierPick();
+}
+function saveTierMode(){
+  try { localStorage.setItem(TIER_MODE_KEY, tierMode); } catch (e) {}
+}
+function setTierMode(next){
+  if (next === tierMode || !TIER_MODES.some(m => m.key === next)) return;
+  tierMode = next;
+  saveTierMode();
+  drawTierPick();
+  const was = tier;
+  const pin = pinnedTier();
+  if (pin !== null) tier = pin;
+  streak = 0;
+  if (mode !== 'solve' || !problem) return;
+  if (tier !== was) newProblem(); else drawProblem();
+}
+
+/* ---------------- a problem ---------------- */
+function drawProblem(){
+  problemEl.textContent = '';
+  const op = document.createElement('span');
+  op.className = 'op';
+  op.textContent = '×';
+  const q = document.createElement('span');
+  q.className = 'q';
+  q.textContent = '= ?';
+  problemEl.append(fmt(problem.a), op, fmt(problem.b), q);
+  problemEl.setAttribute('aria-label', problem.text.replace('×', 'times'));
+  const tn = document.getElementById('tierName');
+  tn.textContent = '';
+  const b = document.createElement('b');
+  b.textContent = TIER_NAME[tier];
+  tn.append(b);
+  if (tierMode === 'auto' && tier === 0) tn.append(' · ' + streak + ' of ' + PROMOTE_AT + ' clean toward three places');
+  document.getElementById('ask').textContent = stage === 'done' ? '' : 'Type the answer as a decimal.';
+}
+
+function newProblem(){ loadProblem(makeProblem(tier)); }
+function loadProblem(p){
+  problem = p;
+  stage = 'open';
+  misses = 0; pointHits = 0; addedHits = 0; hintsUsed = 0;
+  banner.className = 'banner';
+  hintBtn.disabled = false;
+  hintBtn.textContent = 'Hint';
+  checkBtn.disabled = false;
+  ansBox.value = '';
+  ansBox.className = 'decbox';
+  ansBox.disabled = false;
+  drawProblem();
+  say('', 'Estimate first.', 'Then multiply the digits, then count the places.');
+  ansBox.focus();
+}
+
+/* ---------------- checking ----------------
+   Three outcomes. Equal, with trailing zeros ignored, is correct. The
+   same digits with the point somewhere else is a point-slip: named
+   exactly, counted apart, and it is THE error this page exists for. Any
+   other wrong answer is a miss, and if it equals the two factors added
+   it is named as that. */
+function shakeBox(){
+  ansBox.classList.remove('shake');
+  void ansBox.offsetWidth;
+  ansBox.classList.add('shake');
+  setTimeout(() => ansBox.classList.remove('shake'), 420);
+}
+function check(){
+  if (mode !== 'solve' || stage !== 'open') return;
+  const raw = ansBox.value;
+  if (!raw.trim()){ say('', 'Type an answer first.'); return; }
+  const E = parseDecimal(raw);
+  if (!E){ say('', 'Just digits and one point.', 'Like 3.12 or 0.08.'); return; }
+  const C = problem.answer;
+
+  if (same(E, C)){ finish(); return; }
+
+  const k = pointShift(E, C);
+  if (k !== null){
+    pointHits++;
+    ansBox.classList.add('point');
+    shakeBox();
+    say('point', 'Your multiplication is right. The point is in the wrong place:',
+      'count the decimal places in the problem.');
+    return;
+  }
+  misses++;
+  ansBox.classList.add('miss');
+  shakeBox();
+  if (same(E, add(problem.a, problem.b))){
+    addedHits++;
+    say('bad', 'That is what you get adding them.', 'This one is multiply. Whole numbers first, then pay the point back.');
+  } else {
+    say('bad', 'Not that.', 'Check the whole-number multiplication first. Then count the places.');
+  }
+}
+
+function finish(){
+  stage = 'done';
+  ansBox.classList.remove('miss', 'point');
+  ansBox.classList.add('ok');
+  ansBox.disabled = true;
+  checkBtn.disabled = true;
+  hintBtn.disabled = true;
+  const outcome = misses ? 'miss' : (pointHits ? 'point' : 'correct');
+  const cleanRun = outcome === 'correct' && hintsUsed === 0;
+  solved++;
+  if (cleanRun) clean++;
+  saveProgress();
+  drawTally();
+  pushRecord({
+    t: Date.now(), mode: 'solve', problem: problem.text, outcome: outcome,
+    misses: misses, point: pointHits, added: addedHits, hints: hintsUsed, tier: tier
+  });
+  if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'decimals' });
+
+  let tierNote = '';
+  if (tierMode !== 'auto'){
+    /* nothing moves */
+  } else if (outcome === 'miss'){
+    if (tier === 1) tierNote = ' Back to two places for a bit.';
+    tier = 0; streak = 0;
+  } else if (outcome === 'point'){
+    streak = 0;
+  } else {
+    streak++;
+    if (tier === 0 && streak >= PROMOTE_AT){ tier = 1; streak = 0; tierNote = ' Three clean in a row: up to three places from here.'; }
+  }
+  drawProblem();
+  banner.className = 'banner show';
+  banner.textContent = cleanRun
+    ? 'Right, first try, no hints.'
+    : (outcome === 'point'
+      ? 'Right digits the whole way; the point took ' + (pointHits + 1) + ' tries. Estimate before you place it.'
+      : 'Solved, after ' + misses + (misses === 1 ? ' miss' : ' misses') + '.');
+  say('good', 'That is it.', estimateText(problem) + ' Tap New problem for another.' + tierNote);
+}
+
+/* ---------------- hints ----------------
+   One restates slide and repay. Two gives the whole-number product. Three
+   says how many places to pay back, and nothing else. */
+function hintText(){
+  const p = problem;
+  const total = p.a.places + p.b.places;
+  const prod = p.a.core * p.b.core;
+  if (hintsUsed === 1){
+    return 'Slide each point right until both numbers are whole. Every slide is a ×10 you owe. '
+      + 'Multiply the whole numbers, then pay the slides back: one ÷10 each, sliding the point left.';
+  }
+  if (hintsUsed === 2){
+    return 'The whole-number multiplication is ' + p.a.core + ' × ' + p.b.core + ' = ' + prod + '. Now pay back the slides.';
+  }
+  return 'Pay back ' + total + (total === 1 ? ' place' : ' places') + ': start at the right end of ' + prod
+    + ' and slide the point ' + total + ' to the left.' + (String(prod).length <= total ? ' If you run out of digits, a zero goes in front.' : '');
+}
+hintBtn.onclick = () => {
+  if (mode !== 'solve' || stage !== 'open' || hintsUsed >= 3) return;
+  hintsUsed++;
+  say('', hintText());
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- Place the point ----------------
+   Sixty seconds. The multiplication is done; the answer sits there as
+   bare digits and she taps the gap where the point belongs. Right or
+   wrong on the spot, then the next one. Problems go up to three places
+   whatever the tier, because this trains the estimate, not the
+   arithmetic. */
+const SPEED_SECONDS = 60;
+let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+let place = null, runStreak = 0, bestStreak = 0, placeTimer = 0;
+const peq = document.getElementById('peq');
+const prow = document.getElementById('prow');
+const streakEl = document.getElementById('streak');
+const placeIdle = document.getElementById('placeIdle');
+
+function drawSpeedBar(){
+  document.getElementById('score').textContent = speedScore;
+  document.getElementById('best').textContent = best;
+}
+function drawStreak(){
+  streakEl.textContent = '';
+  if (!speedOn) return;
+  streakEl.append('Streak ');
+  const b = document.createElement('b');
+  b.textContent = String(runStreak);
+  streakEl.append(b);
+  if (bestStreak > 1) streakEl.append(' · best this round ' + bestStreak);
+}
+/* the digits, padded with zeros on the left so there is always a gap
+   for the point even when the answer starts 0.0 */
+function placeDigits(p){
+  return String(p.answer.core).padStart(p.answer.places, '0');
+}
+function drawPlace(){
+  peq.textContent = '';
+  prow.textContent = '';
+  if (!place){ peq.textContent = '—'; return; }
+  const p = place.p;
+  const op = document.createElement('span');
+  op.className = 'op';
+  op.textContent = '×';
+  peq.append(fmt(p.a), op, fmt(p.b), ' =');
+  const digits = place.digits;
+  for (let i = 0; i <= digits.length; i++){
+    const g = document.createElement('button');
+    g.type = 'button';
+    g.className = 'gap';
+    g.dataset.gap = String(i);
+    g.setAttribute('aria-label', i === 0 ? 'Point before the first digit' : 'Point after digit ' + i);
+    g.onclick = () => tapGap(i);
+    prow.append(g);
+    if (i < digits.length){
+      const d = document.createElement('span');
+      d.className = 'pd';
+      d.textContent = digits[i];
+      prow.append(d);
+    }
+  }
+}
+function nextPlace(){
+  const p = makeProblem(1);
+  const digits = placeDigits(p);
+  place = { p, digits, gap: digits.length - p.answer.places, locked: false };
+  drawPlace();
+  drawStreak();
+}
+function tapGap(i){
+  if (!speedOn || !place || place.locked) return;
+  place.locked = true;
+  speedSeen++;
+  const right = i === place.gap;
+  const gaps = prow.querySelectorAll('.gap');
+  gaps.forEach(g => { g.disabled = true; });
+  gaps[i].classList.add(right ? 'hit' : 'miss');
+  if (!right) gaps[place.gap].classList.add('want');
+  const ans = fmt(place.p.answer);
+  if (right){
+    speedScore++;
+    runStreak++;
+    if (runStreak > bestStreak) bestStreak = runStreak;
+    say('good', ans + '. Yes.', place.p.answer.places + (place.p.answer.places === 1 ? ' place' : ' places') + ' in the problem, ' + place.p.answer.places + ' in the answer.');
+  } else {
+    runStreak = 0;
+    say('bad', 'Not there. ' + ans + '.', estimateText(place.p) + ' Count the places: ' + fmt(place.p.a) + ' has ' + place.p.a.places + ', ' + fmt(place.p.b) + ' has ' + place.p.b.places + '.');
+  }
+  drawSpeedBar();
+  drawStreak();
+  clearTimeout(placeTimer);
+  placeTimer = setTimeout(() => { if (speedOn) nextPlace(); }, reduced() ? 0 : (right ? 420 : 1100));
+}
+
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0; runStreak = 0; bestStreak = 0;
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  banner.className = 'banner';
+  nextBtn.textContent = 'Stop';
+  placeIdle.hidden = true;
+  drawSpeedBar();
+  tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  say('', 'Tap the gap where the point goes.', 'Estimate first: about how big should the answer be?');
+  nextPlace();
+}
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer);
+  clearTimeout(placeTimer);
+  speedTimer = 0;
+  place = null;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  drawPlace();
+  drawStreak();
+  placeIdle.hidden = false;
+
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar();
+  drawTally();
+  pushRecord({ t: Date.now(), mode: 'place', problem: SPEED_SECONDS + ' second round', score: speedScore, seen: speedSeen, streak: bestStreak });
+  if (isBest && window.Tokens) Tokens.earnBest('decimals:place');
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest
+    ? speedScore + ' right. That is a new best.'
+    : speedScore + ' right. Best so far is ' + best + '.';
+  say('', '');
+}
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  {key:'solve', tab:'Multiply',
+   note:'Multiply the two decimals and type the answer. Estimate first, every time. If your digits are right and only the point is off, the page will say so.'},
+  {key:'place', tab:'Place the point',
+   note:'Sixty seconds. The multiplying is already done and the answer sits there as bare digits. You tap the gap where the point belongs. No hints in here; estimate and tap.'}
+];
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mode-tab';
+  b.type = 'button';
+  b.textContent = m.tab;
+  b.setAttribute('aria-pressed', String(m.key === mode));
+  b.onclick = () => setMode(m.key);
+  modesEl.append(b);
+});
+
+function setMode(nextMode){
+  if (speedOn) stopSpeed(false);
+  mode = nextMode;
+  Array.prototype.forEach.call(modesEl.children,
+    (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  speedBar.hidden = mode !== 'place';
+  solveView.hidden = mode !== 'solve';
+  placeView.hidden = mode !== 'place';
+  hintBtn.disabled = mode === 'place';
+  banner.className = 'banner';
+
+  if (mode === 'place'){
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0;
+    drawSpeedBar();
+    place = null;
+    drawPlace();
+    drawStreak();
+    say('', 'Sixty seconds.', 'Tap Start the round when you are ready.');
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+
+nextBtn.onclick = () => {
+  if (mode !== 'place'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+checkBtn.onclick = check;
+ansBox.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); check(); } });
+ansBox.addEventListener('input', () => {
+  /* digits and one point, nothing else */
+  let v = ansBox.value.replace(/[^0-9.]/g, '');
+  const i = v.indexOf('.');
+  if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+  ansBox.value = v.slice(0, 10);
+  ansBox.classList.remove('miss', 'point');
+});
+
+/* ---------------- Start over ---------------- */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){
+  clearTimeout(armed); armed = 0;
+  clearBtn.classList.remove('arming');
+  clearBtn.textContent = 'Start over';
+}
+clearBtn.onclick = () => {
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming');
+  clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportBtn = document.getElementById('export');
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+exportBtn.onclick = async () => {
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(() => { exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text;
+    exportBox.hidden = false;
+    exportBox.focus();
+    exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+/* ---------------- self-check ----------------
+   The integer decimal helpers are where every verdict comes from, so
+   their cases run at load; if one fails the page says so and stops. */
+function selfCheck(){
+  const f = [];
+  const t = (name, ok) => { if (!ok) f.push(name); };
+  t('fmt 3.12', fmt({core:312, places:2}) === '3.12');
+  t('fmt 0.08', fmt({core:8, places:2}) === '0.08');
+  t('fmt 14', fmt({core:14, places:0}) === '14');
+  t('parse 4.320', same(parseDecimal('4.320'), {core:432, places:2}));
+  t('parse .5', same(parseDecimal('.5'), {core:5, places:1}));
+  t('parse 0.08', same(parseDecimal('0.08'), {core:8, places:2}));
+  t('parse bad', parseDecimal('1.2.3') === null && parseDecimal('') === null && parseDecimal('.') === null);
+  t('same 4.32 4.320', same({core:432, places:2}, {core:4320, places:3}));
+  t('not same 4.32 43.2', !same({core:432, places:2}, {core:432, places:1}));
+  t('mul', same(mul({core:24, places:1}, {core:13, places:1}), {core:312, places:2}));
+  t('add', same(add({core:24, places:1}, {core:13, places:1}), {core:37, places:1}));
+  t('add mixed', same(add({core:976, places:2}, {core:14, places:0}), {core:2376, places:2}));
+  t('shift up 1', pointShift({core:312, places:1}, {core:312, places:2}) === 1);
+  t('shift up 2', pointShift({core:312, places:0}, {core:312, places:2}) === 2);
+  t('shift up 3 (trailing zero)', pointShift({core:3120, places:0}, {core:312, places:2}) === 3);
+  t('shift down 1', pointShift({core:312, places:3}, {core:312, places:2}) === -1);
+  t('shift 0.8 vs 0.08', pointShift({core:8, places:1}, {core:8, places:2}) === 1);
+  t('shift 8 vs 0.08', pointShift({core:8, places:0}, {core:8, places:2}) === 2);
+  t('shift 0.008 vs 0.08', pointShift({core:8, places:3}, {core:8, places:2}) === -1);
+  t('no shift when equal', pointShift({core:312, places:2}, {core:312, places:2}) === null);
+  t('no shift other digits', pointShift({core:321, places:2}, {core:312, places:2}) === null);
+  t('round 9.76', roundWhole({core:976, places:2}) === 10);
+  t('round 2.4', roundWhole({core:24, places:1}) === 2);
+  t('round 0.4', roundWhole({core:4, places:1}) === 0);
+  t('round 2.5', roundWhole({core:25, places:1}) === 3);
+  return f;
+}
+
+loadProgress();
+loadLog();
+loadTierMode();
+drawTally();
+drawSpeedBar();
+drawLog();
+const failures = selfCheck();
+if (failures.length){
+  say('bad', 'This page has a problem:', 'the decimal arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+  nextBtn.disabled = true;
+  checkBtn.disabled = true;
+} else {
+  setMode('solve');
+}
+</script>
+</body>
+</html>

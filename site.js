@@ -17,8 +17,9 @@
      name   what that day is about; the row label on the hub
      pages  the pages for that day, in the order she should meet them.
             May be empty
-     note   optional; shown in the row where the tiles would go. Meant
-            for days with no pages, so the row can still say what happens
+     note   optional; shown in the row where the tiles would go, or above
+            the tiles when the day has pages too. Use it so a row can
+            say what happens that day, or in what order
    Each page:
      href   relative to the repo root
      name   the tile title
@@ -122,15 +123,28 @@ const LESSONS = [
       },
       {
         d: 2,
-        name: "Coming up",
-        pages: [],
-        note: "Short week. This day was folded into day 1, which now covers fractions and mixed numbers together. Day 3's topic comes next."
+        name: "On your own: multiplying decimals",
+        note: "Today you work alone, so here is the order. Warm up with a round or two on day 1 if you want one. Then Move the point, all four problems. Then Point placement: ten problems in Multiply mode and one speed round. Then the workbook worksheets. The fraction pages from day 1 stay right above if you want a warm-up.",
+        pages: [
+          {
+            href: "lesson-02/decimal-lesson.html",
+            name: "Move the point",
+            blurb: "A two-lane machine. Slide each point right until the numbers are whole, multiply, then slide it back left through the answer, one tap at a time. Four problems in order. Not graded.",
+            cta: "Start sliding"
+          },
+          {
+            href: "lesson-02/decimal-practice.html",
+            name: "Point placement",
+            blurb: "Generated decimal problems, graded and never answered for you. If your digits are right and only the point is off, it says so. Or run the 60 second round: the digits are done, you tap where the point goes.",
+            cta: "Start practicing"
+          }
+        ]
       },
       {
         d: 3,
         name: "Coming up",
         pages: [],
-        note: "Nothing on the site yet. Same as day 2: register the pages here when they exist."
+        note: "Nothing on the site yet. Register the pages here when they exist."
       },
       {
         d: 4,

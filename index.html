@@ -33,7 +33,8 @@
 /* Five rows per lesson, one per school day. Each row is a label on the
    left and that day's tiles on the right; below 640px the label sits
    above the tiles instead. A day with no pages shows its note in the
-   tile slot, so the week keeps its shape. */
+   tile slot, so the week keeps its shape; a day with pages and a note
+   shows the note above its tiles. */
 .days{margin:0;padding:0;list-style:none}
 .day{
   display:grid;grid-template-columns:1fr;gap:.55rem;
@@ -64,6 +65,12 @@
   width:.55rem;height:.55rem;margin-right:.7rem;
   border-radius:50%;border:1.5px solid var(--line);background:var(--rink);
 }
+
+/* A day with a note and tiles stacks them: the note reads as the plan
+   for the day, the tiles as the pages it names. */
+.day-body{display:flex;flex-direction:column;gap:.7rem;min-width:0}
+.day-body .day-note{align-items:flex-start;min-height:0;line-height:1.45;max-width:64ch}
+.day-body .day-note::before{margin-top:.5rem}
 
 /* The tile grid fills across as many columns as fit, so a third page on
    a day just drops in. Nothing here counts the tiles. */
@@ -197,10 +204,19 @@
     row.append(label);
 
     if (pages.length){
+      const stack = document.createElement('div');
+      stack.className = 'day-body';
+      if (day.note){
+        const note = document.createElement('p');
+        note.className = 'day-note';
+        note.textContent = day.note;
+        stack.append(note);
+      }
       const list = document.createElement('ul');
       list.className = 'tiles';
       pages.forEach(page => list.append(tileFor(page)));
-      row.append(list);
+      stack.append(list);
+      row.append(stack);
     } else {
       const note = document.createElement('p');
       note.className = 'day-note';

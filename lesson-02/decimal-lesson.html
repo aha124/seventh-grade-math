@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Move the Point — Multiplying Decimals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+  --cell:clamp(34px,9vw,46px);   /* one digit box in a strip */
+  --pt:14px;                      /* the decimal point */
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em}
+.lede{margin:1.3rem 0 .2rem;max-width:58ch;font-size:1.05rem}
+
+/* ---- which problem ---- */
+.picks{display:flex;gap:.4rem;margin:1.2rem 0 0;flex-wrap:wrap}
+.pick{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:inline-flex;align-items:center;gap:.35rem;font-variant-numeric:tabular-nums;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.pick .tick{color:var(--ice)}
+.stepline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.stepline b{color:var(--board);font-weight:700;font-variant-numeric:tabular-nums}
+.ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+/* ---- the machine ----
+   Two factor lanes, the repay counter, the multiply panel, and the
+   product lane, stacked. A lane is a strip of digit boxes with the point
+   drawn as a dot that slides between them; the dot's left offset is the
+   only thing that moves, so the slide is a real slide. */
+.machine{
+  display:flex;flex-direction:column;gap:.8rem;
+  margin:.6rem 0 0;padding:1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.problem{
+  font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,7vw,2.5rem);
+  text-align:center;color:var(--board);line-height:1.1;font-variant-numeric:tabular-nums;
+}
+.problem .op{color:var(--gold);margin:0 .2em}
+.lane{
+  display:flex;align-items:center;gap:.6rem .9rem;flex-wrap:wrap;
+  padding:.6rem .7rem .7rem;border:1.5px solid var(--line);border-radius:3px;background:#F6FAFC;
+  transition:border-color .3s ease,background .3s ease;
+}
+.lane.whole{border-color:var(--good);background:#EEF7F1}
+.lane.home{border-color:var(--good);background:#EEF7F1}
+.lane[hidden]{display:none}
+.lane .lab{flex:0 0 100%;font-family:var(--body);font-size:.72rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#7C93A5}
+.strip{position:relative;display:inline-flex;height:var(--cell);padding-bottom:6px;box-sizing:content-box}
+.strip .d{
+  width:var(--cell);height:var(--cell);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,6vw,2.1rem);color:var(--board);
+  border:1.5px solid var(--line);margin-left:-1.5px;background:var(--paper);
+  transition:opacity .3s ease;font-variant-numeric:tabular-nums;
+}
+.strip .d:first-child{margin-left:0}
+.strip .d.ghost{opacity:.22}
+.strip .pt{
+  position:absolute;bottom:0;width:var(--pt);height:var(--pt);border-radius:50%;
+  background:var(--gold);box-shadow:0 0 0 3px var(--paper);z-index:2;
+  transition:left .38s cubic-bezier(.2,.8,.3,1);
+}
+.strip .pt.hop{animation:hop .38s ease-out}
+@keyframes hop{50%{transform:translateY(-9px)}}
+.lane .val{font-family:var(--display);font-weight:600;font-size:1.2rem;color:var(--board-soft);min-width:4.5ch;font-variant-numeric:tabular-nums}
+.lane .val::before{content:"= ";color:#93A9B8;font-weight:500}
+.lane .ctl{display:inline-flex;align-items:center;gap:.5rem;margin-left:auto}
+.shift{
+  min-width:44px;min-height:44px;padding:0 .75rem;
+  font-family:var(--display);font-weight:700;font-size:1.2rem;letter-spacing:.02em;
+  border:1.5px solid var(--edge);background:var(--paper);color:var(--edge);border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.shift.pay{border-color:var(--gold);color:#8A5F1E}
+.shift:disabled{opacity:.3;cursor:default}
+.tag{font-family:var(--display);font-weight:600;font-size:1rem;color:var(--good);letter-spacing:.02em}
+.tag[hidden]{display:none}
+
+.repay{
+  display:flex;align-items:center;justify-content:center;gap:.7rem;flex-wrap:wrap;
+  padding:.55rem .8rem;border:2px solid var(--gold);border-radius:3px;background:#FFF8E8;
+  font-family:var(--display);font-weight:600;font-size:1.2rem;color:#8A5F1E;letter-spacing:.03em;
+  transition:border-color .3s ease,background .3s ease,color .3s ease;
+}
+.repay .unit{font-size:1.5rem;font-weight:700}
+.repay b{font-size:clamp(2.1rem,8vw,2.9rem);font-weight:700;color:var(--board);line-height:1;font-variant-numeric:tabular-nums;display:inline-block}
+.repay.zero{border-color:var(--good);background:#EEF7F1;color:var(--good)}
+.repay.bump b{animation:bump .35s ease-out}
+@keyframes bump{40%{transform:scale(1.28)}}
+
+.mult{display:none;flex-direction:column;gap:.6rem;padding:.7rem;border:1.5px solid var(--gold);border-radius:3px;background:#FFFDF8}
+.mult.show{display:flex}
+.mult .row{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,6vw,2.1rem);color:var(--board);font-variant-numeric:tabular-nums;
+}
+.mult input{
+  width:6.2rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.6rem;
+  border:1.5px solid var(--gold);border-radius:3px;padding:.1rem .3rem;
+  background:#fff;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.mult input.miss{background:#FBF0DF}
+.mult input.ok{border-color:var(--good);background:#EEF7F1}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.mult input.shake{animation:shake .38s ease-in-out}
+.okb{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.okb:disabled{opacity:.35;cursor:default}
+.work{
+  display:none;margin:0 auto;padding:.4rem .8rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.05rem;line-height:1.4;
+  color:var(--board);white-space:pre;text-align:left;
+  border-left:3px solid var(--line);
+}
+.work.show{display:block}
+.work-title{font-family:var(--body);font-size:.72rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#7C93A5;text-align:center}
+.work-title[hidden]{display:none}
+
+.done{
+  display:none;flex-direction:column;gap:.35rem;align-items:flex-start;
+  padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+}
+.done.show{display:flex}
+.done .eqn{font-family:var(--display);font-size:1.6rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.done p{margin:0;font-size:.98rem;color:var(--board)}
+.done p b{font-weight:600;color:var(--good)}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--edge)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+
+.actions{display:flex;gap:.6rem;margin:1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.actions .btn[hidden]{display:none}
+.stuck{margin:1.2rem 0 0;font-size:.95rem;color:var(--board-soft);max-width:60ch}
+.stuck b{color:var(--board)}
+
+/* ---- the habit, at the end ---- */
+.habit{
+  display:none;margin:1.8rem 0 0;padding:1rem 1.1rem 1.1rem;
+  background:var(--paper);border:1.5px solid var(--edge);border-radius:3px;
+}
+.habit.show{display:block}
+.habit h2{font-family:var(--display);font-size:1.5rem;margin:0 0 .3rem;color:var(--board);line-height:1.1}
+.habit p{margin:.45rem 0;max-width:58ch}
+.habit code{font-family:var(--display);font-size:1.1rem;font-weight:700;color:var(--board)}
+.habit .try{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.7rem 0 0}
+.habit .try .q{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);flex:0 0 100%}
+.habit .try button{
+  min-height:44px;min-width:44px;padding:0 .9rem;
+  font-family:var(--display);font-weight:700;font-size:1.3rem;font-variant-numeric:tabular-nums;
+  border:1.5px solid var(--edge);background:var(--paper);color:var(--edge);border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.habit .try button.yes{background:#EEF7F1;border-color:var(--good);color:var(--good)}
+.habit .try button.no{background:#FBF0DF;border-color:var(--gold);color:#8A5F1E}
+.habit .verdict{margin:.5rem 0 0;font-size:.98rem;color:var(--board);min-height:1.5em}
+
+@media (prefers-reduced-motion:reduce){
+  .strip .pt,.lane,.repay{transition:none}
+  .strip .pt.hop,.repay.bump b,.mult input.shake{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Move <span>the Point</span></h1>
+    <div class="sess">Multiplying decimals, one slide at a time</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="lede">A decimal problem is a whole-number problem plus some bookkeeping. Slide each point to the right until both numbers are whole. Every slide is a ×10 you owe. Multiply the whole numbers, then pay the slides back: one ÷10 for each, sliding the point left through the answer. Do the four problems below in order.</p>
+
+  <div class="picks" id="picks"></div>
+
+  <div class="stepline">
+    <span id="stepName"></span>
+    <span class="ask" id="ask"></span>
+  </div>
+
+  <div class="machine" id="machine">
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="lane" id="laneA"></div>
+    <div class="lane" id="laneB"></div>
+    <div class="repay" id="repay" aria-live="polite">
+      <span>To repay:</span>
+      <span class="unit">÷10 ×</span>
+      <b id="repayN" data-n="0">0</b>
+    </div>
+    <div class="mult" id="mult">
+      <div class="row">
+        <span id="multText"></span>
+        <input id="prodIn" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="The whole-number product">
+        <button class="okb" id="prodOk" type="button" aria-label="Check the product">✓</button>
+      </div>
+      <div class="work-title" id="workTitle" hidden>The long way</div>
+      <div class="work" id="work"></div>
+    </div>
+    <div class="lane" id="laneP" hidden></div>
+    <div class="done" id="done"></div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="actions">
+    <button class="btn primary" id="onward" type="button" hidden>Next problem</button>
+    <button class="btn ghost" id="restart" type="button">Start this one over</button>
+  </div>
+
+  <p class="stuck"><b>If you get stuck:</b> look at the repay counter. Every ×10 you tapped is one ÷10 you still owe. When it reads 0, the point is home and you are done.</p>
+
+  <section class="habit" id="habit" aria-label="Estimate first">
+    <h2>Before every multiply: estimate</h2>
+    <p>Round each number to a whole number and multiply those in your head. Then do the real problem. If your real answer is not near your estimate, the point is in the wrong place. That is the whole check, and it takes five seconds.</p>
+    <p><code>3.6 × 1.2</code>: 3.6 is about 4, 1.2 is about 1, and 4 × 1 = 4. So the answer is about 4. The digits are 432 either way; the estimate tells you where the point goes.</p>
+    <div class="try" id="try">
+      <span class="q">Which one is 3.6 × 1.2?</span>
+    </div>
+    <p class="verdict" id="verdict"></p>
+    <p>Do this on paper too, before the worksheet problems. Write the estimate in the margin, then multiply, then compare.</p>
+  </section>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script>
+/* ---------------- exact decimals ----------------
+   A decimal here is {core, places}: an integer and a count of digits to
+   the right of the point. 2.4 is {24, 1}. Nothing on this page is ever a
+   float; the slide is a change of places, and the multiply is integer. */
+const POW10 = [1, 10, 100, 1000, 10000, 100000, 1000000];
+function fmt(d){
+  if (d.places === 0) return String(d.core);
+  const s = String(d.core).padStart(d.places + 1, '0');
+  return s.slice(0, s.length - d.places) + '.' + s.slice(s.length - d.places);
+}
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- the four problems, in order ----------------
+   1 one shift. 2 two shifts, one per factor. 3 the trap: 0.08, where the
+   slide back has to land on a leading zero. 4 one factor already whole.
+   The sanity line is written per problem because the rounding story is
+   different when a factor is under one. */
+const PROBLEMS = [
+  { a:{core:3, places:1},   b:{core:4, places:0},
+    sane:'0.3 is less than 1, so the answer has to be less than 4. 1.2 is. 12 is not.' },
+  { a:{core:24, places:1},  b:{core:13, places:1},
+    sane:'2.4 is about 2 and 1.3 is about 1. 2 × 1 = 2, and 3.12 is near 2. 31.2 is nowhere near it.' },
+  { a:{core:4, places:1},   b:{core:2, places:1},
+    sane:'Both numbers are less than 1, so the answer is smaller than either of them. 0.08 is. 0.8 is bigger than 0.4, so it cannot be right.' },
+  { a:{core:976, places:2}, b:{core:14, places:0},
+    sane:'9.76 is about 10, and 10 × 14 = 140. 136.64 is near 140. 1366.4 is not.' }
+];
+
+/* ---------------- saved ticks ----------------
+   Only which problems are finished, so a reload does not lose the row of
+   ticks. Nothing is graded and no token is earned here. */
+const STORE_KEY = 'seventh-grade-math:decimal-lesson';
+let finished = PROBLEMS.map(() => false);
+function loadTicks(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    if (p && Array.isArray(p.finished)) finished = PROBLEMS.map((_, i) => p.finished[i] === true);
+  } catch (e) { finished = PROBLEMS.map(() => false); }
+}
+function saveTicks(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ finished })); } catch (e) {}
+}
+
+/* ---------------- page state ---------------- */
+const sayEl   = document.getElementById('say');
+const doneEl  = document.getElementById('done');
+const picksEl = document.getElementById('picks');
+const repayEl = document.getElementById('repay');
+const repayN  = document.getElementById('repayN');
+const multEl  = document.getElementById('mult');
+const multText = document.getElementById('multText');
+const prodIn  = document.getElementById('prodIn');
+const prodOk  = document.getElementById('prodOk');
+const workEl  = document.getElementById('work');
+const workTitle = document.getElementById('workTitle');
+const onward  = document.getElementById('onward');
+const restart = document.getElementById('restart');
+const habitEl = document.getElementById('habit');
+
+let n = 0;                 /* which problem */
+let S = null;              /* the machine: factors, repay, stage, misses */
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+/* ---------------- a lane ----------------
+   digits  the digit boxes, left to right, leading zeros included
+   pt      how many digits sit left of the point
+   A digit is drawn as a ghost when it is a leading zero with another
+   digit still between it and the point: the box stays, so there is a
+   place for the point to land, but it does not read as part of the
+   number. 0.3 is "0" "3" with pt 1; after one ×10 it is "3" with a ghost
+   in front. The product lane starts with enough ghost zeros for every
+   ÷10 it will need, which is what gives 0.08 somewhere to land. */
+function makeLane(host, label, kind){
+  host.textContent = '';
+  const lab = document.createElement('span');
+  lab.className = 'lab';
+  lab.textContent = label;
+  const strip = document.createElement('span');
+  strip.className = 'strip';
+  strip.setAttribute('role', 'img');
+  const val = document.createElement('span');
+  val.className = 'val';
+  const ctl = document.createElement('span');
+  ctl.className = 'ctl';
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.hidden = true;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'shift' + (kind === 'pay' ? ' pay' : '');
+  btn.textContent = kind === 'pay' ? '← ÷10' : '×10 →';
+  btn.setAttribute('aria-label', kind === 'pay' ? 'Divide by ten: slide the point one place left' : 'Times ten: slide the point one place right');
+  ctl.append(tag, btn);
+  host.append(lab, strip, val, ctl);
+  return { host, strip, val, tag, btn, digits: [], pt: 0, shifts: 0 };
+}
+function valueText(digits, pt){
+  let whole = digits.slice(0, pt).join('').replace(/^0+(?=\d)/, '');
+  const frac = digits.slice(pt).join('');
+  if (!whole) whole = '0';
+  return frac ? whole + '.' + frac : whole;
+}
+function dotLeft(pt){ return 'calc(' + pt + ' * var(--cell) - var(--pt) / 2)'; }
+function drawLane(lane){
+  const { strip, digits, pt } = lane;
+  strip.textContent = '';
+  let leading = true;
+  digits.forEach((ch, i) => {
+    const d = document.createElement('span');
+    d.className = 'd';
+    d.textContent = ch;
+    if (leading && ch === '0' && i < pt - 1) d.classList.add('ghost');
+    if (ch !== '0') leading = false;
+    strip.append(d);
+  });
+  const dot = document.createElement('span');
+  dot.className = 'pt';
+  dot.setAttribute('aria-hidden', 'true');
+  dot.style.left = dotLeft(pt);
+  strip.append(dot);
+  strip.dataset.point = String(pt);
+  strip.dataset.len = String(digits.length);
+  strip.dataset.places = String(digits.length - pt);
+  const text = valueText(digits, pt);
+  lane.val.textContent = text;
+  strip.setAttribute('aria-label', text);
+}
+/* slide with a hop: the dot is drawn at the old spot first, then moved,
+   so the transition on left has somewhere to go from */
+function slideLane(lane, from){
+  drawLane(lane);
+  if (reduced()) return;
+  const dot = lane.strip.querySelector('.pt');
+  dot.style.transition = 'none';
+  dot.style.left = dotLeft(from);
+  void dot.offsetWidth;
+  dot.style.transition = '';
+  dot.classList.add('hop');
+  dot.style.left = dotLeft(lane.pt);
+}
+
+const laneA = makeLane(document.getElementById('laneA'), 'First number', 'shift');
+const laneB = makeLane(document.getElementById('laneB'), 'Second number', 'shift');
+const laneP = makeLane(document.getElementById('laneP'), 'The answer', 'pay');
+
+/* ---------------- the repay counter ---------------- */
+function drawRepay(bump){
+  repayN.textContent = String(S.repay);
+  repayN.dataset.n = String(S.repay);
+  repayEl.classList.toggle('zero', S.repay === 0 && S.stage !== 'shift' && S.stage !== 'multiply');
+  if (bump && !reduced()){
+    repayEl.classList.remove('bump');
+    void repayEl.offsetWidth;
+    repayEl.classList.add('bump');
+  }
+}
+
+/* ---------------- the walk ---------------- */
+function setAsk(){
+  document.getElementById('ask').textContent =
+      S.stage === 'shift'    ? 'Tap ×10 until both numbers are whole.'
+    : S.stage === 'multiply' ? 'Multiply the two whole numbers.'
+    : S.stage === 'repay'    ? 'Tap ÷10 until the counter reads 0.'
+    : 'Done. Read the two lines under the machine.';
+}
+function drawStep(){
+  const step = document.getElementById('stepName');
+  step.textContent = '';
+  step.append('Problem ');
+  const b = document.createElement('b');
+  b.textContent = String(n + 1);
+  step.append(b, ' of ' + PROBLEMS.length);
+  setAsk();
+}
+function drawPicks(){
+  picksEl.textContent = '';
+  PROBLEMS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pick';
+    b.setAttribute('aria-pressed', String(i === n));
+    b.textContent = fmt(p.a) + ' × ' + fmt(p.b);
+    if (finished[i]){
+      const t = document.createElement('span');
+      t.className = 'tick';
+      t.textContent = '✓';
+      b.append(' ', t);
+    }
+    b.onclick = () => load(i);
+    picksEl.append(b);
+  });
+  const h = document.createElement('button');
+  h.type = 'button';
+  h.className = 'pick';
+  h.textContent = 'Estimate first';
+  h.setAttribute('aria-pressed', 'false');
+  h.onclick = () => showHabit(true);
+  picksEl.append(h);
+}
+function laneReady(lane, d){
+  lane.digits = String(d.core).padStart(d.places + 1, '0').split('');
+  lane.pt = lane.digits.length - d.places;
+  lane.shifts = 0;
+  lane.host.classList.remove('whole', 'home');
+  drawLane(lane);
+  const whole = d.places === 0;
+  lane.btn.disabled = whole;
+  lane.tag.hidden = !whole;
+  lane.tag.textContent = whole ? 'Already whole' : '';
+  if (whole) lane.host.classList.add('whole');
+}
+function load(i){
+  n = i;
+  const p = PROBLEMS[n];
+  S = { a: p.a, b: p.b, repay: 0, stage: 'shift', misses: 0 };
+  const problemEl = document.getElementById('problem');
+  problemEl.textContent = '';
+  const op = document.createElement('span');
+  op.className = 'op';
+  op.textContent = '×';
+  problemEl.append(fmt(p.a), op, fmt(p.b));
+  laneReady(laneA, p.a);
+  laneReady(laneB, p.b);
+  laneP.host.hidden = true;
+  laneP.host.classList.remove('home');
+  multEl.classList.remove('show');
+  workEl.classList.remove('show');
+  workEl.textContent = '';
+  workTitle.hidden = true;
+  prodIn.value = '';
+  prodIn.className = '';
+  prodIn.disabled = false;
+  prodOk.disabled = false;
+  doneEl.className = 'done';
+  doneEl.textContent = '';
+  onward.hidden = true;
+  drawRepay(false);
+  drawPicks();
+  drawStep();
+  if (p.a.places === 0 || p.b.places === 0){
+    const w = p.a.places === 0 ? fmt(p.a) : fmt(p.b);
+    say('', w + ' is already whole.', 'Its ×10 stays off. Slide the other one.');
+  } else {
+    say('', 'Neither number is whole yet.', 'Tap ×10 on each one and watch the point slide. Every tap is one you owe back.');
+  }
+  checkWhole();
+}
+
+function shift(lane){
+  if (!S || S.stage !== 'shift') return;
+  if (lane.pt >= lane.digits.length) return;
+  const from = lane.pt;
+  lane.pt++;
+  lane.shifts++;
+  S.repay++;
+  slideLane(lane, from);
+  drawRepay(true);
+  if (lane.pt === lane.digits.length){
+    lane.btn.disabled = true;
+    lane.tag.hidden = false;
+    lane.tag.textContent = 'Whole';
+    lane.host.classList.add('whole');
+  }
+  say('', '×10. The point slid one place right.', 'The counter went up by one: that is a ÷10 you owe at the end.');
+  checkWhole();
+}
+function checkWhole(){
+  const aw = laneA.pt === laneA.digits.length, bw = laneB.pt === laneB.digits.length;
+  if (!(aw && bw)) return;
+  S.stage = 'multiply';
+  setAsk();
+  multText.textContent = S.a.core + ' × ' + S.b.core + ' =';
+  multEl.classList.add('show');
+  say('good', 'Both whole. Now it is just ' + S.a.core + ' × ' + S.b.core + '.',
+    'Type the answer. The counter says ' + S.repay + ': keep that for after.');
+  prodIn.focus();
+}
+
+/* the multiplication written out, one row per digit of the second number */
+function longForm(A, B){
+  const sa = String(A), sb = String(B);
+  const total = A * B;
+  const bd = sb.split('').reverse();
+  const parts = bd.map((d, k) => A * Number(d) * POW10[k]);
+  const width = Math.max(String(total).length, sa.length, sb.length + 2);
+  const pad = s => String(s).padStart(width, ' ');
+  const rows = [pad(sa), pad('× ' + sb), pad('—'.repeat(width))];
+  if (parts.length === 1){
+    rows.push(pad(total));
+  } else {
+    parts.forEach((p, k) => rows.push(pad(p) + '    ' + sa + ' × ' + (Number(bd[k]) * POW10[k])));
+    rows.push(pad('—'.repeat(width)));
+    rows.push(pad(total) + '    add the rows');
+  }
+  return rows.join('\n');
+}
+function showWork(){
+  workEl.textContent = longForm(S.a.core, S.b.core);
+  workEl.classList.add('show');
+  workTitle.hidden = false;
+}
+function checkProduct(){
+  if (!S || S.stage !== 'multiply') return;
+  const raw = prodIn.value.replace(/[^0-9]/g, '');
+  if (!raw){ say('', 'Type the product first.'); return; }
+  const v = parseInt(raw, 10);
+  const want = S.a.core * S.b.core;
+  if (v !== want){
+    S.misses++;
+    prodIn.classList.add('miss');
+    prodIn.classList.remove('shake');
+    void prodIn.offsetWidth;
+    prodIn.classList.add('shake');
+    setTimeout(() => prodIn.classList.remove('shake'), 420);
+    if (S.misses >= 2){
+      showWork();
+      say('bad', 'Not that. Here it is the long way.', 'Add the rows, then type the total.');
+    } else {
+      say('bad', 'Not that.', 'Do it the long way on paper: one row for each digit of ' + S.b.core + ', then add the rows.');
+    }
+    return;
+  }
+  prodIn.classList.remove('miss');
+  prodIn.classList.add('ok');
+  prodIn.disabled = true;
+  prodOk.disabled = true;
+  showWork();
+  /* the product lane: the integer, with a ghost zero in front for every
+     ÷10 that would otherwise run off the left end */
+  const digits = String(want).split('');
+  const pad = Math.max(0, S.repay + 1 - digits.length);
+  laneP.digits = Array(pad).fill('0').concat(digits);
+  laneP.pt = laneP.digits.length;
+  laneP.host.hidden = false;
+  laneP.btn.disabled = S.repay === 0;
+  laneP.tag.hidden = true;
+  drawLane(laneP);
+  S.stage = 'repay';
+  setAsk();
+  drawRepay(false);
+  if (S.repay === 0){ finish(); return; }
+  say('good', want + '. Right.', 'Now pay back the ' + S.repay + (S.repay === 1 ? ' slide' : ' slides') + ': tap ÷10 and watch the point come left.');
+}
+
+function pay(){
+  if (!S || S.stage !== 'repay' || S.repay <= 0) return;
+  const from = laneP.pt;
+  laneP.pt--;
+  S.repay--;
+  slideLane(laneP, from);
+  drawRepay(true);
+  if (S.repay === 0){ finish(); return; }
+  const onZero = laneP.digits[laneP.pt - 1] === '0' && laneP.digits.slice(0, laneP.pt).every(c => c === '0');
+  say('', '÷10. The point slid one place left.',
+    (onZero ? 'It landed with a zero in front: that zero is part of the number now. ' : '') + 'Counter says ' + S.repay + ' to go.');
+}
+
+function finish(){
+  S.stage = 'done';
+  laneP.btn.disabled = true;
+  laneP.tag.hidden = false;
+  laneP.tag.textContent = 'Home';
+  laneP.host.classList.add('home');
+  drawRepay(false);
+  setAsk();
+  const p = PROBLEMS[n];
+  const answer = { core: p.a.core * p.b.core, places: p.a.places + p.b.places };
+  const total = p.a.places + p.b.places;
+  doneEl.textContent = '';
+  const eqn = document.createElement('div');
+  eqn.className = 'eqn';
+  eqn.textContent = fmt(p.a) + ' × ' + fmt(p.b) + ' = ' + fmt(answer);
+  const rule = document.createElement('p');
+  const rb = document.createElement('b');
+  rb.textContent = 'The shortcut: ';
+  rule.append(rb, 'count the decimal places in the problem; the answer has that many. ' + fmt(p.a) + ' has ' + p.a.places
+    + ', ' + fmt(p.b) + ' has ' + p.b.places + ', so ' + total + ' in all, and ' + fmt(answer) + ' has ' + total + '. The machine just proved it.');
+  const sane = document.createElement('p');
+  const sb = document.createElement('b');
+  sb.textContent = 'Sanity check: ';
+  sane.append(sb, p.sane);
+  doneEl.append(eqn, rule, sane);
+  doneEl.className = 'done show';
+  if (!finished[n]){ finished[n] = true; saveTicks(); }
+  drawPicks();
+  const last = n === PROBLEMS.length - 1;
+  onward.hidden = false;
+  onward.textContent = last ? 'One more thing' : 'Next problem';
+  say('good', 'Home. Counter at 0, point in place.', last ? 'That is all four. One more thing below.' : 'Read the two lines, then go on.');
+}
+
+onward.onclick = () => {
+  if (n < PROBLEMS.length - 1){ load(n + 1); window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); }
+  else showHabit(true);
+};
+restart.onclick = () => load(n);
+laneA.btn.onclick = () => shift(laneA);
+laneB.btn.onclick = () => shift(laneB);
+laneP.btn.onclick = pay;
+prodOk.onclick = checkProduct;
+prodIn.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); checkProduct(); } });
+prodIn.addEventListener('input', () => { prodIn.value = prodIn.value.replace(/[^0-9]/g, '').slice(0, 6); prodIn.classList.remove('miss'); });
+
+/* ---------------- the habit ---------------- */
+const CHOICES = [ {text:'0.432', ok:false}, {text:'4.32', ok:true}, {text:'43.2', ok:false} ];
+function showHabit(scroll){
+  habitEl.classList.add('show');
+  if (scroll) habitEl.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
+}
+(function buildTry(){
+  const host = document.getElementById('try');
+  const verdict = document.getElementById('verdict');
+  CHOICES.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = c.text;
+    b.onclick = () => {
+      Array.prototype.forEach.call(host.querySelectorAll('button'), x => x.classList.remove('yes', 'no'));
+      b.classList.add(c.ok ? 'yes' : 'no');
+      verdict.textContent = c.ok
+        ? 'Yes. 4.32 is near 4. Same digits as the other two, and only this one passes the estimate.'
+        : c.text + ' is not near 4. Same digits, wrong place for the point. Estimate first and this never gets past you.';
+    };
+    host.append(b);
+  });
+})();
+
+loadTicks();
+if (finished.every(Boolean)) showHabit(false);
+const firstOpen = finished.findIndex(f => !f);
+load(firstOpen === -1 ? 0 : firstOpen);
+</script>
+</body>
+</html>

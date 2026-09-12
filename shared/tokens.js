@@ -19,19 +19,24 @@
   const CONFIG = {
     cleanSolve: 2,     /* tokens for a solve that was right first try with no hints */
     solve: 1,          /* tokens for a solve that needed a hint or a retry */
-    dailyCap: 20,      /* most tokens solves can earn in one calendar day */
-    bestBonus: 5,      /* bonus for a new personal best in a speed or timed round; exempt from the cap, once per mode per day */
+    weeklyCap: 100,    /* most tokens solves can earn in one week, Monday 00:00 local to the next */
+    bestBonus: 5,      /* bonus for a new personal best in a speed or timed round; exempt from the cap, once per mode per week */
     toastMs: 2600,     /* how long the +N toast stays on screen */
-    dayHistory: 120,   /* per-day tallies kept; older days are dropped */
+    weekHistory: 60,   /* per-week tallies kept; older weeks are dropped */
     ledgerCap: 500     /* redemptions and adjustments kept; oldest fall off the front */
   };
 
   /* ---------------- storage ----------------
      Two keys, both new, both under the site namespace.
-     TOKENS_KEY  { balance, earned, days: { "YYYY-MM-DD": { earned, bonus, best: { mode: true } } } }
+     TOKENS_KEY  { balance, earned, weeks: { "YYYY-MM-DD": { earned, bonus, best: { mode: true } } } }
                  balance  what she can spend now
                  earned   lifetime tokens from practice, bonuses included
-                 days     per-day tallies; earned is what counts toward the cap
+                 weeks    per-week tallies keyed by the Monday that starts the
+                          week; earned is what counts toward the cap. Before
+                          the weekly cap this was a per-day "days" object; a
+                          saved state that still has one is read for its
+                          balance and lifetime total only, so the week in
+                          progress starts at zero used
      LEDGER_KEY  [ record, ... ] in the order they happened
                  { id, t, kind: "redeem", item, name, cost, status: "pending" | "fulfilled", done }
                  { id, t, kind: "adjust", delta, reason } */
@@ -40,13 +45,18 @@
 
   const int = (v, min) => Number.isFinite(v) ? Math.max(min, Math.floor(v)) : min;
 
-  function today(){
+  /* The week runs Monday 00:00 local time to the next. Its key is that
+     Monday's date, so a tally never depends on the time zone the page was
+     last opened in beyond the local calendar itself. */
+  function weekKey(){
     const d = new Date();
+    const back = (d.getDay() + 6) % 7;                 /* Monday is 0 */
+    const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - back);
     const p = n => String(n).padStart(2, '0');
-    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    return monday.getFullYear() + '-' + p(monday.getMonth() + 1) + '-' + p(monday.getDate());
   }
 
-  function freshState(){ return { balance: 0, earned: 0, days: {} }; }
+  function freshState(){ return { balance: 0, earned: 0, weeks: {} }; }
 
   function readState(){
     let s = freshState();
@@ -57,16 +67,18 @@
         if (p && typeof p === 'object'){
           s.balance = int(p.balance, 0);
           s.earned = int(p.earned, 0);
-          if (p.days && typeof p.days === 'object'){
-            Object.keys(p.days).sort().slice(-CONFIG.dayHistory).forEach(k => {
-              const d = p.days[k] || {};
-              s.days[k] = {
-                earned: int(d.earned, 0),
-                bonus: int(d.bonus, 0),
-                best: (d.best && typeof d.best === 'object') ? d.best : {}
+          if (p.weeks && typeof p.weeks === 'object'){
+            Object.keys(p.weeks).sort().slice(-CONFIG.weekHistory).forEach(k => {
+              const w = p.weeks[k] || {};
+              s.weeks[k] = {
+                earned: int(w.earned, 0),
+                bonus: int(w.bonus, 0),
+                best: (w.best && typeof w.best === 'object') ? w.best : {}
               };
             });
           }
+          /* an older per-day state has no weeks: balance and lifetime total
+             carry over above, the day tallies are left behind */
         }
       }
     } catch (e) { s = freshState(); }
@@ -79,9 +91,9 @@
     fire();
   }
 
-  function dayOf(s, key){
-    if (!s.days[key]) s.days[key] = { earned: 0, bonus: 0, best: {} };
-    return s.days[key];
+  function weekOf(s, key){
+    if (!s.weeks[key]) s.weeks[key] = { earned: 0, bonus: 0, best: {} };
+    return s.weeks[key];
   }
 
   function readLedger(){
@@ -108,38 +120,38 @@
 
   /* One solved problem. clean is the page's own first-try, no-hints
      determination; the same one its log record carries. Returns the
-     number of tokens that actually landed, which is zero once the day's
+     number of tokens that actually landed, which is zero once the week's
      cap is full. */
   function earnSolve(opts){
     const clean = !!(opts && opts.clean);
     const base = clean ? CONFIG.cleanSolve : CONFIG.solve;
     const s = readState();
-    const day = dayOf(s, today());
-    const room = Math.max(0, CONFIG.dailyCap - day.earned);
+    const week = weekOf(s, weekKey());
+    const room = Math.max(0, CONFIG.weeklyCap - week.earned);
     const award = Math.min(base, room);
     if (award > 0){
-      day.earned += award;
+      week.earned += award;
       s.balance += award;
       s.earned += award;
       writeState(s);
       toast(award, s.balance, clean ? 'Clean solve' : 'Solved');
     } else {
       draw(s);
-      quietToast('Today’s ' + CONFIG.dailyCap + ' are all earned. Tomorrow is a new day.');
+      quietToast('This week’s ' + CONFIG.weeklyCap + ' are all earned. Monday starts a new week.');
     }
     return award;
   }
 
   /* A new personal best in a timed round. mode is a short label like
-     "exponents:speed"; the bonus lands at most once per mode per day and
-     does not count toward the daily cap. Returns tokens landed. */
+     "exponents:speed"; the bonus lands at most once per mode per week and
+     does not count toward the weekly cap. Returns tokens landed. */
   function earnBest(mode){
     const key = String(mode || 'round');
     const s = readState();
-    const day = dayOf(s, today());
-    if (day.best[key]) { draw(s); return 0; }
-    day.best[key] = true;
-    day.bonus += CONFIG.bestBonus;
+    const week = weekOf(s, weekKey());
+    if (week.best[key]) { draw(s); return 0; }
+    week.best[key] = true;
+    week.bonus += CONFIG.bestBonus;
     s.balance += CONFIG.bestBonus;
     s.earned += CONFIG.bestBonus;
     writeState(s);
@@ -302,10 +314,10 @@
     CONFIG: CONFIG,
     KEYS: { tokens: TOKENS_KEY, ledger: LEDGER_KEY },
     ROOT: ROOT,
-    today: today,
+    weekKey: weekKey,
     state: readState,
     balance: () => readState().balance,
-    earnedToday: () => { const s = readState(); const d = s.days[today()]; return d ? d.earned : 0; },
+    earnedThisWeek: () => { const s = readState(); const w = s.weeks[weekKey()]; return w ? w.earned : 0; },
     ledger: readLedger,
     earnSolve: earnSolve,
     earnBest: earnBest,

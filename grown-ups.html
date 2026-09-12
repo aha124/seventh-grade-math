@@ -155,7 +155,7 @@ h2{
     stats.textContent = '';
     stats.append(
       stat(s.balance, 'Balance'),
-      stat(Tokens.earnedToday() + ' of ' + C.dailyCap, 'Earned today'),
+      stat(Tokens.earnedThisWeek() + ' of ' + C.weeklyCap, 'Earned this week'),
       stat(s.earned, 'Earned, all time'),
       stat(spent, 'Spent on prizes'),
       stat(handed, 'Handed over'),

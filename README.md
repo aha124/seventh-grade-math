@@ -83,8 +83,9 @@ draining and the practice page only needs splitting.
 
 Every solve on a practice page earns tokens, and the prize counter on
 `shop.html` spends them. All of it is `shared/tokens.js`: the numbers
-(2 for a clean solve, 1 otherwise, 20 a day, a 5 token bonus for a new
-speed-round best at most once per mode per day) sit in one config object
+(2 for a clean solve, 1 otherwise, 100 a week from Monday 00:00 local
+time, a 5 token bonus for a new speed-round best at most once per mode
+per week) sit in one config object
 at the top of that file. A practice page earns by calling
 `Tokens.earnSolve({ clean })` right where it writes its log record, and
 `Tokens.earnBest('page:mode')` where it decides a round was a new best.

@@ -34,13 +34,19 @@ const LESSONS = [
       {
         d: 1,
         name: "Multiplying and dividing fractions",
-        note: "Dice warm-up, Version 2: roll for two fractions, multiply them in your head, and say the answer in lowest terms. Then Of means multiply, all five in order.",
+        note: "Dice warm-up, Version 2: roll for two fractions, multiply them in your head, and say the answer in lowest terms. Then Of means multiply, all five in order, then Straight across.",
         pages: [
           {
             href: "lesson-03/area.html",
             name: "Of means multiply",
             blurb: "A unit square. Shade three quarters in stripes one way, two thirds of that the other way, and the double-shaded cells are the answer. Five walkthroughs: the grid, canceling, whole numbers, why division flips, and mixed numbers.",
             cta: "Start shading"
+          },
+          {
+            href: "lesson-03/multiply-practice.html",
+            name: "Straight across",
+            blurb: "Generated multiply and divide problems, graded in lowest terms and never answered for you. The four classic mistakes get named. Or run the 60 second round where all you do is spot what cancels.",
+            cta: "Start practicing"
           }
         ]
       },

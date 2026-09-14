@@ -41,6 +41,7 @@ lesson-02/fractions-practice.html   graded adding and subtracting, plus the LCD 
 lesson-02/decimal-lesson.html       multiplying decimals: slide the point, multiply, slide it back
 lesson-02/decimal-practice.html     graded decimal multiplication, plus the place-the-point speed round
 lesson-03/area.html      the area model: of means multiply, canceling, why division flips, mixed numbers
+lesson-03/multiply-practice.html    graded multiply and divide with the four named mistakes, plus the cancel speed round
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares

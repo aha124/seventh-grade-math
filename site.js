@@ -26,6 +26,27 @@
      blurb  one or two sentences under it
      cta    optional; the link text. Defaults to "Open" */
 
+/* The daily warm-ups: a short strip pinned above the lessons on the
+   hub. Each is one line. An entry with an href is a link, and the href
+   may carry #tab=<mode> so the practice page opens on that tab. An
+   entry without an href is an off-screen job and shows its text.
+   DICE_VERSION is the version of the dice game in play right now; bump
+   it when the game changes and add the new version's line to
+   DICE_GAMES. */
+const DICE_VERSION = 2;
+const DICE_GAMES = {
+  1: "roll two fractions and add them",
+  2: "roll two fractions and multiply them in your head, lowest terms"
+};
+const WARMUPS = [
+  { name: "Exponents speed round", href: "lesson-01/exponents-practice.html#tab=speed",
+    text: "45 seconds on the nine powers worth knowing cold." },
+  { name: "LCD Match it", href: "lesson-02/fractions-practice.html#tab=match",
+    text: "60 seconds of just the bottoms." },
+  { name: "Dice game", version: DICE_VERSION,
+    text: "grab the dice: " + (DICE_GAMES[DICE_VERSION] || "") + "." }
+];
+
 const LESSONS = [
   {
     n: 3,

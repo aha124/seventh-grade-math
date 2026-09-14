@@ -883,8 +883,14 @@ loadProgress();
 loadLog();
 drawTally();
 drawSpeedBar();
+/* a #tab=<mode> fragment picks the opening tab, so the hub's warm-up
+   strip can land straight on a speed round */
+function tabFromHash(){
+  const m = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+  return m && MODES.some(x => x.key === m[1]) ? m[1] : null;
+}
 drawLog();
-setMode('evaluate');
+setMode(tabFromHash() || 'evaluate');
 </script>
 </body>
 </html>

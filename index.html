@@ -126,6 +126,25 @@
 .counter-sub{font-size:.92rem;color:#7A5A22}
 .counter-go{font-family:var(--display);font-size:1.05rem;font-weight:600;color:#8A5F1E;white-space:nowrap}
 
+/* The daily warm-ups: three one-line entries pinned above the lessons.
+   Compact on purpose; the lessons are the page, this is the two-minute
+   start. */
+.warmups{margin:1.2rem 0 0;padding:.55rem .9rem .6rem;background:var(--paper);border:1.5px solid var(--line);border-left:5px solid var(--ice);border-radius:3px}
+.warmups h2{margin:0 0 .15rem;font-family:var(--body);font-size:.72rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#7C93A5}
+.warmups ul{margin:0;padding:0;list-style:none}
+.warm{
+  display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;
+  min-height:44px;padding:.35rem 0;
+  border-top:1px solid var(--line);text-decoration:none;color:inherit;
+}
+.warmups li:first-child .warm{border-top:none}
+.warm .wname{font-family:var(--display);font-weight:700;font-size:1.15rem;color:var(--board);line-height:1.1}
+a.warm .wname{color:var(--edge)}
+a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoration:underline}
+.warm .wtext{font-size:.92rem;color:var(--board-soft);flex:1 1 14rem;min-width:0}
+.warm .wver{font-family:var(--body);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7C93A5;padding:.05rem .4rem;border:1px solid var(--line);border-radius:999px}
+.warm .go{font-family:var(--display);font-size:1rem;font-weight:600;color:var(--edge);margin-left:auto;white-space:nowrap}
+
 .nolist{margin:1.6rem 0 0;color:var(--board-soft)}
 .foot{margin:2.4rem 0 0;padding-top:1rem;border-top:1.5px solid var(--line);font-size:.95rem;color:#7C93A5;max-width:56ch}
 .foot-link{display:inline-block;min-height:44px;line-height:44px;margin-top:-.4rem;color:var(--edge);font-weight:600}
@@ -151,6 +170,11 @@
     </span>
     <span class="counter-go">Open the shop →</span>
   </a>
+
+  <section class="warmups" id="warmups" hidden aria-label="Daily warm-ups">
+    <h2>Daily warm-ups</h2>
+    <ul id="warmupList"></ul>
+  </section>
 
   <div id="lessons">
     <p class="nolist">The list could not load. Open <code>index.html</code> from the folder that holds <code>site.js</code>.</p>
@@ -252,6 +276,41 @@
 
   host.textContent = '';
   host.append(frag);
+
+  /* the warm-up strip, from the WARMUPS array in site.js */
+  const strip = document.getElementById('warmups');
+  const list = document.getElementById('warmupList');
+  if (typeof WARMUPS !== 'undefined' && Array.isArray(WARMUPS) && WARMUPS.length){
+    WARMUPS.forEach(w => {
+      const li = document.createElement('li');
+      const row = document.createElement(w.href ? 'a' : 'div');
+      row.className = 'warm';
+      if (w.href) row.href = w.href;
+      const name = document.createElement('span');
+      name.className = 'wname';
+      name.textContent = w.name;
+      row.append(name);
+      if (w.version){
+        const ver = document.createElement('span');
+        ver.className = 'wver';
+        ver.textContent = 'Version ' + w.version;
+        row.append(ver);
+      }
+      const text = document.createElement('span');
+      text.className = 'wtext';
+      text.textContent = w.text || '';
+      row.append(text);
+      if (w.href){
+        const go = document.createElement('span');
+        go.className = 'go';
+        go.textContent = 'Go →';
+        row.append(go);
+      }
+      li.append(row);
+      list.append(li);
+    });
+    strip.hidden = false;
+  }
 })();
 </script>
 

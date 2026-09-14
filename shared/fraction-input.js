@@ -47,6 +47,10 @@
     return make(a.n * (L / a.d) + b.n * (L / b.d), L);
   }
   function sub(a, b){ return add(a, { n: -b.n, d: b.d }); }
+  /* straight across, then reduce; and division as the flipped multiply.
+     Dividing by zero comes back null, like make() with a zero bottom. */
+  function mul(a, b){ return make(a.n * b.n, a.d * b.d); }
+  function div(a, b){ return b.n === 0 ? null : make(a.n * b.d, a.d * b.n); }
   function cmp(a, b){
     const x = a.n * b.d, y = b.n * a.d;
     return x < y ? -1 : (x > y ? 1 : 0);
@@ -101,6 +105,16 @@
       ['add 1/2 1/2', add(make(1,2), make(1,2)), {n:1, d:1}],
       ['sub 5/6 1/3', sub(make(5,6), make(1,3)), {n:1, d:2}],
       ['sub 1/4 1/2', sub(make(1,4), make(1,2)), {n:-1, d:4}],
+      ['mul 2/3 3/4', mul(make(2,3), make(3,4)), {n:1, d:2}],
+      ['mul 7/12 6/7', mul(make(7,12), make(6,7)), {n:1, d:2}],
+      ['mul 4 3/4', mul(make(4,1), make(3,4)), {n:3, d:1}],
+      ['mul 3/2 7/3', mul(make(3,2), make(7,3)), {n:7, d:2}],
+      ['mul 12 3/4 by 4 1/3', mul(fromParts(12,3,4), fromParts(4,1,3)), {n:221, d:4}],
+      ['mul 5/12 4/20', mul(make(5,12), make(4,20)), {n:1, d:12}],
+      ['div 3/4 1/2', div(make(3,4), make(1,2)), {n:3, d:2}],
+      ['div 6 2/3 by 2 1/2', div(fromParts(6,2,3), fromParts(2,1,2)), {n:8, d:3}],
+      ['div 2/3 by 4', div(make(2,3), make(4,1)), {n:1, d:6}],
+      ['div by 0', div(make(1,2), make(0,1)), null],
       ['cmp 2/3 3/4', cmp(make(2,3), make(3,4)), -1],
       ['eq 2/4 1/2', eq(make(2,4), make(1,2)), true],
       ['eq 2/4 1/3', eq(make(2,4), make(1,3)), false],
@@ -116,7 +130,7 @@
     return cases.filter(c => !same(c[1], c[2])).map(c => c[0] + ': got ' + JSON.stringify(c[1]) + ', wanted ' + JSON.stringify(c[2]));
   }
 
-  window.Rational = { gcd, lcm, make, add, sub, cmp, eq, isReduced, toMixed, fromParts, text, pieceName, selfCheck };
+  window.Rational = { gcd, lcm, make, add, sub, mul, div, cmp, eq, isReduced, toMixed, fromParts, text, pieceName, selfCheck };
 
   /* ---------------- the input ----------------
      FractionInput.create({ mixed, label, onEnter, onChange }) returns

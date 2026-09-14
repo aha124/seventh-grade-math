@@ -28,6 +28,49 @@
 
 const LESSONS = [
   {
+    n: 3,
+    title: "Multiplying and dividing fractions and mixed numbers",
+    days: [
+      {
+        d: 1,
+        name: "Multiplying and dividing fractions",
+        note: "Dice warm-up, Version 2: roll for two fractions, multiply them in your head, and say the answer in lowest terms. Then Of means multiply, all five in order.",
+        pages: [
+          {
+            href: "lesson-03/area.html",
+            name: "Of means multiply",
+            blurb: "A unit square. Shade three quarters in stripes one way, two thirds of that the other way, and the double-shaded cells are the answer. Five walkthroughs: the grid, canceling, whole numbers, why division flips, and mixed numbers.",
+            cta: "Start shading"
+          }
+        ]
+      },
+      {
+        d: 2,
+        name: "Coming up",
+        pages: [],
+        note: "Nothing on the site yet. Register the pages here when they exist."
+      },
+      {
+        d: 3,
+        name: "Coming up",
+        pages: [],
+        note: "Nothing on the site yet. Register the pages here when they exist."
+      },
+      {
+        d: 4,
+        name: "Review day",
+        pages: [],
+        note: "Workbook day. Any practice page from this week for a refresher."
+      },
+      {
+        d: 5,
+        name: "Test day",
+        pages: [],
+        note: "The test is on paper. Improper before multiplying, flip the second before dividing, lowest terms at the end."
+      }
+    ]
+  },
+  {
     n: 1,
     title: "Mean, median, mode, and range; exponents; order of operations",
     days: [

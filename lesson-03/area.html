@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Of Means Multiply — Multiplying and Dividing Fractions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+  --bar-h:clamp(36px,9vw,48px);
+  --cols:#2E6E9E;      /* the second fraction, vertical stripes */
+  --rows:#C0862B;      /* "of" the first fraction, horizontal stripes */
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em}
+.lede{margin:1.3rem 0 .2rem;max-width:58ch;font-size:1.05rem}
+
+/* ---- which walkthrough ---- */
+.picks{display:flex;gap:.4rem;margin:1.2rem 0 0;flex-wrap:wrap}
+.pick{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:inline-flex;align-items:center;gap:.35rem;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.pick .tick{color:var(--ice)}
+.pick .fx{font-size:1rem}
+.stepline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.stepline b{color:var(--board);font-weight:700;font-variant-numeric:tabular-nums}
+.ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+/* ---- inline stacked fractions ---- */
+.fx{display:inline-flex;align-items:center;gap:.18em;vertical-align:middle;font-family:var(--display);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.fx-s{display:inline-flex;flex-direction:column;align-items:center;font-size:.82em}
+.fx-n{padding:0 .22em .1em}
+.fx-d{padding:.1em .22em 0;border-top:2px solid currentColor}
+
+/* ---- the stage ---- */
+.stage{
+  display:flex;flex-direction:column;gap:.8rem;
+  margin:.6rem 0 0;padding:1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.expr{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,7vw,2.5rem);color:var(--board);line-height:1.1;
+}
+.expr .op{color:var(--gold)}
+.expr .fx-s{font-size:.85em}
+.expr .of{font-family:var(--body);font-size:.55em;font-weight:500;color:#7C93A5;letter-spacing:.02em}
+.expr .fade{opacity:.35}
+/* tappable numbers for canceling */
+.expr .num{
+  min-width:44px;min-height:44px;padding:0 .3em;border-radius:3px;
+  font:inherit;color:inherit;background:transparent;border:1.5px solid transparent;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.expr .num.pickable{border-color:var(--line)}
+.expr .num.sel{border-color:var(--gold);background:#FFF8E8}
+.expr .num.gone{color:#B9CBD9;text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:var(--gold)}
+.expr .num.gone .re{position:absolute;top:-.55em;right:-.35em;font-size:.6em;color:var(--gold);text-decoration:none}
+.expr .num{position:relative}
+.expr .num:disabled{cursor:default}
+
+/* the unit square as a grid. Cell size is set from script so every cell
+   is at least 44px, which is what makes the 7 by 12 grid tall rather
+   than clipped. */
+.legend{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;font-family:var(--display);font-size:.95rem;color:var(--board-soft)}
+.legend span{display:inline-flex;align-items:center;gap:.35rem}
+.legend i{display:inline-block;width:1.2rem;height:1.2rem;border:1.5px solid var(--board);border-radius:2px}
+.legend i.c{background:repeating-linear-gradient(90deg,var(--cols) 0 3px,transparent 3px 7px)}
+.legend i.r{background:repeating-linear-gradient(0deg,var(--rows) 0 3px,transparent 3px 7px)}
+.legend i.both{background:repeating-linear-gradient(90deg,var(--cols) 0 3px,transparent 3px 7px),repeating-linear-gradient(0deg,var(--rows) 0 3px,transparent 3px 7px)}
+.area-wrap{display:flex;justify-content:center;overflow:visible}
+.area{display:grid;gap:0;border:2px solid var(--board);border-radius:2px;background:var(--paper);max-width:100%}
+.area .cell{
+  position:relative;box-sizing:border-box;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-weight:700;font-size:1.1rem;color:var(--board);
+  background:transparent;padding:0;cursor:default;-webkit-tap-highlight-color:transparent;
+}
+.area .cell.c{background:repeating-linear-gradient(90deg,rgba(46,110,158,.75) 0 4px,transparent 4px 10px)}
+.area .cell.r{background:repeating-linear-gradient(0deg,rgba(192,134,43,.8) 0 4px,transparent 4px 10px)}
+.area .cell.c.r{background:repeating-linear-gradient(90deg,rgba(46,110,158,.75) 0 4px,transparent 4px 10px),repeating-linear-gradient(0deg,rgba(192,134,43,.8) 0 4px,transparent 4px 10px)}
+.area .cell.rowline{border-top:2px solid var(--board)}
+.area .cell.new{animation:cellin .45s ease-out}
+@keyframes cellin{from{opacity:0}}
+.area.counting .cell.c.r{cursor:pointer}
+.area .cell.hit{background:var(--good);color:#fff}
+.area .cell.hit.pop{animation:pop .3s ease-out}
+@keyframes pop{from{transform:scale(.6)}}
+.area .cell.shake{animation:shake .38s ease-in-out}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.count-row{display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;font-family:var(--display);font-size:1.15rem;color:var(--board-soft)}
+.count-row b{font-size:1.6rem;color:var(--board);font-variant-numeric:tabular-nums}
+.count-row .btn{min-height:44px}
+.count-row .btn[hidden]{display:none}
+
+/* ---- bars, for the whole-number and division pictures ---- */
+.bars{display:flex;flex-direction:column;gap:.5rem;align-items:center}
+.bar-row{display:flex;gap:.45rem;flex-wrap:wrap;justify-content:center;align-items:center}
+.fbar{position:relative;display:flex;height:var(--bar-h);border:2px solid var(--board);border-radius:2px;background:var(--paper);overflow:visible}
+.fbar .cell{flex:0 0 auto;width:var(--bar-h);border-right:1px solid var(--line);box-sizing:border-box}
+.fbar .cell:last-child{border-right:none}
+.fbar .cell.filled{background:var(--edge)}
+.fbar .cell.pop{animation:cellin .45s ease-out}
+.fbar .cell.whole-mark{border-right:2px solid var(--board)}
+.fbar .win{
+  position:absolute;top:-6px;bottom:-6px;border:3px solid var(--gold);border-radius:3px;
+  background:rgba(192,134,43,.14);box-sizing:border-box;
+  display:flex;align-items:flex-end;justify-content:center;
+  font-family:var(--display);font-weight:700;font-size:.85rem;color:#8A5F1E;padding-bottom:2px;
+  animation:cellin .45s ease-out;
+}
+.fbar .win.half{background:repeating-linear-gradient(90deg,rgba(192,134,43,.2) 0 6px,transparent 6px 12px)}
+.bar-label{font-family:var(--display);font-size:1rem;color:var(--board-soft)}
+.wholes{display:inline-flex;gap:.3rem;align-items:center}
+.whole{width:var(--bar-h);height:var(--bar-h);background:var(--edge);border:2px solid var(--board);border-radius:2px;transition:opacity .4s ease,transform .4s ease}
+.whole.fold{opacity:0;transform:scale(.4)}
+.mixed-pic{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:center}
+.mixed-pic .fx{font-size:1.4rem;color:var(--board)}
+
+/* ---- the record ---- */
+.record-wrap{margin:.9rem 0 0;padding:.6rem .9rem .7rem;background:var(--paper);border:1.5px solid var(--line);border-radius:3px}
+.record-wrap h3{margin:0 0 .2rem;font-family:var(--body);font-size:.72rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#7C93A5}
+.record{margin:0;padding:0;list-style:none;font-family:var(--display);font-size:1.25rem;font-weight:600;color:var(--board-soft);min-height:1.6em}
+.record li{padding:.3rem 0;border-top:1px solid var(--line);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.record li:first-child{border-top:none}
+.record li .fx{color:var(--board)}
+.record li .why{font-family:var(--body);font-size:.85rem;font-weight:500;color:#7C93A5;margin-left:.3rem}
+.record li.book{background:#F6FAFC;margin:0 -.9rem -.7rem;padding:.5rem .9rem;border-top:1.5px solid var(--edge)}
+.record li.book .why{color:var(--edge)}
+.record li.arrive{animation:land .3s ease-out}
+@keyframes land{from{transform:translateY(6px);opacity:0}}
+.record-empty{color:#93A9B8;font-family:var(--body);font-size:.92rem;font-weight:400}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--edge)}
+.say.gold{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+
+.warn{
+  display:none;margin:1rem 0 0;padding:.9rem 1rem;border-radius:3px;
+  background:#FFF8E8;border:2px solid var(--gold);color:var(--board);
+}
+.warn.show{display:block}
+.warn h3{margin:0 0 .3rem;font-family:var(--display);font-size:1.35rem;color:#8A5F1E;line-height:1.1}
+.warn p{margin:.3rem 0;font-size:.98rem}
+.warn .fx{font-size:1.1rem}
+
+.done{
+  display:none;margin:1rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.3rem;font-weight:600;align-items:center;gap:.4rem;flex-wrap:wrap;
+}
+.done.show{display:flex}
+.done .fx{color:var(--good)}
+
+.actions{display:flex;gap:.6rem;margin:1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.actions .btn[hidden]{display:none}
+
+/* collapsible cards */
+details.rules{margin:.6rem 0 0;border:1.5px solid var(--line);border-radius:3px;background:var(--paper);padding:0 .9rem}
+details.rules summary{font-family:var(--display);font-size:1.1rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;min-height:44px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
+details.rules summary::-webkit-details-marker{display:none}
+details.rules summary::before{content:"▸ ";color:var(--ice)}
+details.rules[open] summary::before{content:"▾ ";color:var(--ice)}
+details.rules ol{margin:0 0 .8rem;padding-left:1.2rem;font-size:.98rem}
+details.rules li{margin:.35rem 0}
+details.rules[hidden]{display:none}
+
+details.notes{max-width:660px;margin:2.4rem auto 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.notes summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.notes summary::-webkit-details-marker{display:none}
+details.notes summary::before{content:"▸ ";color:var(--ice)}
+details.notes[open] summary::before{content:"▾ ";color:var(--ice)}
+details.notes .body{font-size:.98rem;color:var(--board-soft);max-width:60ch}
+details.notes h4{font-family:var(--display);font-size:1.15rem;margin:1.1rem 0 .2rem;color:var(--board)}
+details.notes p{margin:.35rem 0}
+details.notes ul{margin:.35rem 0;padding-left:1.1rem}
+details.notes li{margin:.35rem 0}
+details.notes code{font-family:var(--display);font-size:1.05rem;color:var(--board);font-weight:600}
+
+@media (prefers-reduced-motion:reduce){
+  .area .cell.new,.area .cell.hit.pop,.area .cell.shake,.fbar .cell.pop,.fbar .win,.record li.arrive{animation:none}
+  .whole{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Of <span>Means Multiply</span></h1>
+    <div class="sess">Multiplying and dividing fractions</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="lede">Two thirds times three quarters means two thirds <b>of</b> three quarters. Shade three quarters of a square one way, then two thirds of that the other way, and the cells shaded twice are the answer. The grid does the multiplying. Five walkthroughs, in order.</p>
+
+  <div class="picks" id="picks"></div>
+
+  <div class="stepline">
+    <span id="stepName"></span>
+    <span class="ask" id="ask"></span>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="expr" id="expr"></div>
+    <div id="picture"></div>
+  </div>
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <details class="rules" id="rulesCard" hidden>
+    <summary>The three canceling rules</summary>
+    <ol>
+      <li><b>Only a top with a bottom.</b> Never two tops, never two bottoms. Any top with any bottom, even across the × sign.</li>
+      <li><b>Divide both by the same number.</b> Pick a number that goes into both, divide both by it, and write the new numbers in. The biggest one that fits saves the most work.</li>
+      <li><b>Cancel before you multiply.</b> Keep going until no top and bottom share a factor. Then multiply straight across, and the answer comes out already in lowest terms.</li>
+    </ol>
+  </details>
+
+  <div class="record-wrap">
+    <h3>The record</h3>
+    <ol class="record" id="record"></ol>
+  </div>
+
+  <div class="warn" id="warn">
+    <h3>Mixed numbers go improper before you multiply</h3>
+    <p>It is tempting to multiply the wholes and the fractions in separate lanes: 1 × 2 = 2 and <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">2</span></span></span> × <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">3</span></span></span> = <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">6</span></span></span>, so 2 <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">6</span></span></span>. That is wrong. The real answer is 3 <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">2</span></span></span>, because the 1 also has to multiply the <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">3</span></span></span> and the <span class="fx"><span class="fx-s"><span class="fx-n">1</span><span class="fx-d">2</span></span></span> also has to multiply the 2.</p>
+    <p>Convert first, every time. Tomorrow's practice page catches the separate-lanes answer and says so by name.</p>
+  </div>
+
+  <div class="done" id="done"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="go" type="button">Next</button>
+    <button class="btn primary" id="onward" type="button" hidden>Next walkthrough</button>
+    <button class="btn ghost" id="restart" type="button">Start this one over</button>
+  </div>
+
+  <details class="notes">
+    <summary>Teacher notes</summary>
+    <div class="body">
+      <h4>Run the five in order</h4>
+      <p><b>1</b>, <code>2/3 × 3/4</code>, builds the picture. Let her tap the six double-shaded cells herself; the count is the answer. Then read the grid back to her: 4 across and 3 down because of the bottoms, 3 across and 2 down because of the tops. "Multiply straight across" is a description of that grid, not a rule to memorise.</p>
+      <p><b>2</b>, <code>7/12 × 6/7</code>, is deliberately big: 84 cells. The counting is tedious on purpose, so that canceling arrives as relief rather than as another rule. She taps the two 7s, then the 6 and the 12, and redraws: two cells, one double-shaded, same answer.</p>
+      <p><b>3</b>, <code>4 × 3/4</code>, is four copies of the bar. The only new idea is that 4 is <code>4/1</code>, so the rule still applies.</p>
+      <p><b>4</b>, <code>3/4 ÷ 1/2</code>, asks how many halves fit in three quarters. She lays the halves on the bar and sees one and a half of them fit. Only then does the flip appear, and it gives the same answer.</p>
+      <p><b>5</b>, <code>1 1/2 × 2 1/3</code>, converts both to improper on screen, cancels, and converts back. The warning card under the record is the one thing to make sure she reads.</p>
+
+      <h4>The "of" framing</h4>
+      <p>Say "of" out loud every time: two thirds <i>of</i> three quarters, four <i>of</i> the three-quarter bars. Kids already know that half of something is a multiply by a half; the word connects the new symbol to the thing they know. If she asks why the answer is smaller than what she started with, "of" answers it: a fraction of something is less than the something.</p>
+
+      <h4>Why division gets the picture before the flip</h4>
+      <p>"Flip and multiply" is the kind of rule that is easy to remember and easy to distrust, and a rule she distrusts is a rule she will second-guess on a test. So the page asks the real question first, how many halves fit in three quarters, and gets one and a half from the picture. Then the flip gives one and a half too. The flip is trustworthy because she watched it agree with something she could see. If she asks why it works, "dividing by a half is asking how many halves, and there are two halves in every one" is enough for this week.</p>
+
+      <h4>The dice game, Version 2</h4>
+      <p>Same dice as before, new job. Roll four dice and make two fractions, smaller number on top of each. Multiply them in her head and say the answer in lowest terms; cancel first if she can, out loud. A double is a whole number, so a 3 and a 3 make 1. Two minutes before the page, and again the next morning. Version 1, adding the two fractions, is retired for now; bring it back as a change of pace on the review day.</p>
+    </div>
+  </details>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script src="../shared/fraction-input.js"></script>
+<script>
+const R = window.Rational;
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- printing fractions ---------------- */
+function fx(n, d, w){
+  const s = document.createElement('span');
+  s.className = 'fx';
+  if (w){
+    const ws = document.createElement('span');
+    ws.textContent = String(w);
+    s.append(ws);
+    if (n === 0) return s;
+  }
+  if (d === 1 && !w){ s.textContent = String(n); return s; }
+  const st = document.createElement('span');
+  st.className = 'fx-s';
+  const top = document.createElement('span'); top.className = 'fx-n'; top.textContent = String(n);
+  const bot = document.createElement('span'); bot.className = 'fx-d'; bot.textContent = String(d);
+  st.append(top, bot);
+  s.append(st);
+  return s;
+}
+const fxR = r => { const m = R.toMixed(r); return m.w && m.n ? fx(m.n, m.d, m.w) : (m.w && !m.n ? fx(m.w, 1) : fx(r.n, r.d)); };
+const fxRaw = r => fx(r.n, r.d);          /* improper, as written */
+
+/* ---------------- the walkthroughs ----------------
+   Every step is {ask, say:[lead, extra], draw, wait}. draw builds the
+   picture for that step; wait means Next stays off until the picture
+   reports satisfied(). Everything numeric goes through Rational. */
+const W = [];
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+
+const stage = document.getElementById('stage');
+const exprEl = document.getElementById('expr');
+const picEl = document.getElementById('picture');
+const sayEl = document.getElementById('say');
+const recordEl = document.getElementById('record');
+const doneEl = document.getElementById('done');
+const warnEl = document.getElementById('warn');
+const rulesCard = document.getElementById('rulesCard');
+const goBtn = document.getElementById('go');
+const onward = document.getElementById('onward');
+const restart = document.getElementById('restart');
+const picksEl = document.getElementById('picks');
+
+let n = 0, step = 0, waiting = false;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = el('b', '', text);
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+function record(parts, why, book){
+  const li = el('li', 'arrive' + (book ? ' book' : ''));
+  parts.forEach(p => li.append(typeof p === 'string' ? document.createTextNode(p) : p));
+  if (why) li.append(el('span', 'why', why));
+  const empty = recordEl.querySelector('.record-empty');
+  if (empty) empty.remove();
+  recordEl.append(li);
+}
+function clearRecord(){ recordEl.textContent = ''; recordEl.append(el('li', 'record-empty', 'Every move gets written here as the book would write it.')); }
+function satisfied(){ waiting = false; goBtn.disabled = false; }
+
+/* expression line. parts: strings, fractions, ops; '×' and '÷' and '=' are ops */
+function expr(parts){
+  exprEl.textContent = '';
+  parts.forEach(p => {
+    if (p === '×' || p === '÷' || p === '='){ exprEl.append(el('span', 'op', p)); }
+    else if (typeof p === 'string'){ exprEl.append(el('span', p.startsWith('of:') ? 'of' : '', p.replace(/^of:/, ''))); }
+    else exprEl.append(p);
+  });
+}
+
+/* ---- the area grid ----
+   cols and shadeCols come from the second fraction (bottom, top); rows
+   and shadeRows from the first. Cell size: at least 44px, at most
+   120px, and never wider than the stage. */
+let gridState = null;
+function cellSize(cols, rows){
+  const w = stage.clientWidth - 34;
+  return Math.max(44, Math.min(120, Math.floor(w / cols), Math.floor(480 / rows)));
+}
+function drawGrid(cols, rows, shadeCols, shadeRows, opts){
+  opts = opts || {};
+  picEl.textContent = '';
+  const legend = el('div', 'legend');
+  const L = (cls, text) => { const s = el('span'); s.append(el('i', cls), text); return s; };
+  legend.append(L('c', opts.colLabel || ''), ...(rows > 1 ? [L('r', opts.rowLabel || ''), L('both', 'both: the answer')] : []));
+  const wrap = el('div', 'area-wrap');
+  const grid = el('div', 'area');
+  const size = cellSize(cols, rows);
+  grid.style.gridTemplateColumns = 'repeat(' + cols + ', ' + size + 'px)';
+  grid.style.gridTemplateRows = 'repeat(' + rows + ', ' + size + 'px)';
+  grid.dataset.cols = cols; grid.dataset.rows = rows;
+  const cells = [];
+  for (let r = 0; r < rows; r++){
+    for (let c = 0; c < cols; c++){
+      const cell = el('button', 'cell');
+      cell.type = 'button';
+      cell.tabIndex = -1;
+      if (c < shadeCols) cell.classList.add('c');
+      if (r < shadeRows) cell.classList.add('r');
+      if (rows > 1 && opts.newRows) cell.classList.add('new');
+      if (r > 0) cell.classList.add('rowline');
+      cell.setAttribute('aria-label', 'row ' + (r + 1) + ' column ' + (c + 1) + (cell.classList.contains('c') && cell.classList.contains('r') ? ', shaded twice' : ''));
+      cell.disabled = true;
+      grid.append(cell);
+      cells.push(cell);
+    }
+  }
+  wrap.append(grid);
+  picEl.append(legend, wrap);
+  gridState = { grid, cells, cols, rows, both: shadeCols * shadeRows, hit: 0 };
+  return gridState;
+}
+/* counting: tap every double-shaded cell. Big grids get a finish button
+   after a few taps so the point is made without 42 taps. */
+function startCount(onDone){
+  const g = gridState;
+  g.grid.classList.add('counting');
+  const row = el('div', 'count-row');
+  row.append('Counted ', el('b', '', '0'), ' of ' + g.both);
+  const rest = el('button', 'btn ghost', 'Count the rest for me');
+  rest.type = 'button'; rest.hidden = true;
+  row.append(rest);
+  picEl.append(row);
+  const counter = row.querySelector('b');
+  const finish = () => {
+    g.grid.classList.remove('counting');
+    g.cells.forEach(c => { c.disabled = true; });
+    rest.hidden = true;
+    onDone();
+  };
+  const mark = (cell) => {
+    g.hit++;
+    cell.classList.add('hit', 'pop');
+    cell.textContent = String(g.hit);
+    cell.disabled = true;
+    counter.textContent = String(g.hit);
+    if (g.hit >= 3 && g.both > 12) rest.hidden = false;
+    if (g.hit === g.both) finish();
+  };
+  g.cells.forEach(cell => {
+    const both = cell.classList.contains('c') && cell.classList.contains('r');
+    cell.disabled = false;
+    cell.onclick = () => {
+      if (!both){
+        cell.classList.remove('shake'); void cell.offsetWidth; cell.classList.add('shake');
+        say('gold', 'That one is shaded once, not twice.', 'Only the cells with both stripes are in the answer.');
+        return;
+      }
+      if (cell.classList.contains('hit')) return;
+      mark(cell);
+    };
+  });
+  rest.onclick = () => { g.cells.forEach(c => { if (!c.disabled && !c.classList.contains('hit')) mark(c); }); };
+}
+
+/* ---- the canceling line ----
+   Four tappable numbers. A tap picks a top or a bottom; the second tap
+   pairs it. Sharing a factor greys both out and writes the reduced
+   numbers above. Reports through onPair. */
+function cancelLine(a, b, onPair){
+  exprEl.textContent = '';
+  const nums = {};
+  const mk = (key, v, kind) => {
+    const btn = el('button', 'num pickable', String(v));
+    btn.type = 'button';
+    btn.dataset.key = key; btn.dataset.kind = kind; btn.dataset.v = String(v);
+    btn.setAttribute('aria-label', (kind === 'top' ? 'top ' : 'bottom ') + v);
+    btn.onclick = () => pickNum(btn);
+    nums[key] = btn;
+    return btn;
+  };
+  const stack = (nk, dk, nv, dv) => {
+    const s = el('span', 'fx');
+    const st = el('span', 'fx-s');
+    const top = el('span', 'fx-n'); top.append(mk(nk, nv, 'top'));
+    const bot = el('span', 'fx-d'); bot.append(mk(dk, dv, 'bottom'));
+    st.append(top, bot); s.append(st);
+    return s;
+  };
+  exprEl.append(stack('an', 'ad', a.n, a.d), el('span', 'op', '×'), stack('bn', 'bd', b.n, b.d));
+  let sel = null;
+  const state = { an: a.n, ad: a.d, bn: b.n, bd: b.d };
+  function pickNum(btn){
+    if (btn.classList.contains('gone')) return;
+    if (!sel){ sel = btn; btn.classList.add('sel'); say('', 'Now a number on the other side of the bar.', 'A top cancels only with a bottom.'); return; }
+    if (sel === btn){ sel.classList.remove('sel'); sel = null; return; }
+    if (sel.dataset.kind === btn.dataset.kind){
+      say('gold', 'Two ' + (btn.dataset.kind === 'top' ? 'tops' : 'bottoms') + ' never cancel.', 'One top, one bottom.');
+      sel.classList.remove('sel'); sel = null; return;
+    }
+    const x = Number(state[sel.dataset.key]), y = Number(state[btn.dataset.key]);
+    const g = R.gcd(x, y);
+    const first = sel; sel.classList.remove('sel'); sel = null;
+    if (g === 1){ say('gold', x + ' and ' + y + ' share no factor.', 'Try a different pair.'); return; }
+    [[first, x], [btn, y]].forEach(([bt, v]) => {
+      state[bt.dataset.key] = v / g;
+      bt.classList.add('gone'); bt.classList.remove('pickable'); bt.disabled = true;
+      bt.append(el('span', 're', String(v / g)));
+    });
+    onPair(g, state);
+  }
+  return { nums, state, lock: () => Object.values(nums).forEach(b => { b.disabled = true; b.classList.remove('pickable'); }) };
+}
+
+/* ---- bars ---- */
+function bar(d, n, opts){
+  opts = opts || {};
+  const b = el('div', 'fbar');
+  for (let i = 0; i < d; i++){
+    const c = el('span', 'cell' + (i < n ? ' filled' : '') + (opts.pop ? ' pop' : ''));
+    if (opts.wholeEvery && (i + 1) % opts.wholeEvery === 0 && i < d - 1) c.classList.add('whole-mark');
+    b.append(c);
+  }
+  return b;
+}
+
+/* ================ walkthrough 1: 2/3 × 3/4 ================ */
+(function(){
+  const a = R.make(2, 3), b = R.make(3, 4);
+  W.push({
+    title: [fx(2,3), '×', fx(3,4)], key: '2/3 × 3/4',
+    steps: [
+      { ask: 'Read it out loud, then tap Next.',
+        say: ['Two thirds × three quarters means two thirds of three quarters.', 'Start with the three quarters: shade them.'],
+        draw(){ expr([fx(2,3), '×', fx(3,4)]); picEl.textContent = ''; picEl.append(el('p', 'bar-label', 'A unit square, empty.')); drawGrid(1, 1, 0, 0); } },
+      { ask: 'Three quarters of the square, in stripes.',
+        say: ['Cut the square into 4 columns and shade 3.', 'That is three quarters. Now take two thirds of it.'],
+        draw(){ expr([fx(2,3), 'of:of', fx(3,4)]); drawGrid(4, 1, 3, 0, { colLabel: 'three quarters' }); } },
+      { ask: 'Two thirds of that, the other way.',
+        say: ['Cut it into 3 rows and shade 2.', 'Every column got cut, so the square is now a 4 by 3 grid. The cells with both stripes are two thirds of three quarters.'],
+        draw(){ drawGrid(4, 3, 3, 2, { colLabel: 'three quarters', rowLabel: 'two thirds of it', newRows: true }); } },
+      { ask: 'Tap every cell that has both stripes.', wait: true,
+        say: ['Count the double-shaded cells.', 'Tap each one.'],
+        draw(){ startCount(() => { say('good', '6 of the 12 cells.', 'Two thirds of three quarters is six twelfths.'); record([fx(2,3), ' × ', fx(3,4), ' = ', fx(6,12)], 'count the overlap'); satisfied(); }); } },
+      { ask: 'Reduce.',
+        say: ['6/12 = 1/2.', 'Both go by 6.'],
+        draw(){ record([fx(6,12), ' = ', fx(1,2)], 'reduce'); } },
+      { ask: 'Now read the grid back.',
+        say: ['The grid is 4 across because of the 4, and 3 down because of the 3: 4 × 3 = 12 cells. The overlap is 3 across because of the 3, and 2 down because of the 2: 3 × 2 = 6.',
+              '"Multiply straight across" is not a rule. It is a description of this grid.'],
+        draw(){ record([fx(2,3), ' × ', fx(3,4), ' = ', fx('2 × 3', '3 × 4'), ' = ', fx(6,12), ' = ', fx(1,2)], 'the book’s line', true); expr([fx(2,3), '×', fx(3,4), '=', fx(1,2)]); } }
+    ]
+  });
+})();
+
+/* ================ walkthrough 2: 7/12 × 6/7 ================ */
+(function(){
+  let line = null, pairs = 0;
+  W.push({
+    title: [fx(7,12), '×', fx(6,7)], key: '7/12 × 6/7',
+    steps: [
+      { ask: 'Same picture, bigger numbers.',
+        say: ['Seven twelfths of six sevenths.', 'Shade six sevenths first: 7 columns, 6 shaded.'],
+        draw(){ expr([fx(7,12), 'of:of', fx(6,7)]); drawGrid(7, 1, 6, 0, { colLabel: 'six sevenths' }); } },
+      { ask: 'Seven twelfths of that.',
+        say: ['Cut into 12 rows and shade 7.', 'A 7 by 12 grid: 84 cells. That is a lot of cells.'],
+        draw(){ drawGrid(7, 12, 6, 7, { colLabel: 'six sevenths', rowLabel: 'seven twelfths of it', newRows: true }); } },
+      { ask: 'Tap the double-shaded cells. After a few, you can let the page finish.', wait: true,
+        say: ['Count the overlap.', 'It is 6 across and 7 down.'],
+        draw(){ startCount(() => { say('good', '42 of 84.', 'Forty-two eighty-fourths, which reduces to one half. That was a lot of counting, and a lot of reducing.'); record([fx(7,12), ' × ', fx(6,7), ' = ', fx(42,84), ' = ', fx(1,2)], 'count, then reduce'); satisfied(); }); } },
+      { ask: 'Tap a top and a bottom that share a factor.', wait: true,
+        say: ['The shortcut: cancel before you draw.', 'There is a 7 on top and a 7 on the bottom. Tap them both.'],
+        draw(){
+          picEl.textContent = '';
+          rulesCard.hidden = false;
+          pairs = 0;
+          line = cancelLine(R.make(7,12), R.make(6,7), (g, st) => {
+            pairs++;
+            if (pairs === 1){
+              record([fx(7,12), ' × ', fx(6,7), ' → ', fx(st.an, st.ad), ' × ', fx(st.bn, st.bd)], 'cancel by ' + g);
+              const left = R.gcd(st.an, st.bd) > 1 || R.gcd(st.bn, st.ad) > 1 || R.gcd(st.an, st.ad) > 1 || R.gcd(st.bn, st.bd) > 1;
+              if (left) say('good', 'That pair is gone.', 'Anything else? Look for another top and bottom that share a factor.');
+              else { line.lock(); satisfied(); }
+            } else {
+              record([fx(st.an, st.ad), ' × ', fx(st.bn, st.bd)], 'cancel by ' + g);
+              say('good', 'Nothing left to cancel.', 'It is one half times one. Now draw that.');
+              line.lock();
+              satisfied();
+            }
+          });
+        } },
+      { ask: 'The same problem, after canceling.',
+        say: ['One half of one whole: a 1 by 2 grid, one cell double-shaded.', 'Same answer, one half, from two cells instead of eighty-four. Canceling is the grid with the shared factors taken out first.'],
+        draw(){ expr([fx(1,2), '×', fx(1,1), '=', fx(1,2)]); drawGrid(1, 2, 1, 1, { colLabel: 'one whole', rowLabel: 'half of it', newRows: true }); record([fx(7,12), ' × ', fx(6,7), ' = ', fx(1,2), ' × ', fx(1,1), ' = ', fx(1,2)], 'the book’s line', true); } }
+    ]
+  });
+})();
+
+/* ================ walkthrough 3: 4 × 3/4 ================ */
+(function(){
+  W.push({
+    title: ['4', '×', fx(3,4)], key: '4 × 3/4',
+    steps: [
+      { ask: 'A whole number times a fraction.',
+        say: ['4 × three quarters means four of the three-quarter bars.', 'Here is one.'],
+        draw(){ expr(['4', 'of:of', fx(3,4)]); picEl.textContent = ''; const bars = el('div', 'bars'); const row = el('div', 'bar-row'); row.append(bar(4, 3)); bars.append(row, el('p', 'bar-label', 'three quarters')); picEl.append(bars); } },
+      { ask: 'Four of them, side by side.',
+        say: ['Four bars, three quarters each.', 'Count the shaded quarters: 3, 6, 9, 12. Twelve quarters.'],
+        draw(){ picEl.textContent = ''; const bars = el('div', 'bars'); const row = el('div', 'bar-row'); for (let i = 0; i < 4; i++) row.append(bar(4, 3, { pop: i > 0 })); bars.append(row, el('p', 'bar-label', '12 shaded quarters')); picEl.append(bars); record(['4 × ', fx(3,4), ' = ', fx(12,4)], 'count the quarters'); } },
+      { ask: 'Twelve quarters is how many wholes?',
+        say: ['12/4 = 3.', 'Four quarters make a whole, so twelve quarters make three.'],
+        draw(){ picEl.textContent = ''; const bars = el('div', 'bars'); const row = el('div', 'bar-row'); for (let i = 0; i < 3; i++) row.append(bar(4, 4)); bars.append(row, el('p', 'bar-label', 'three wholes')); picEl.append(bars); record([fx(12,4), ' = 3'], 'reduce'); } },
+      { ask: 'Now the rule.',
+        say: ['4 is 4/1. Straight across: 4 × 3 on top, 1 × 4 on the bottom.', 'Any whole number is itself over 1, so the rule never changes.'],
+        draw(){ expr([fx(4,1), '×', fx(3,4), '=', fx(12,4), '=', '3']); record([fx(4,1), ' × ', fx(3,4), ' = ', fx('4 × 3', '1 × 4'), ' = ', fx(12,4), ' = 3'], 'the book’s line', true); } }
+    ]
+  });
+})();
+
+/* ================ walkthrough 4: 3/4 ÷ 1/2 ================ */
+(function(){
+  let laid = 0;
+  function drawFit(windows){
+    picEl.textContent = '';
+    const bars = el('div', 'bars');
+    const row = el('div', 'bar-row');
+    const b = bar(4, 3);
+    if (windows >= 1){ const w = el('span', 'win', '1'); w.style.left = '0'; w.style.width = '50%'; b.append(w); }
+    if (windows >= 2){ const w = el('span', 'win half', '½'); w.style.left = '50%'; w.style.width = '50%'; b.append(w); }
+    row.append(b);
+    const lay = el('button', 'btn ghost', windows === 0 ? 'Lay a half on it' : 'Lay another half');
+    lay.type = 'button';
+    lay.style.minHeight = '44px';
+    lay.hidden = windows >= 2;
+    lay.onclick = () => { laid++; drawFit(laid); if (laid === 1) say('', 'One half fits, whole.', 'There is still shaded bar left over. Lay another.'); else { say('good', 'The second half only half fits.', 'Only one of its two quarters lands on shading. So one and a half halves fit in three quarters.'); record([fx(3,4), ' ÷ ', fx(1,2), ' = 1 ', fx(1,2)], 'count the halves that fit'); satisfied(); } };
+    bars.append(row, lay, el('p', 'bar-label', 'three quarters, measured in halves'));
+    picEl.append(bars);
+  }
+  W.push({
+    title: [fx(3,4), '÷', fx(1,2)], key: '3/4 ÷ 1/2',
+    steps: [
+      { ask: 'Division asks a question.',
+        say: ['Three quarters ÷ one half asks: how many halves fit in three quarters?', 'Here is three quarters. A half is two of those cells.'],
+        draw(){ expr([fx(3,4), '÷', fx(1,2)]); laid = 0; drawFit(0); picEl.querySelector('.btn').hidden = true; } },
+      { ask: 'Lay halves on the bar until the shading runs out.', wait: true,
+        say: ['Tap to lay a half-sized window on the bar.', ''],
+        draw(){ laid = 0; drawFit(0); } },
+      { ask: 'Now the shortcut.',
+        say: ['Flip the second fraction and multiply: 3/4 × 2/1 = 6/4 = 1 1/2.', 'Same answer as the picture. It works every time: dividing by a half is asking how many halves, and there are two halves in every one, so it is the same as multiplying by 2.'],
+        draw(){ expr([fx(3,4), '÷', fx(1,2), '=', fx(3,4), '×', fx(2,1)]); record([fx(3,4), ' ÷ ', fx(1,2), ' = ', fx(3,4), ' × ', fx(2,1), ' = ', fx(6,4), ' = 1 ', fx(1,2)], 'flip the second, multiply', true); } },
+      { ask: 'Say it in words.',
+        say: ['Keep the first. Flip the second. Multiply straight across.', 'The flip is trustworthy because you just watched it agree with the picture.'],
+        draw(){ expr([fx(3,4), '÷', fx(1,2), '=', fx(3,2), '=', fx(1,2,1)]); } }
+    ]
+  });
+})();
+
+/* ================ walkthrough 5: 1 1/2 × 2 1/3 ================ */
+(function(){
+  let line = null;
+  function mixedPic(w, n, d, folded){
+    const box = el('div', 'mixed-pic');
+    if (!folded){
+      const wh = el('span', 'wholes');
+      for (let i = 0; i < w; i++) wh.append(el('span', 'whole'));
+      box.append(fx(n, d, w), wh, bar(d, n));
+    } else {
+      box.append(fx(w * d + n, d), bar(w * d + n, w * d + n, { pop: true, wholeEvery: d }));
+    }
+    return box;
+  }
+  function drawMixed(foldA, foldB){
+    picEl.textContent = '';
+    const bars = el('div', 'bars');
+    bars.append(mixedPic(1, 1, 2, foldA), mixedPic(2, 1, 3, foldB));
+    picEl.append(bars);
+  }
+  W.push({
+    title: [fx(1,2,1), '×', fx(1,3,2)], key: '1 1/2 × 2 1/3',
+    steps: [
+      { ask: 'Mixed numbers.',
+        say: ['One and a half times two and a third.', 'Before anything else, both become improper fractions. Watch the wholes fold into the fraction.'],
+        draw(){ expr([fx(1,2,1), '×', fx(1,3,2)]); drawMixed(false, false); } },
+      { ask: 'Fold the first one.',
+        say: ['1 1/2: the whole is 2 halves, plus 1 half, is 3 halves.', '1 × 2 + 1 = 3, over the same 2.'],
+        draw(){ expr([fx(3,2), '×', fx(1,3,2)]); drawMixed(true, false); record([fx(1,2,1), ' = ', fx(3,2)], '1 × 2 + 1 on top'); } },
+      { ask: 'Fold the second one.',
+        say: ['2 1/3: two wholes are 6 thirds, plus 1 third, is 7 thirds.', '2 × 3 + 1 = 7, over the same 3.'],
+        draw(){ expr([fx(3,2), '×', fx(7,3)]); drawMixed(true, true); record([fx(1,3,2), ' = ', fx(7,3)], '2 × 3 + 1 on top'); } },
+      { ask: 'Tap the pair that cancels.', wait: true,
+        say: ['Now it is a plain multiply: 3/2 × 7/3.', 'Cancel first.'],
+        draw(){ picEl.textContent = ''; line = cancelLine(R.make(3,2), R.make(7,3), (g, st) => { record([fx(3,2), ' × ', fx(7,3), ' → ', fx(st.an, st.ad), ' × ', fx(st.bn, st.bd)], 'cancel by ' + g); say('good', 'The 3s are gone.', '1/2 × 7/1 is 7/2.'); line.lock(); satisfied(); }); } },
+      { ask: 'Multiply, then back to a mixed number.',
+        say: ['1 × 7 = 7 on top, 2 × 1 = 2 on the bottom: 7/2. Seven halves is 3 wholes and 1 half.', 'So one and a half times two and a third is three and a half.'],
+        draw(){ expr([fx(1,2), '×', fx(7,1), '=', fx(7,2), '=', fx(1,2,3)]); record([fx(1,2,1), ' × ', fx(1,3,2), ' = ', fx(3,2), ' × ', fx(7,3), ' = ', fx(7,2), ' = 3 ', fx(1,2)], 'the book’s line', true); warnEl.classList.add('show'); } }
+    ]
+  });
+})();
+
+/* ---------------- saved ticks ---------------- */
+const STORE_KEY = 'seventh-grade-math:area-lesson';
+let finished = W.map(() => false);
+function loadTicks(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    if (p && Array.isArray(p.finished)) finished = W.map((_, i) => p.finished[i] === true);
+  } catch (e) { finished = W.map(() => false); }
+}
+function saveTicks(){ try { localStorage.setItem(STORE_KEY, JSON.stringify({ finished })); } catch (e) {} }
+
+/* ---------------- running a walkthrough ---------------- */
+function drawPicks(){
+  picksEl.textContent = '';
+  W.forEach((w, i) => {
+    const b = el('button', 'pick');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(i === n));
+    b.setAttribute('aria-label', 'Walkthrough ' + (i + 1) + ', ' + w.key);
+    w.title.forEach(t => b.append(typeof t === 'string' ? el('span', t === '×' || t === '÷' ? 'op' : '', t) : t.cloneNode(true)));
+    if (finished[i]) b.append(' ', el('span', 'tick', '✓'));
+    b.onclick = () => load(i);
+    picksEl.append(b);
+  });
+}
+function drawStep(){
+  const s = document.getElementById('stepName');
+  s.textContent = '';
+  s.append('Walkthrough ');
+  s.append(el('b', '', String(n + 1)));
+  s.append(' of ' + W.length + ' · step ');
+  s.append(el('b', '', String(step + 1)));
+  s.append(' of ' + W[n].steps.length);
+  document.getElementById('ask').textContent = W[n].steps[step].ask;
+}
+function runStep(){
+  const st = W[n].steps[step];
+  waiting = !!st.wait;
+  goBtn.disabled = waiting;
+  goBtn.hidden = false;
+  onward.hidden = true;
+  drawStep();
+  say('', st.say[0], st.say[1]);
+  st.draw();
+  if (step === W[n].steps.length - 1) finishWalk();
+}
+function finishWalk(){
+  goBtn.hidden = true;
+  if (!finished[n]){ finished[n] = true; saveTicks(); }
+  drawPicks();
+  doneEl.textContent = '';
+  doneEl.append('Walkthrough ' + (n + 1) + ' done.');
+  doneEl.className = 'done show';
+  if (n < W.length - 1){
+    onward.hidden = false;
+    onward.textContent = '';
+    onward.append('Go on to ');
+    W[n + 1].title.forEach(t => onward.append(typeof t === 'string' ? ' ' + t + ' ' : t.cloneNode(true)));
+  } else {
+    doneEl.append(' That is all five. Read the warning above once more, then close the page.');
+  }
+}
+function load(i){
+  n = i; step = 0;
+  clearRecord();
+  doneEl.className = 'done';
+  warnEl.classList.remove('show');
+  rulesCard.hidden = i !== 1;
+  rulesCard.open = false;
+  drawPicks();
+  runStep();
+}
+goBtn.onclick = () => {
+  if (waiting) return;
+  if (step < W[n].steps.length - 1){ step++; runStep(); }
+};
+onward.onclick = () => { load(n + 1); window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); };
+restart.onclick = () => load(n);
+window.addEventListener('resize', () => {
+  if (!gridState || !gridState.grid.isConnected) return;
+  const size = cellSize(gridState.cols, gridState.rows);
+  gridState.grid.style.gridTemplateColumns = 'repeat(' + gridState.cols + ', ' + size + 'px)';
+  gridState.grid.style.gridTemplateRows = 'repeat(' + gridState.rows + ', ' + size + 'px)';
+});
+
+/* the rational helper is where every number on this page comes from */
+const failures = R.selfCheck();
+if (failures.length){
+  say('gold', 'This page has a problem:', 'the fraction arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+  goBtn.disabled = true;
+} else {
+  loadTicks();
+  const first = finished.findIndex(f => !f);
+  load(first === -1 ? 0 : first);
+}
+</script>
+</body>
+</html>

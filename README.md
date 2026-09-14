@@ -40,6 +40,7 @@ lesson-02/bars.html      fraction bars: split until they match, then add by coun
 lesson-02/fractions-practice.html   graded adding and subtracting, plus the LCD speed round
 lesson-02/decimal-lesson.html       multiplying decimals: slide the point, multiply, slide it back
 lesson-02/decimal-practice.html     graded decimal multiplication, plus the place-the-point speed round
+lesson-03/area.html      the area model: of means multiply, canceling, why division flips, mixed numbers
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares
@@ -66,8 +67,8 @@ more cards, tighten those clamps rather than letting the rail wrap.
 `shared/fraction-input.js` is the second shared script, loaded the same
 way as `tokens.js`, on the pages that deal in fractions. It exposes two
 things. `Rational` is exact fraction arithmetic with integers only
-(`gcd`, `lcm`, `make`, `add`, `sub`, `cmp`, `eq`, `isReduced`,
-`toMixed`, `fromParts`, `text`); no decimal ever enters it, and
+(`gcd`, `lcm`, `make`, `add`, `sub`, `mul`, `div`, `cmp`, `eq`,
+`isReduced`, `toMixed`, `fromParts`, `text`); no decimal ever enters it, and
 `Rational.selfCheck()` runs its unit cases so every page that loads it
 can refuse to drill if one fails. `FractionInput.create()` is the entry
 control: a top box over a bottom box with a real bar between, plus a

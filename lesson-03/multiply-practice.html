@@ -345,31 +345,49 @@ const improper = m => R.fromParts(m.w, m.n, m.d);      /* unreduced, as the book
    would be multiplied straight across, before any canceling, stays
    under 1000, and nothing is ever divided by zero because every
    numerator is at least 1. The answer comes out of the Rational helper
-   and nowhere else. */
+   and nowhere else.
+
+   Tier 0 poses every fraction in lowest terms. At tiers 1 and 2 about
+   a quarter of problems carry at least one unreduced fraction part,
+   10/12 or 6/9 style, because canceling and reducing mid-problem is
+   the skill, the book's own examples arrive that way, and a test will
+   not promise clean inputs. Answers are graded in lowest terms
+   regardless. */
 const DENS = [2, 3, 4, 5, 6, 8, 10, 12];
 const TIER_NAME = ['Fractions', 'With whole numbers', 'Mixed numbers'];
 const PROMOTE_AT = 3;
 const RAW_MAX = 1000;
 
-/* fraction parts are always in lowest terms, the way the book poses them */
-function part(){ for (;;){ const d = pick(DENS), n = rand(1, d - 1); if (R.gcd(n, d) === 1) return { n, d }; } }
-function proper(){ const f = part(); return { w: 0, n: f.n, d: f.d }; }
+/* a fraction part. 'reduced' is in lowest terms, 'any' may or may not be */
+const LOOSE_ODDS = 0.25;
+function part(kind){
+  for (;;){
+    const d = pick(DENS), n = rand(1, d - 1);
+    if (kind === 'reduced' && R.gcd(n, d) !== 1) continue;
+    return { n, d };
+  }
+}
+const unreducedPart = m => m.d > 1 && R.gcd(m.n, m.d) !== 1;
+function proper(kind){ const f = part(kind); return { w: 0, n: f.n, d: f.d }; }
 function whole(){ return { w: 0, n: rand(2, 9), d: 1 }; }
-function mixedNum(){ const f = part(); return { w: rand(1, 4), n: f.n, d: f.d }; }
+function mixedNum(kind){ const f = part(kind); return { w: rand(1, 4), n: f.n, d: f.d }; }
 function rawParts(ra, rb, op){
   return op === '×' ? [ra.n * rb.n, ra.d * rb.d] : [ra.n * rb.d, ra.d * rb.n];
 }
 function makeProblem(tier){
+  const loose = tier > 0 && Math.random() < LOOSE_ODDS;   /* decided once, so retries do not bias the rate */
+  const kind = loose ? 'any' : 'reduced';
   for (let attempt = 0; attempt < 600; attempt++){
     let a, b;
-    if (tier === 0){ a = proper(); b = proper(); }
-    else if (tier === 1){ if (Math.random() < 0.5){ a = whole(); b = proper(); } else { a = proper(); b = whole(); } }
+    if (tier === 0){ a = proper('reduced'); b = proper('reduced'); }
+    else if (tier === 1){ if (Math.random() < 0.5){ a = whole(); b = proper(kind); } else { a = proper(kind); b = whole(); } }
     else {
       const roll = Math.random();
-      if (roll < 0.45){ a = mixedNum(); b = mixedNum(); }
-      else if (roll < 0.75){ a = mixedNum(); b = proper(); }
-      else { a = proper(); b = mixedNum(); }
+      if (roll < 0.45){ a = mixedNum(kind); b = mixedNum(kind); }
+      else if (roll < 0.75){ a = mixedNum(kind); b = proper(kind); }
+      else { a = proper(kind); b = mixedNum(kind); }
     }
+    if (loose && !unreducedPart(a) && !unreducedPart(b)) continue;
     const op = Math.random() < 0.5 ? '×' : '÷';
     const ra = improper(a), rb = improper(b);
     const raw = rawParts(ra, rb, op);

@@ -73,9 +73,15 @@ const LESSONS = [
       },
       {
         d: 2,
-        name: "Coming up",
-        pages: [],
-        note: "Nothing on the site yet. Register the pages here when they exist."
+        name: "Why the flip works; fraction bars",
+        pages: [
+          {
+            href: "lesson-03/flip.html",
+            name: "The flip, proven",
+            blurb: "Three short acts: a number times its reciprocal is 1; a division written as a fraction over a fraction, with the bottom erased by its reciprocal; then your turn to pick the right one. Not graded.",
+            cta: "Start the proof"
+          }
+        ]
       },
       {
         d: 3,

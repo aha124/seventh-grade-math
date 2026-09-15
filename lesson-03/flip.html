@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Flip, Proven — Dividing Fractions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.sess{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em}
+.lede{margin:1.3rem 0 .2rem;max-width:58ch;font-size:1.05rem}
+
+.picks{display:flex;gap:.4rem;margin:1.2rem 0 0;flex-wrap:wrap}
+.pick{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:inline-flex;align-items:center;gap:.35rem;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.pick .tick{color:var(--ice)}
+.stepline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.stepline b{color:var(--board);font-weight:700}
+.ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+/* ---- inline stacked fractions ---- */
+.fx{display:inline-flex;align-items:center;gap:.18em;vertical-align:middle;font-family:var(--display);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.fx-s{display:inline-flex;flex-direction:column;align-items:center;font-size:.82em}
+.fx-n{padding:0 .22em .1em}
+.fx-d{padding:.1em .22em 0;border-top:2px solid currentColor}
+
+.stage{
+  display:flex;flex-direction:column;gap:.9rem;align-items:center;
+  margin:.6rem 0 0;padding:1.1rem 1rem 1.2rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.stage[hidden]{display:none}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(2rem,9vw,3rem);color:var(--board);line-height:1}
+.big .op{color:var(--gold);margin:0 .25em}
+.big .dim{color:#B9CBD9}
+
+/* act 1 */
+.dots{display:flex;gap:.4rem}
+.dots span{width:.7rem;height:.7rem;border-radius:50%;border:1.5px solid var(--line);background:var(--rink)}
+.dots span.on{border-color:var(--gold);background:var(--gold)}
+.dots span.done{border-color:var(--good);background:var(--good)}
+.entry{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;justify-content:center}
+.entry .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+.proof{font-family:var(--display);font-weight:600;font-size:1.35rem;color:var(--board-soft);min-height:1.6em;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:center}
+.proof .fx{color:var(--board)}
+.proof .one{color:var(--good);font-size:1.6rem}
+.proof.arrive{animation:land .3s ease-out}
+@keyframes land{from{transform:translateY(6px);opacity:0}}
+
+/* acts 2 and 3: the tall fraction */
+.tall{display:inline-flex;flex-direction:column;align-items:stretch;min-width:9rem}
+.half{
+  display:flex;align-items:center;justify-content:center;gap:.4rem;flex-wrap:wrap;
+  padding:.5rem .9rem;font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,7vw,2.4rem);color:var(--board);
+  min-height:44px;
+}
+.half .fx-s{font-size:.85em}
+.half .op{color:var(--gold)}
+.half .eq{color:#93A9B8;font-weight:600}
+.half .piece.arrive{animation:land .35s ease-out}
+.half .piece.fade{animation:fade .35s ease-in forwards}
+@keyframes fade{to{opacity:0;transform:scale(.6)}}
+.half .one{color:var(--good)}
+.thick{height:5px;background:var(--board);border-radius:3px;transition:opacity .4s ease}
+.thick.gone,.half.gone{opacity:0;transition:opacity .4s ease}
+.tall.flat{min-width:0}
+.tall.flat .half.bottom,.tall.flat .thick{display:none}
+.choices{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.choice{
+  min-height:44px;min-width:44px;padding:0 .9rem;
+  font-family:var(--display);font-weight:700;font-size:1.25rem;
+  border:1.5px solid var(--edge);background:var(--paper);color:var(--edge);border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;gap:.3rem;
+}
+.choice .fx-s{font-size:.9em}
+.choice.yes{background:#EEF7F1;border-color:var(--good);color:var(--good)}
+.choice.no{background:#FBF0DF;border-color:var(--gold);color:#8A5F1E}
+.choice:disabled{cursor:default;opacity:.8}
+.choices[hidden]{display:none}
+.result{font-family:var(--display);font-weight:700;font-size:clamp(1.4rem,6vw,2rem);color:var(--board);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:center;min-height:1.4em}
+.result .eq{color:#93A9B8;font-weight:600}
+.result[hidden]{display:none}
+.narrate{
+  margin:0;max-width:56ch;text-align:center;font-size:1.02rem;color:var(--board);
+  padding:.6rem .9rem;background:#FFF8E8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.narrate[hidden]{display:none}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+
+.actions{display:flex;gap:.6rem;margin:1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.actions .btn[hidden]{display:none}
+.done{
+  display:none;margin:1rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.3rem;font-weight:600;
+}
+.done.show{display:block}
+
+details.notes{max-width:660px;margin:2.4rem auto 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.notes summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.notes summary::-webkit-details-marker{display:none}
+details.notes summary::before{content:"▸ ";color:var(--ice)}
+details.notes[open] summary::before{content:"▾ ";color:var(--ice)}
+details.notes .body{font-size:.98rem;color:var(--board-soft);max-width:60ch}
+details.notes h4{font-family:var(--display);font-size:1.15rem;margin:1.1rem 0 .2rem;color:var(--board)}
+details.notes p{margin:.35rem 0}
+details.notes code{font-family:var(--display);font-size:1.05rem;color:var(--board);font-weight:600}
+
+@media (prefers-reduced-motion:reduce){
+  .proof.arrive,.half .piece.arrive,.half .piece.fade{animation:none}
+  .half .piece.fade{opacity:0}
+  .thick,.thick.gone,.half.gone{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">The Flip, <span>Proven</span></h1>
+    <div class="sess">Why keep, change, flip works</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="lede">You already know the move: keep the first, flip the second, multiply. This page is the reason it works, in three short acts. Nothing here is graded.</p>
+
+  <div class="picks" id="picks"></div>
+
+  <div class="stepline">
+    <span id="stepName"></span>
+    <span class="ask" id="ask"></span>
+  </div>
+
+  <div class="stage" id="act1">
+    <div class="dots" id="dots"></div>
+    <div class="big" id="item"></div>
+    <div class="entry">
+      <span class="lab">Its reciprocal</span>
+      <span id="host1"></span>
+      <button class="ok" id="check1" type="button" aria-label="Check">✓</button>
+    </div>
+    <div class="proof" id="proof"></div>
+  </div>
+
+  <div class="stage" id="act2" hidden>
+    <div class="tall" id="tall2">
+      <div class="half top" id="top2"></div>
+      <div class="thick" id="bar2"></div>
+      <div class="half bottom" id="bot2"></div>
+    </div>
+    <div class="choices" id="ctl2"></div>
+    <p class="narrate" id="narrate2" hidden></p>
+    <div class="result" id="result2" hidden></div>
+  </div>
+
+  <div class="stage" id="act3" hidden>
+    <div class="tall" id="tall3">
+      <div class="half top" id="top3"></div>
+      <div class="thick" id="bar3"></div>
+      <div class="half bottom" id="bot3"></div>
+    </div>
+    <div class="choices" id="ctl3"></div>
+    <p class="narrate" id="narrate3" hidden></p>
+    <div class="result" id="result3" hidden></div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+  <div class="done" id="done"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="onward" type="button" hidden>Next act</button>
+    <button class="btn ghost" id="restart" type="button">Start this act over</button>
+  </div>
+
+  <details class="notes">
+    <summary>Teacher notes</summary>
+    <div class="body">
+      <h4>Why this page exists</h4>
+      <p>Keep, change, flip is easy to remember and easy to distrust. A rule that feels like magic gets second-guessed on a test, and the first "but why does that work?" from a tutor or a test question should not be the first time she hears the answer. This page makes the flip a consequence of two things she already accepts: a number times its reciprocal is 1, and multiplying top and bottom by the same thing changes nothing.</p>
+      <h4>Run it even if she flips confidently</h4>
+      <p>Confidence with the move is not the same as owning the reason. Ten minutes here, once, and the flip is hers to explain rather than recall. The three acts are the book's own argument in order: reciprocals make 1; a division is a fraction over a fraction, and multiplying both halves by the bottom's reciprocal turns the bottom into 1; what is left is the flipped multiplication.</p>
+      <h4>The one line to say out loud</h4>
+      <p>At the end of act 2: <code>nothing was changed</code>. Top and bottom were multiplied by the same thing, so the fraction is the same fraction. The flip is not a trick that gets applied; it is what remains after the denominator erases itself.</p>
+      <h4>Act 3</h4>
+      <p>Let her pick wrong. Multiplying by <code>2/3</code> makes the bottom <code>4/9</code>, not 1, and the page says so; multiplying by the top's reciprocal erases the top instead of the bottom. Both wrong picks teach the thing the right pick cannot: only the bottom's reciprocal does the job.</p>
+    </div>
+  </details>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script src="../shared/fraction-input.js"></script>
+<script>
+const R = window.Rational;
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+
+/* ---------------- printing fractions ---------------- */
+function fx(n, d, w){
+  const s = el('span', 'fx');
+  if (w){ s.append(el('span', '', String(w))); if (n === 0) return s; }
+  if (d === 1 && !w){ s.textContent = String(n); return s; }
+  const st = el('span', 'fx-s');
+  st.append(el('span', 'fx-n', String(n)), el('span', 'fx-d', String(d)));
+  s.append(st);
+  return s;
+}
+const fxR = r => fx(r.n, r.d);                                   /* as is, improper allowed */
+/* always stacked, even over 1: the reciprocal of a half is written 2/1
+   on this page because the "over 1" is the point */
+const fxStack = r => { const s = el('span', 'fx'); const st = el('span', 'fx-s'); st.append(el('span', 'fx-n', String(r.n)), el('span', 'fx-d', String(r.d))); s.append(st); return s; };
+const fxMixed = r => { const m = R.toMixed(r); return m.w && m.n ? fx(m.n, m.d, m.w) : (m.w ? fx(m.w, 1) : fx(r.n, r.d)); };
+const recip = r => R.make(r.d, r.n);
+
+/* ---------------- page frame ---------------- */
+const ACTS = [
+  { key: 'recip', title: 'Act 1 · Reciprocals', ask: 'Type the reciprocal, then check.' },
+  { key: 'tall',  title: 'Act 2 · The complex fraction', ask: 'One button. Watch the bottom.' },
+  { key: 'turn',  title: 'Act 3 · Your turn', ask: 'Pick the reciprocal that erases the bottom.' }
+];
+let act = 0;
+let finished = [false, false, false];
+const STORE_KEY = 'seventh-grade-math:flip';
+function loadTicks(){ try { const p = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (p && Array.isArray(p.finished)) finished = ACTS.map((_, i) => p.finished[i] === true); } catch (e) {} }
+function saveTicks(){ try { localStorage.setItem(STORE_KEY, JSON.stringify({ finished })); } catch (e) {} }
+
+const sayEl = document.getElementById('say');
+const doneEl = document.getElementById('done');
+const onward = document.getElementById('onward');
+const picksEl = document.getElementById('picks');
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  sayEl.append(el('b', '', text));
+  if (extra) sayEl.append(' ' + extra);
+}
+function drawPicks(){
+  picksEl.textContent = '';
+  ACTS.forEach((a, i) => {
+    const b = el('button', 'pick', a.title);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(i === act));
+    if (finished[i]) b.append(' ', el('span', 'tick', '✓'));
+    b.onclick = () => load(i);
+    picksEl.append(b);
+  });
+}
+function finishAct(){
+  if (!finished[act]){ finished[act] = true; saveTicks(); }
+  drawPicks();
+  doneEl.className = 'done show';
+  doneEl.textContent = ACTS[act].title.replace(/ ·.*/, '') + ' done.' + (act === ACTS.length - 1 ? ' That is the whole proof.' : '');
+  onward.hidden = act === ACTS.length - 1;
+}
+function load(i){
+  act = i;
+  [0, 1, 2].forEach(k => { document.getElementById('act' + (k + 1)).hidden = k !== i; });
+  document.getElementById('stepName').textContent = '';
+  document.getElementById('stepName').append(el('b', '', ACTS[i].title));
+  document.getElementById('ask').textContent = ACTS[i].ask;
+  doneEl.className = 'done';
+  onward.hidden = true;
+  drawPicks();
+  if (i === 0) startAct1(); else if (i === 1) startAct2(); else startAct3();
+}
+
+/* ================ act 1: reciprocals ================
+   Four numbers, checked on the spot, not timed. The mixed number goes
+   improper on screen first, because that is the step the flip needs. */
+const ITEMS = [
+  { r: R.make(2, 3), show: () => fx(2, 3), word: 'two thirds' },
+  { r: R.make(5, 1), show: () => fx(5, 1), word: 'five, which is five over one' },
+  { r: R.make(1, 4), show: () => fx(1, 4), word: 'one quarter' },
+  { r: R.make(5, 2), show: () => fx(1, 2, 2), word: 'two and a half, which is five halves', mixed: true }
+];
+let item = 0, itemsDone = 0;
+const input1 = FractionInput.create({ mixed: true, label: 'The reciprocal', onEnter: () => act1Check() });
+document.getElementById('host1').append(input1.el);
+const itemEl = document.getElementById('item');
+const proofEl = document.getElementById('proof');
+function drawDots(){
+  const d = document.getElementById('dots');
+  d.textContent = '';
+  ITEMS.forEach((_, i) => d.append(el('span', i < itemsDone ? 'done' : (i === item ? 'on' : ''))));
+}
+function showItem(){
+  const it = ITEMS[item];
+  itemEl.textContent = '';
+  itemEl.append(it.show());
+  if (it.mixed){
+    itemEl.append(el('span', 'op', '='), fxR(it.r));
+  }
+  proofEl.textContent = '';
+  proofEl.className = 'proof';
+  input1.clear();
+  input1.setDisabled(false);
+  document.getElementById('check1').disabled = false;
+  drawDots();
+  input1.focus();
+}
+function startAct1(){
+  item = 0; itemsDone = 0;
+  showItem();
+  say('', 'A number times its reciprocal is 1.', 'Flip the number over: top to the bottom, bottom to the top. Type it.');
+}
+function act1Check(){
+  if (act !== 0 || item >= ITEMS.length) return;
+  const it = ITEMS[item];
+  const v = input1.value();
+  if (v.w === null && v.n === null && v.d === null){ say('', 'Type the reciprocal first.'); return; }
+  if ((v.n === null) !== (v.d === null)){ say('', 'A fraction needs a top and a bottom.', 'For a whole number on its own, leave both fraction boxes empty.'); return; }
+  if (v.d === 0){ say('', 'The bottom cannot be 0.'); return; }
+  const E = input1.rational();
+  if (!E) return;
+  const want = recip(it.r);
+  if (!R.eq(E, want)){
+    input1.mark('miss');
+    say('bad', 'Not the reciprocal.', it.mixed
+      ? 'Two and a half is five halves. Flip five halves: the 5 goes under, the 2 goes on top.'
+      : (it.r.d === 1 ? 'A whole number is itself over 1. Flip that: 1 on top, the number underneath.' : 'Top and bottom trade places, nothing else changes.'));
+    return;
+  }
+  input1.mark('ok');
+  input1.setDisabled(true);
+  document.getElementById('check1').disabled = true;
+  const prod = R.mul(it.r, want);
+  proofEl.textContent = '';
+  proofEl.className = 'proof arrive';
+  proofEl.append(fxR(it.r), '×', fxR(want), '=', fx(it.r.n * want.n, it.r.d * want.d), '=', el('span', 'one', String(prod.n)));
+  itemsDone++;
+  item++;
+  drawDots();
+  if (item < ITEMS.length){
+    say('good', 'Yes. ' + it.r.n * want.n + ' over ' + it.r.d * want.d + ' is exactly 1.', 'Next one.');
+    setTimeout(() => { if (act === 0 && item < ITEMS.length) showItem(); }, reduced() ? 0 : 1100);
+  } else {
+    say('good', 'Four for four.', 'Flipping a fraction makes the multiplication cancel to exactly 1, and 1 is the only number that erases itself. Hold on to that for act 2.');
+    finishAct();
+  }
+}
+document.getElementById('check1').onclick = act1Check;
+
+/* ================ the tall fraction machine ================
+   Used by acts 2 and 3. A fraction over a fraction; multiply both halves
+   by a chosen fraction; the bottom becomes 1; drop the 1. */
+function makeTall(ids){
+  const T = {
+    top: document.getElementById(ids.top), bot: document.getElementById(ids.bot), bar: document.getElementById(ids.bar),
+    tall: document.getElementById(ids.tall), ctl: document.getElementById(ids.ctl),
+    narrate: document.getElementById(ids.narrate), result: document.getElementById(ids.result),
+    a: null, b: null, stage: 'ready'
+  };
+  T.set = (a, b) => {
+    T.a = a; T.b = b; T.stage = 'ready';
+    T.tall.classList.remove('flat');
+    T.top.className = 'half top'; T.bot.className = 'half bottom'; T.bar.className = 'thick';
+    T.top.textContent = ''; T.bot.textContent = '';
+    T.top.append(fxR(a)); T.bot.append(fxR(b));
+    T.narrate.hidden = true; T.result.hidden = true; T.result.textContent = '';
+    T.ctl.textContent = '';
+  };
+  /* multiply both halves by m. The top keeps "× m" unevaluated; the
+     bottom works through to its product. Returns the bottom's product. */
+  T.multiply = (m, done) => {
+    T.stage = 'multiplying';
+    const wait = reduced() ? 0 : 520;
+    [T.top, T.bot].forEach(h => { const p = el('span', 'piece arrive'); p.append(el('span', 'op', '×'), fxStack(m)); h.append(p); });
+    const prodB = R.make(T.b.n * m.n, T.b.d * m.d);        /* reduced by make */
+    setTimeout(() => {
+      const p = el('span', 'piece arrive');
+      p.append(el('span', 'eq', '='), fx(T.b.n * m.n, T.b.d * m.d));
+      if (R.eq(prodB, R.make(1, 1))){ p.append(el('span', 'eq', '='), el('span', 'one', '1')); }
+      else if (prodB.d !== T.b.d * m.d || prodB.n !== T.b.n * m.n){ p.append(el('span', 'eq', '='), fxR(prodB)); }
+      T.bot.append(p);
+      T.stage = 'multiplied';
+      if (done) done(prodB);
+    }, wait);
+    return prodB;
+  };
+  T.drop = (done) => {
+    T.stage = 'dropping';
+    T.bar.classList.add('gone'); T.bot.classList.add('gone');
+    const wait = reduced() ? 0 : 450;
+    setTimeout(() => {
+      T.tall.classList.add('flat');
+      T.stage = 'flat';
+      if (done) done();
+    }, wait);
+  };
+  return T;
+}
+const tall2 = makeTall({ top: 'top2', bot: 'bot2', bar: 'bar2', tall: 'tall2', ctl: 'ctl2', narrate: 'narrate2', result: 'result2' });
+const tall3 = makeTall({ top: 'top3', bot: 'bot3', bar: 'bar3', tall: 'tall3', ctl: 'ctl3', narrate: 'narrate3', result: 'result3' });
+
+const NARRATION = 'Nothing was changed, because top and bottom were multiplied by the same thing; the flip is what is left over after the denominator erases itself.';
+
+function resultLine(T, a, m){
+  const raw = { n: a.n * m.n, d: a.d * m.d };
+  const red = R.make(raw.n, raw.d);
+  T.result.textContent = '';
+  T.result.append(fxR(a), el('span', 'op', '×'), fxStack(m), el('span', 'eq', '='), fx(raw.n, raw.d));
+  if (red.n !== raw.n || red.d !== raw.d) T.result.append(el('span', 'eq', '='), fxR(red));
+  const m2 = R.toMixed(red);
+  if (m2.w && m2.n) T.result.append(el('span', 'eq', '='), fxMixed(red));
+  T.result.hidden = false;
+}
+
+/* ================ act 2: 3/4 ÷ 1/2 ================ */
+function startAct2(){
+  tall2.set(R.make(3, 4), R.make(1, 2));
+  const b = el('button', 'choice');
+  b.type = 'button';
+  b.id = 'mult2';
+  b.append('Multiply top and bottom by ', fxStack(R.make(2, 1)));
+  b.onclick = act2Multiply;
+  tall2.ctl.append(b);
+  say('', 'Three quarters ÷ one half, written as a fraction over a fraction.', 'The bottom is one half. Its reciprocal is two over one. Multiply both halves by it.');
+}
+function act2Multiply(){
+  if (act !== 1 || tall2.stage !== 'ready') return;
+  tall2.ctl.textContent = '';
+  tall2.multiply(R.make(2, 1), () => {
+    say('good', 'The bottom is 1.', 'One half times two over one is two halves, which is 1. The top was multiplied by the same thing, so the fraction is still the same fraction.');
+    const b = el('button', 'choice', 'Drop the 1');
+    b.type = 'button'; b.id = 'drop2';
+    b.onclick = act2Drop;
+    tall2.ctl.append(b);
+  });
+}
+function act2Drop(){
+  if (act !== 1 || tall2.stage !== 'multiplied') return;
+  tall2.ctl.textContent = '';
+  tall2.drop(() => {
+    tall2.narrate.textContent = NARRATION;
+    tall2.narrate.hidden = false;
+    resultLine(tall2, R.make(3, 4), R.make(2, 1));
+    say('good', 'Anything over 1 is itself. What is left is 3/4 × 2/1.', 'That is the flipped multiplication. It was there all along.');
+    finishAct();
+  });
+}
+
+/* ================ act 3: 5/6 ÷ 2/3, her pick ================ */
+const CHOICES3 = [
+  { m: R.make(2, 3), ok: false, why: 'That is the bottom itself, not its reciprocal. Two thirds times two thirds is four ninths, not 1, so the bottom does not erase.' },
+  { m: R.make(3, 2), ok: true },
+  { m: R.make(6, 5), ok: false, why: 'That is the reciprocal of the top. It would turn the top into 1 and leave the bottom standing. It is the bottom that has to go.' }
+];
+function startAct3(){
+  tall3.set(R.make(5, 6), R.make(2, 3));
+  CHOICES3.forEach((c, i) => {
+    const b = el('button', 'choice');
+    b.type = 'button';
+    b.dataset.choice = String(i);
+    b.append('× ', fxStack(c.m));
+    b.setAttribute('aria-label', 'multiply both by ' + c.m.n + ' over ' + c.m.d);
+    b.onclick = () => act3Pick(i);
+    tall3.ctl.append(b);
+  });
+  say('', 'Five sixths ÷ two thirds.', 'Which reciprocal turns the bottom into 1?');
+}
+function act3Pick(i){
+  if (act !== 2 || tall3.stage !== 'ready') return;
+  const c = CHOICES3[i];
+  const btns = tall3.ctl.querySelectorAll('.choice');
+  if (!c.ok){
+    btns.forEach(b => b.classList.remove('no'));
+    btns[i].classList.add('no');
+    const prodB = R.mul(tall3.b, c.m);
+    say('bad', 'The bottom would be ' + R.text(prodB) + ', not 1.', c.why);
+    return;
+  }
+  btns.forEach(b => { b.disabled = true; b.classList.remove('no'); });
+  btns[i].classList.add('yes');
+  tall3.multiply(c.m, () => {
+    tall3.ctl.textContent = '';
+    say('good', 'Two thirds times three halves is six sixths: 1.', 'The bottom erased itself. Drop it.');
+    const b = el('button', 'choice', 'Drop the 1');
+    b.type = 'button'; b.id = 'drop3';
+    b.onclick = act3Drop;
+    tall3.ctl.append(b);
+  });
+}
+function act3Drop(){
+  if (act !== 2 || tall3.stage !== 'multiplied') return;
+  tall3.ctl.textContent = '';
+  tall3.drop(() => {
+    tall3.narrate.textContent = NARRATION;
+    tall3.narrate.hidden = false;
+    resultLine(tall3, R.make(5, 6), R.make(3, 2));
+    say('good', '5/6 × 3/2 = 15/12 = 5/4 = 1 1/4.', 'Keep the first, flip the second, multiply. Now you know why.');
+    finishAct();
+  });
+}
+
+onward.onclick = () => { if (act < ACTS.length - 1) load(act + 1); };
+document.getElementById('restart').onclick = () => load(act);
+
+const failures = R.selfCheck();
+if (failures.length){
+  say('bad', 'This page has a problem:', 'the fraction arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+} else {
+  loadTicks();
+  const first = finished.findIndex(f => !f);
+  load(first === -1 ? 0 : first);
+}
+</script>
+</body>
+</html>

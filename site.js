@@ -80,6 +80,12 @@ const LESSONS = [
             name: "The flip, proven",
             blurb: "Three short acts: a number times its reciprocal is 1; a division written as a fraction over a fraction, with the bottom erased by its reciprocal; then your turn to pick the right one. Not graded.",
             cta: "Start the proof"
+          },
+          {
+            href: "lesson-03/bar-practice.html",
+            name: "The invisible parentheses",
+            blurb: "Order of operations with a fraction bar in the expression. Tap what goes next; the top and bottom of the bar come before anything outside, and the bar turns into a fraction. Or run the 45 second reciprocal round.",
+            cta: "Start practicing"
           }
         ]
       },

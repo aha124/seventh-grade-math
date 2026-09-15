@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Invisible Parentheses — Fraction Bars in Expressions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+  --tok-size:clamp(1.4rem,5.6vw,2.2rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  min-height:44px;display:inline-flex;align-items:center;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+.stepline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.stepline b{color:var(--board);font-weight:700;font-variant-numeric:tabular-nums}
+.ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+/* ---- the expression board ----
+   Same board as lesson 1: one node per token in a wrapping row, only
+   the operations are buttons. New here is the fraction bar: a column
+   with the top row, the bar itself as a button, and the bottom row. */
+.strip{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:.2rem .12rem;
+  min-height:9rem;margin:.5rem 0 0;padding:1.2rem .6rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.strip[hidden]{display:none}
+.tok{
+  font-family:var(--display);font-weight:700;line-height:1;
+  font-size:var(--tok-size);color:var(--board);
+  font-variant-numeric:tabular-nums;border-radius:3px;
+}
+.tok.num{padding:.4rem .18rem}
+.tok.num .fx{font-size:1em}
+.tok.paren{padding:.4rem 0;margin:0 -.2rem;color:var(--board-soft)}
+button.tok{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;padding:.2rem .35rem;
+  background:var(--rink);border:1.5px solid var(--line);color:var(--edge);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;position:relative;
+}
+button.tok.pow sup{font-size:.58em;vertical-align:super;line-height:0;margin-left:.03em}
+button.tok.imp{
+  min-width:0;width:1px;padding:0;margin:0 -2px;
+  background:none;border:none;align-self:stretch;z-index:2;
+}
+button.tok.imp::after{content:"";position:absolute;left:-21px;right:-21px;top:-6px;bottom:-6px}
+
+.frac{display:inline-flex;flex-direction:column;align-items:stretch;margin:0 .2rem;vertical-align:middle;max-width:100%}
+.frac .frow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.2rem .12rem;padding:.05rem .25rem}
+button.tok.bar{
+  width:100%;min-width:44px;min-height:44px;height:44px;padding:0;
+  background:transparent;border:none;border-radius:3px;
+}
+button.tok.bar::before{content:"";position:absolute;left:.1rem;right:.1rem;top:50%;height:4px;margin-top:-2px;background:var(--board);border-radius:2px}
+button.tok.bar:hover::before,button.tok.bar:focus-visible::before{background:var(--edge)}
+button.tok.bar.lit-op{background:transparent}
+button.tok.bar.lit-op::before{background:var(--gold);height:6px;margin-top:-3px}
+
+.tok.lit{background:#FBF5EA;box-shadow:inset 0 0 0 2px rgba(192,134,43,.45)}
+.frac.lit{background:#FBF5EA;box-shadow:inset 0 0 0 2px rgba(192,134,43,.45);border-radius:3px}
+button.tok.lit-op{background:var(--gold);border-color:var(--gold);color:#fff}
+button.tok.imp.lit-op{background:none;border:none}
+
+.tok.going,.answer.going,.frac.going{animation:fold .22s ease-in forwards}
+@keyframes fold{to{transform:scale(.5);opacity:0}}
+.tok.arriving{animation:land .26s ease-out}
+@keyframes land{from{transform:scale(.55);opacity:.15}to{transform:scale(1);opacity:1}}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.tok.shake,.ansbox.shake,.frac.shake,.frac-input.shake{animation:shake .38s ease-in-out}
+@media (prefers-reduced-motion:reduce){
+  .tok.going,.answer.going,.frac.going,.tok.arriving,.tok.shake,.ansbox.shake,.frac.shake,.frac-input.shake{animation:none}
+  .tok.going,.answer.going,.frac.going{opacity:0}
+}
+
+.answer{display:inline-flex;align-items:center;gap:.3rem;margin:0 .1rem;flex-wrap:wrap;justify-content:center}
+.answer .eq{font-family:var(--display);font-weight:700;font-size:var(--tok-size);color:var(--gold)}
+.ansbox{
+  width:4.4rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:calc(var(--tok-size) * .9);
+  border:1.5px solid var(--gold);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.ansbox.miss{background:#FBF0DF}
+.answer .ok,.ok{
+  min-width:44px;min-height:44px;padding:0 .5rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+/* ---- inline stacked fractions ---- */
+.fx{display:inline-flex;align-items:center;gap:.18em;vertical-align:middle;font-family:var(--display);font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.fx-s{display:inline-flex;flex-direction:column;align-items:center;font-size:.82em}
+.fx-n{padding:0 .22em .1em}
+.fx-d{padding:.1em .22em 0;border-top:2px solid currentColor}
+
+/* ---- reciprocal round ---- */
+.recipbox{
+  display:flex;flex-direction:column;align-items:center;gap:.8rem;
+  margin:.5rem 0 0;padding:1.2rem .8rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.recipbox[hidden]{display:none}
+.recipbox .prompt{font-family:var(--body);font-size:.95rem;color:#7C93A5;margin:0}
+.recipbox .shown{font-family:var(--display);font-weight:700;font-size:clamp(2.2rem,10vw,3.4rem);color:var(--board);line-height:1;min-height:1.2em}
+.recipbox .shown .fx-s{font-size:.85em}
+.recipbox .entry{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:center}
+.recipbox .streak{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);letter-spacing:.03em;font-variant-numeric:tabular-nums;min-height:1.4em}
+.recipbox .streak b{color:var(--gold);font-weight:700}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--edge)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.slip{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say.bar{border-left-color:#8A5F1E;background:#FFF3DC;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.slip b,.say.bar b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+.accuracy-note{margin:0 0 .5rem;font-size:.88rem;color:#7C93A5}
+.slip,.barline{
+  margin:0 0 .6rem;padding:.55rem .75rem;border-radius:2px;
+  background:#F6FAFC;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.barline{background:#FFF3DC;border-left-color:#8A5F1E;margin-bottom:.9rem}
+.slip b,.barline b{color:var(--board);font-weight:600}
+.slip[hidden],.barline[hidden]{display:none}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .slips{font-size:.8em;color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+.export-box[hidden]{display:none}
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">The Invisible <span>Parentheses</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">45</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div class="stepline" id="stepline">
+    <span id="stepCount"></span>
+    <span class="ask" id="ask"></span>
+  </div>
+
+  <div class="strip" id="strip" role="group" aria-label="Expression"></div>
+
+  <div class="recipbox" id="recipbox" hidden>
+    <p class="prompt">Type the reciprocal</p>
+    <div class="shown" id="shown" aria-live="polite">—</div>
+    <div class="entry">
+      <span id="recipHost"></span>
+      <button class="ok" id="recipOk" type="button" aria-label="Check" disabled>✓</button>
+    </div>
+    <div class="streak" id="streak"></div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="accuracy-note" id="accuracyNote"></p>
+      <p class="barline" id="barline"></p>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Right operation on the first tap, per step">Decisions</th>
+              <th scope="col" title="Right value on the first try, per step">Arithmetic</th>
+              <th scope="col" title="Wrong taps by kind">Slips</th>
+              <th scope="col" title="Right amount, unfinished form">Form</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. The fraction bar is a pair of parentheses you cannot see: everything above it and everything below it gets finished first, then the bar turns into a fraction. Outside the bar every step still lands on a whole number; the bar is where the fractions come from.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script src="../shared/fraction-input.js"></script>
+<script>
+const R = window.Rational;
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
+const isWhole = r => r.d === 1;
+
+/* ---------------- printing fractions ---------------- */
+function fx(n, d, w){
+  const s = el('span', 'fx');
+  if (w){ s.append(el('span', '', String(w))); if (n === 0) return s; }
+  if (d === 1 && !w){ s.textContent = String(n); return s; }
+  const st = el('span', 'fx-s');
+  st.append(el('span', 'fx-n', String(n)), el('span', 'fx-d', String(d)));
+  s.append(st);
+  return s;
+}
+const fxMixed = r => { const m = R.toMixed(r); return m.w && m.n ? fx(m.n, m.d, m.w) : (m.w || r.n === 0 ? fx(m.w, 1) : fx(r.n, r.d)); };
+
+/* ---------------- the expression model ----------------
+   The lesson 1 token list, with two additions. Values are exact
+   rationals from the shared helper instead of plain numbers, and a
+   fraction bar is three tokens: {k:'lb', id} opens it, {k:'bar', id}
+   is the bar itself, {k:'rb', id} closes it. Tokens above the bar carry
+   g = 'T' + id and tokens below carry g = 'B' + id, so each half is a
+   group of its own, exactly like a pair of parentheses. Parentheses
+   inside a half are the 2(5) kind only: a bracketed single number. */
+const N  = (v, g) => ({k:'num', v: typeof v === 'number' ? R.make(v, 1) : v, g: g || null});
+const O  = (op, show, g, imp) => ({k:'op', op, show, g: g || null, implicit: !!imp});
+const LP = id => ({k:'lp', id, g:null});
+const RP = id => ({k:'rp', id, g:null});
+const LB = id => ({k:'lb', id, g:null});
+const BAR = id => ({k:'bar', id, op:'bar', g:null});
+const RB = id => ({k:'rb', id, g:null});
+
+const RANK = {'^':2, '*':3, '/':3, 'bar':3, '+':4, '-':4};
+const SUPER = ['', '¹', '²', '³', '⁴', '⁵'];
+const isRegion = g => typeof g === 'string' && (g[0] === 'T' || g[0] === 'B');
+
+function opIndexes(toks){
+  const out = [];
+  toks.forEach((t, i) => { if (t.k === 'op' || t.k === 'bar') out.push(i); });
+  return out;
+}
+function bestOf(toks, list){
+  let best = list[0];
+  for (let n = 1; n < list.length; n++) if (RANK[toks[list[n]].op] < RANK[toks[best].op]) best = list[n];
+  return best;
+}
+/* Every operation that may go next. Inside any group, parentheses or
+   either half of a bar, the lowest rank leftmost of that group is
+   allowed, and the groups are independent of each other: the top of a
+   bar and the bottom of a bar can be worked in either order. Only when
+   no group has work left does the top level open up, and the bar itself
+   is a top-level divide. */
+function allowedIndexes(toks){
+  const all = opIndexes(toks);
+  if (!all.length) return [];
+  const groups = new Map();
+  all.forEach(i => { const g = toks[i].g; if (g !== null){ if (!groups.has(g)) groups.set(g, []); groups.get(g).push(i); } });
+  if (groups.size) return [...groups.values()].map(list => bestOf(toks, list));
+  return [bestOf(toks, all.filter(i => toks[i].g === null))];
+}
+const pendingIndex = toks => { const a = allowedIndexes(toks); return a.length ? a[0] : -1; };
+const barPending = toks => toks.some(t => t.k === 'op' && isRegion(t.g));
+const parenPending = toks => toks.some(t => t.k === 'op' && t.g !== null && !isRegion(t.g));
+
+function spanOf(toks, i, dir){
+  const j = i + dir;
+  const t = toks[j];
+  if (dir < 0 && t.k === 'rp'){ let s = j; while (!(toks[s].k === 'lp' && toks[s].id === t.id)) s--; return [s, j]; }
+  if (dir > 0 && t.k === 'lp'){ let e = j; while (!(toks[e].k === 'rp' && toks[e].id === t.id)) e++; return [j, e]; }
+  return [j, j];
+}
+function spanValue(toks, sp){
+  for (let i = sp[0]; i <= sp[1]; i++) if (toks[i].k === 'num') return toks[i].v;
+  return R.make(0, 1);
+}
+function compute(op, a, b){
+  if (op === '^'){ let v = R.make(1, 1); for (let k = 0; k < b.n; k++) v = R.mul(v, a); return v; }
+  if (op === '*') return R.mul(a, b);
+  if (op === '/' || op === 'bar') return R.div(a, b);
+  if (op === '+') return R.add(a, b);
+  return R.sub(a, b);
+}
+/* the bar's span is the whole lb..rb run; its operands are the single
+   numbers left above and below */
+function stepAt(toks, i){
+  const t = toks[i];
+  if (t.k === 'bar'){
+    let s = i, e = i;
+    while (toks[s].k !== 'lb') s--;
+    while (toks[e].k !== 'rb') e++;
+    const a = spanValue(toks, [s + 1, i - 1]), b = spanValue(toks, [i + 1, e - 1]);
+    return { i, L: [s, i - 1], R: [i + 1, e], a, b, op: 'bar', show: '/', implicit: false, g: null, value: compute('bar', a, b), bar: true };
+  }
+  const L = spanOf(toks, i, -1), Rr = spanOf(toks, i, 1);
+  const a = spanValue(toks, L), b = spanValue(toks, Rr);
+  return { i, L, R: Rr, a, b, op: t.op, show: t.show, implicit: !!t.implicit, g: t.g, value: compute(t.op, a, b), bar: false };
+}
+function dissolve(toks){
+  for (let i = 0; i < toks.length - 2; i++){
+    if (toks[i].k === 'lp' && toks[i+1].k === 'num' && toks[i+2].k === 'rp'){
+      const prev = toks[i-1];
+      if (prev && prev.k === 'op' && prev.implicit) continue;
+      toks[i+1].g = null;
+      toks.splice(i, 3, toks[i+1]);
+      i--;
+    }
+  }
+}
+function applyStep(toks, st){
+  const out = toks.map(t => Object.assign({}, t));
+  out.splice(st.L[0], st.R[1] - st.L[0] + 1, {k:'num', v: st.value, g: st.g, fresh: true});
+  dissolve(out);
+  return out;
+}
+/* The reducer: canonical order, leftmost allowed group first. Every
+   value on this page comes out of here. A bar over 0 gives a null value
+   and the whole reduction reports NaN, which the generator rejects. */
+function reduceAll(start){
+  let toks = start.map(t => Object.assign({}, t));
+  dissolve(toks);
+  const steps = [];
+  for (let guard = 0; guard < 60; guard++){
+    const i = pendingIndex(toks);
+    if (i < 0) break;
+    const st = stepAt(toks, i);
+    if (!st.value) return { value: null, steps, tokens: toks, bad: true };
+    steps.push(st);
+    toks = applyStep(toks, st);
+  }
+  const ok = toks.length === 1 && toks[0].k === 'num';
+  return { value: ok ? toks[0].v : null, steps, tokens: toks, bad: !ok };
+}
+function numText(r){ return R.text(r); }
+function exprText(toks){
+  let s = '';
+  toks.forEach((t, i) => {
+    if (t.k === 'num'){
+      if (toks[i-1] && toks[i-1].k === 'op' && toks[i-1].op === '^') s += (SUPER[t.v.n] || ('^' + t.v.n));
+      else s += numText(t.v);
+    }
+    else if (t.k === 'lp') s += '(';
+    else if (t.k === 'rp') s += ')';
+    else if (t.k === 'lb') s += '[';
+    else if (t.k === 'bar') s += '] / [';
+    else if (t.k === 'rb') s += ']';
+    else if (t.op === '^' || t.implicit) s += '';
+    else s += ' ' + t.show + ' ';
+  });
+  return s.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').replace(/\[\s+/g, '[').replace(/\s+\]/g, ']').trim();
+}
+function pieceText(st){
+  if (st.bar) return numText(st.a) + ' over ' + numText(st.b);
+  if (st.op === '^') return numText(st.a) + (SUPER[st.b.n] || ('^' + st.b.n));
+  if (st.implicit) return numText(st.a) + '(' + numText(st.b) + ')';
+  return numText(st.a) + ' ' + st.show + ' ' + numText(st.b);
+}
+
+/* ---------------- the five wrong taps ----------------
+   The four from lesson 1, and the bar: reaching outside while the top
+   or bottom of a bar still has work, or tapping the bar itself before
+   its halves are done. */
+const CATS = ['paren', 'outranked', 'leftright', 'exponent', 'bar'];
+const WRONG = {
+  paren:     'Parentheses first, always.',
+  outranked: 'Multiplication outranks addition, even when the addition comes first in line.',
+  leftright: 'Same rank. Work left to right.',
+  exponent:  'Exponents before multiplying.',
+  bar:       'The bar is invisible parentheses. Finish the top and the bottom first.'
+};
+const CAT_SHORT = {paren:'Par', outranked:'Rank', leftright:'L→R', exponent:'Exp', bar:'Bar'};
+const CAT_LONG = {
+  paren:     'going outside the parentheses too early',
+  outranked: 'adding or subtracting while a multiplication was still waiting',
+  leftright: 'taking the right hand one of two operations that share a rank',
+  exponent:  'multiplying before settling the power',
+  bar:       'leaving the top or bottom of the bar unfinished'
+};
+function rankCat(want, got){
+  if (RANK[got.op] === RANK[want.op]) return 'leftright';
+  if (RANK[want.op] === 2 && RANK[got.op] === 3) return 'exponent';
+  return 'outranked';
+}
+function classifyWrong(toks, allowed, got){
+  const t = toks[got];
+  if (t.k === 'op' && t.g !== null){
+    /* inside a group: the group's own best is the one to compare with */
+    const mine = allowed.find(i => toks[i].g === t.g);
+    if (mine !== undefined) return rankCat(toks[mine], t);
+    return isRegion(t.g) ? 'bar' : 'paren';
+  }
+  if (barPending(toks)) return 'bar';
+  if (parenPending(toks)) return 'paren';
+  return rankCat(toks[allowed[0]], t);
+}
+function emptyTally(){ const o = {}; CATS.forEach(c => { o[c] = 0; }); return o; }
+
+/* ---------------- the generator ----------------
+   A run of terms joined by + and −, one of which is the bar. Terms
+   outside the bar are whole-number shapes from lesson 1; the halves of
+   the bar are one or two whole-number operations each. Signs are
+   chosen against the running total so nothing goes below zero, and
+   the reducer has the last word: every step whose operands are both
+   whole must land on a whole number, the bottom of the bar is never
+   zero, and the answer stays small. */
+const mulGlyph = () => Math.random() < 0.25 ? '·' : '×';
+function tNum(){ const v = rand(1, 20); return {toks:[N(v)], val:v, ops:0}; }
+function tMul(){ const a = rand(2, 9), b = rand(2, 9); return {toks:[N(a), O('*', mulGlyph()), N(b)], val:a*b, ops:1}; }
+function tDiv(){ const b = rand(2, 9), q = rand(2, 9); return {toks:[N(b*q), O('/', '÷'), N(b)], val:q, ops:1}; }
+function tDivMul(){ const b = rand(2, 6), q = rand(2, 8), c = rand(2, 3); return {toks:[N(b*q), O('/', '÷'), N(b), O('*', mulGlyph()), N(c)], val:q*c, ops:2}; }
+function tPow(){ const b = rand(2, 5), e = rand(2, 3); return {toks:[N(b), O('^', '^'), N(e)], val:Math.pow(b, e), ops:1}; }
+function tParen(g){
+  const id = 'p' + (g.id++);
+  const roll = Math.random();
+  if (roll < 0.45){ const a = rand(2, 12), b = rand(1, 9); return {toks:[LP(id), N(a,id), O('+','+',id), N(b,id), RP(id)], val:a+b, ops:1}; }
+  if (roll < 0.85){ const a = rand(5, 18), b = rand(1, a - 1); return {toks:[LP(id), N(a,id), O('-','−',id), N(b,id), RP(id)], val:a-b, ops:1}; }
+  const a = rand(2, 6), b = rand(2, 6); return {toks:[LP(id), N(a,id), O('*',mulGlyph(),id), N(b,id), RP(id)], val:a*b, ops:1};
+}
+/* one half of a bar: one or two whole operations, tokens tagged with the
+   half's group */
+function half(g, grp, two){
+  const roll = Math.random();
+  if (!two){
+    if (roll < 0.3){ const a = rand(2, 9), b = rand(2, 9); return {toks:[N(a,grp), O('*',mulGlyph(),grp), N(b,grp)], val:a*b, ops:1}; }
+    if (roll < 0.5){ const id = 'p' + (g.id++); const a = rand(2, 9), b = rand(2, 9); return {toks:[N(a,grp), O('*','',grp,true), LP(id), N(b,id), RP(id)], val:a*b, ops:1}; }
+    if (roll < 0.8){ const a = rand(2, 12), b = rand(1, 9); return {toks:[N(a,grp), O('+','+',grp), N(b,grp)], val:a+b, ops:1}; }
+    const a = rand(4, 18), b = rand(1, a - 2); return {toks:[N(a,grp), O('-','−',grp), N(b,grp)], val:a-b, ops:1};
+  }
+  if (roll < 0.5){ const a = rand(2, 6), b = rand(2, 6), c = rand(1, 9); return {toks:[N(a,grp), O('*',mulGlyph(),grp), N(b,grp), O('+','+',grp), N(c,grp)], val:a*b+c, ops:2}; }
+  const a = rand(1, 9), b = rand(2, 6), c = rand(2, 5); return {toks:[N(a,grp), O('+','+',grp), N(b,grp), O('*',mulGlyph(),grp), N(c,grp)], val:a+b*c, ops:2};
+}
+function tBar(g){
+  const id = String(g.id++);
+  const topTwo = Math.random() < 0.35, botTwo = !topTwo && Math.random() < 0.3;
+  const t = half(g, 'T' + id, topTwo), b = half(g, 'B' + id, botTwo);
+  if (b.val === 0) return null;
+  return {toks:[LB(id)].concat(t.toks, [BAR(id)], b.toks, [RB(id)]), val: R.make(t.val, b.val), ops: t.ops + b.ops + 1, bar: true};
+}
+const SHAPES = [
+  {f:tNum, w:3}, {f:tMul, w:2}, {f:tDiv, w:2}, {f:tDivMul, w:1}, {f:tPow, w:1}, {f:tParen, w:3, group:true}
+];
+function weighted(pool){
+  let total = 0; pool.forEach(p => { total += p.w; });
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++){ r -= pool[i].w; if (r <= 0) return pool[i]; }
+  return pool[pool.length - 1];
+}
+const MIN_STEPS = 4, MAX_STEPS = 6, MAX_ANSWER = 100, MAX_DEN = 24;
+
+function makeExpression(){
+  for (let attempt = 0; attempt < 800; attempt++){
+    const g = {id: 1};
+    const nTerms = rand(2, 3);
+    const barAt = rand(0, nTerms - 1);
+    const terms = [];
+    let group = false, ops = 0, broke = false;
+    for (let i = 0; i < nTerms; i++){
+      if (i === barAt){ const b = tBar(g); if (!b){ broke = true; break; } terms.push(b); ops += b.ops; continue; }
+      const shape = weighted(SHAPES.filter(s => !(s.group && group)));
+      const term = shape.f(g);
+      if (!term){ broke = true; break; }
+      if (shape.group) group = true;
+      terms.push(term); ops += term.ops;
+    }
+    if (broke) continue;
+    ops += nTerms - 1;
+    if (ops < MIN_STEPS || ops > MAX_STEPS) continue;
+
+    let total = typeof terms[0].val === 'number' ? R.make(terms[0].val, 1) : terms[0].val;
+    const signs = [];
+    let bust = false;
+    for (let i = 1; i < terms.length; i++){
+      const v = typeof terms[i].val === 'number' ? R.make(terms[i].val, 1) : terms[i].val;
+      let s = Math.random() < 0.45 ? '-' : '+';
+      if (s === '-' && R.cmp(total, v) < 0) s = '+';
+      total = s === '+' ? R.add(total, v) : R.sub(total, v);
+      if (R.cmp(total, R.make(MAX_ANSWER, 1)) > 0){ bust = true; break; }
+      signs.push(s);
+    }
+    if (bust) continue;
+
+    let toks = terms[0].toks.slice();
+    for (let i = 1; i < terms.length; i++){
+      toks.push(O(signs[i-1], signs[i-1] === '+' ? '+' : '−'));
+      toks = toks.concat(terms[i].toks);
+    }
+    const r = reduceAll(toks);
+    if (r.bad || !r.value || r.value.n < 0 || r.value.d > MAX_DEN || R.cmp(r.value, R.make(MAX_ANSWER, 1)) > 0) continue;
+    if (r.steps.length < MIN_STEPS || r.steps.length > MAX_STEPS) continue;
+    if (r.steps.some(st => (isWhole(st.a) && isWhole(st.b) && !st.bar && !isWhole(st.value)) || st.value.n < 0)) continue;
+    return {toks, steps: r.steps.length, value: r.value};
+  }
+  return {toks: BOOK(), steps: 6, value: R.make(36, 13)};
+}
+
+/* The book's own example, the first problem of every visit and the
+   reducer's test case: (3 + 4) + 2(5) over 9 + 4, minus 5, which is
+   2 10/13. If the reducer ever stops agreeing the page says so. */
+const BOOK = () => [
+  LP('p1'), N(3,'p1'), O('+','+','p1'), N(4,'p1'), RP('p1'),
+  O('+','+'),
+  LB('1'), N(2,'T1'), O('*','','T1',true), LP('p2'), N(5,'p2'), RP('p2'), BAR('1'), N(9,'B1'), O('+','+','B1'), N(4,'B1'), RB('1'),
+  O('-','−'), N(5)
+];
+function selfCheck(){
+  const r = reduceAll(BOOK());
+  const ok = !r.bad && R.eq(r.value, R.make(36, 13)) && r.steps.length === 6;
+  if (!ok) say('bad', 'This page has a problem:', 'the reducer no longer agrees with the worked example in the book. Do not use it until that is fixed.');
+  return ok;
+}
+
+/* ---------------- saved progress ---------------- */
+const STORE_KEY = 'seventh-grade-math:bars';
+let solved = 0, clean = 0, best = 0;
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.solved)) solved = Math.max(0, Math.floor(saved.solved));
+    if (Number.isFinite(saved.clean))  clean  = Math.max(0, Math.floor(saved.clean));
+    if (Number.isFinite(saved.best))   best   = Math.max(0, Math.floor(saved.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+function saveProgress(){ try { localStorage.setItem(STORE_KEY, JSON.stringify({solved, clean, best})); } catch (e) {} }
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally(); drawSpeedBar(); clearLog();
+}
+function drawTally(){
+  document.getElementById('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   Lesson 1's shape with two more fields: the bar tally inside wrong,
+   and slips, the count of right-amount unfinished-form answers. */
+const LOG_KEY = 'seventh-grade-math:bars-log';
+const LOG_CAP = 200;
+const LOG_SHOWN = 20;
+const MODE_LABEL = {solve:'Solve it', recip:'Reciprocal round'};
+let log = [];
+function validRecord(r){ return r && typeof r === 'object' && typeof r.t === 'number' && isFinite(r.t) && typeof r.mode === 'string' && typeof r.problem === 'string'; }
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+function saveLog(){ try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {} }
+function clearLog(){ log = []; try { localStorage.removeItem(LOG_KEY); } catch (e) {} drawLog(); }
+function pushRecord(rec){ log.push(rec); if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP); saveLog(); drawLog(); }
+function whenText(t){
+  try { const d = new Date(t); return d.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + ', ' + d.toLocaleTimeString(undefined, {hour:'numeric', minute:'2-digit'}); }
+  catch (e) { return ''; }
+}
+function tallyOf(r){ const w = r && r.wrong ? r.wrong : {}; const out = emptyTally(); CATS.forEach(c => { out[c] = Number(w[c]) || 0; }); return out; }
+
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const note = document.getElementById('accuracyNote');
+  const slip = document.getElementById('slip');
+  const barline = document.getElementById('barline');
+  const empty = document.getElementById('logEmpty');
+  const scroll = document.querySelector('.log-scroll');
+  rows.textContent = ''; accuracy.textContent = ''; slip.textContent = ''; barline.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  empty.hidden = log.length > 0;
+  scroll.hidden = log.length === 0;
+  slip.hidden = log.length === 0;
+  barline.hidden = log.length === 0;
+  if (!log.length){ note.textContent = ''; return; }
+
+  const chip = (label, value, loud) => { const li = el('li', loud ? 'loud' : ''); li.append(label + ' ', el('b', '', String(value))); accuracy.append(li); };
+  const solves = log.filter(r => r.mode === 'solve');
+  const stepsTotal = solves.reduce((n, r) => n + (Number(r.steps) || 0), 0);
+  if (stepsTotal){
+    const dec = solves.reduce((n, r) => n + (Number(r.dec) || 0), 0);
+    const ari = solves.reduce((n, r) => n + (Number(r.arith) || 0), 0);
+    chip('Decisions', Math.round(dec * 100 / stepsTotal) + '%');
+    chip('Arithmetic', Math.round(ari * 100 / stepsTotal) + '%');
+    chip('Reduce-slips', solves.reduce((n, r) => n + (Number(r.slips) || 0), 0), true);
+  }
+  const rounds = log.filter(r => r.mode === 'recip');
+  if (rounds.length) chip('Best reciprocal round', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+  note.textContent = stepsTotal
+    ? 'Right on the first try, across ' + stepsTotal + (stepsTotal === 1 ? ' step of Solve it. ' : ' steps of Solve it. ')
+      + 'The decision and the arithmetic are counted apart. A reduce-slip is the right amount in an unfinished form; it is not a miss, and it is counted on its own.'
+    : 'No Solve it steps logged yet.';
+
+  const totals = emptyTally();
+  log.forEach(r => { const w = tallyOf(r); CATS.forEach(c => { totals[c] += w[c]; }); });
+  const sum = CATS.reduce((n, c) => n + totals[c], 0);
+  /* the bar gets its own line, because it is the new rule this page is for */
+  const lead = el('b', '', totals.bar ? 'The bar: ' + totals.bar + (totals.bar === 1 ? ' wrong tap.' : ' wrong taps.') : 'The bar: no wrong taps.');
+  barline.append(lead, totals.bar
+    ? ' Reaching outside the bar, or tapping the bar itself, while its top or bottom still had work. The bar is invisible parentheses: finish both halves first.'
+    : ' Both halves finished before anything outside, every time so far.');
+  if (!sum){
+    slip.textContent = 'No wrong taps logged yet.';
+  } else {
+    const worst = CATS.reduce((a, b) => totals[b] > totals[a] ? b : a, CATS[0]);
+    const l2 = el('b', '', 'Most often: ' + CAT_LONG[worst] + '.');
+    slip.append(l2, ' ' + totals[worst] + ' of ' + sum + ' wrong taps. (' + CATS.map(c => CAT_SHORT[c] + ' ' + totals[c]).join(', ') + ')');
+  }
+
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = text => { const td = document.createElement('td'); td.textContent = text; return td; };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+    if (r.mode === 'recip'){
+      const td = document.createElement('td');
+      td.append(el('span', 'score', (Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0) + (Number(r.streak) ? ', streak ' + r.streak : '')));
+      tr.append(td, cell('—'));
+    } else {
+      [r.dec, r.arith].forEach(v => {
+        const td = document.createElement('td');
+        const full = Number(v) === Number(r.steps);
+        td.append(el('span', full ? 'yes' : 'no', (Number(v) || 0) + ' of ' + (Number(r.steps) || 0)));
+        tr.append(td);
+      });
+    }
+    const w = tallyOf(r);
+    const slips = document.createElement('td');
+    const hit = CATS.filter(c => w[c] > 0);
+    slips.append(hit.length ? el('span', 'slips', hit.map(c => CAT_SHORT[c] + ' ' + w[c]).join(' · ')) : el('span', 'none', r.mode === 'recip' ? '—' : 'none'));
+    tr.append(slips);
+    const form = document.createElement('td');
+    form.append(r.mode === 'recip' ? el('span', 'none', '—') : (Number(r.slips) ? el('span', 'slipc', String(r.slips)) : el('span', 'none', 'none')));
+    tr.append(form);
+    const hints = document.createElement('td');
+    if (Number(r.hints)) hints.append(el('span', 'hints', '+' + r.hints));
+    tr.append(hints);
+    rows.append(tr);
+  });
+}
+
+async function copyText(text){
+  try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- page state ---------------- */
+const strip     = document.getElementById('strip');
+const sayEl     = document.getElementById('say');
+const banner    = document.getElementById('banner');
+const stepCount = document.getElementById('stepCount');
+const askEl     = document.getElementById('ask');
+const hintBtn   = document.getElementById('hint');
+const nextBtn   = document.getElementById('next');
+const speedBar  = document.getElementById('speedBar');
+const recipbox  = document.getElementById('recipbox');
+
+let mode = 'solve';
+let toks = [], problemText = '', step = null, stage = 'pick';
+let taken = 0, total = 0;
+let decFirst = 0, arithFirst = 0, missedThisStep = false, missedThisValue = false;
+let wrong = emptyTally(), hintsUsed = 0, slips = 0;
+let usedBook = false;
+let stepInput = null;                /* the fraction input open on a fractional step */
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  sayEl.append(el('b', '', text));
+  if (extra) sayEl.append(' ' + extra);
+}
+
+/* ---------------- drawing the row ---------------- */
+function opLabel(t){
+  if (t.k === 'bar') return 'the fraction bar: top over bottom';
+  if (t.implicit) return 'multiply, written as brackets';
+  if (t.op === '^') return 'the power';
+  if (t.op === '*') return 'multiply';
+  if (t.op === '/') return 'divide';
+  if (t.op === '+') return 'add';
+  return 'subtract';
+}
+function numNode(t){
+  const s = el('span', 'tok num');
+  s.append(isWhole(t.v) ? String(t.v.n) : fxMixed(t.v));
+  return s;
+}
+/* draws tokens from..to (inclusive) into host, with a bar drawn as a
+   column whose halves are drawn by the same function */
+function drawRange(host, from, to){
+  let i = from;
+  while (i <= to){
+    const t = toks[i];
+    if (t.k === 'lb'){
+      let bar = i; while (toks[bar].k !== 'bar') bar++;
+      let end = bar; while (toks[end].k !== 'rb') end++;
+      const f = el('span', 'frac');
+      f.dataset.from = i; f.dataset.to = end;
+      const top = el('span', 'frow'); drawRange(top, i + 1, bar - 1);
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tok op bar';
+      b.dataset.op = bar; b.dataset.from = bar; b.dataset.to = bar;
+      b.setAttribute('aria-label', opLabel(toks[bar]));
+      const bot = el('span', 'frow'); drawRange(bot, bar + 1, end - 1);
+      f.append(top, b, bot);
+      host.append(f);
+      i = end + 1;
+      continue;
+    }
+    if (t.k === 'num' && toks[i+1] && toks[i+1].k === 'op' && toks[i+1].op === '^'){
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tok op pow';
+      b.dataset.from = i; b.dataset.to = i + 2; b.dataset.op = i + 1;
+      b.append(String(t.v.n));
+      const sup = document.createElement('sup'); sup.textContent = SUPER[toks[i+2].v.n] || String(toks[i+2].v.n);
+      b.append(sup);
+      b.setAttribute('aria-label', t.v.n + ' to the power of ' + toks[i+2].v.n);
+      if (t.fresh) b.classList.add('arriving');
+      host.append(b);
+      i += 3;
+      continue;
+    }
+    let node;
+    if (t.k === 'op'){
+      node = document.createElement('button');
+      node.type = 'button'; node.className = 'tok op' + (t.implicit ? ' imp' : '');
+      node.dataset.op = i; node.textContent = t.show;
+      node.setAttribute('aria-label', opLabel(t));
+    } else if (t.k === 'num'){
+      node = numNode(t);
+      if (t.fresh) node.classList.add('arriving');
+    } else {
+      node = el('span', 'tok paren', t.k === 'lp' ? '(' : ')');
+    }
+    node.dataset.from = i; node.dataset.to = i;
+    host.append(node);
+    i++;
+  }
+}
+function draw(){
+  strip.textContent = '';
+  if (toks.length) drawRange(strip, 0, toks.length - 1);
+  toks.forEach(t => { delete t.fresh; });
+  strip.setAttribute('aria-label', 'Expression: ' + exprText(toks));
+  if (step) lightStep();
+  stepCount.textContent = '';
+  if (mode !== 'solve') return;
+  const label = el('b');
+  if (stage === 'done'){ label.textContent = 'Done'; stepCount.append(label); }
+  else { label.textContent = 'Step ' + (taken + 1); stepCount.append(label, ' of ' + total); }
+  askEl.textContent = stage === 'answer' ? 'Now work out just that piece.' : (stage === 'done' ? '' : 'Tap the operation you would do next.');
+}
+function allNodes(){ return Array.prototype.slice.call(strip.querySelectorAll('[data-from]')); }
+function lightStep(){
+  allNodes().forEach(n => {
+    const f = +n.dataset.from, t = +n.dataset.to;
+    if (n.dataset.op !== undefined && +n.dataset.op === step.i){ n.classList.add('lit-op'); return; }
+    if (n.classList.contains('frac')) return;
+    if ((f >= step.L[0] && t <= step.L[1]) || (f >= step.R[0] && t <= step.R[1])) n.classList.add('lit');
+  });
+  if (step.bar){ const f = allNodes().find(n => n.classList.contains('frac') && +n.dataset.from === step.L[0]); if (f) f.classList.add('lit'); }
+  openAnswer();
+}
+/* a whole-number step gets the plain box; a fractional one gets the
+   shared fraction input, so mixed numbers can be typed as mixed numbers */
+function openAnswer(){
+  const anchor = allNodes().filter(n => +n.dataset.to === step.R[1]).pop();
+  if (!anchor) return;
+  const wrap = el('span', 'answer');
+  wrap.append(el('span', 'eq', '='));
+  stepInput = null;
+  if (isWhole(step.value)){
+    const inp = document.createElement('input');
+    inp.className = 'ansbox'; inp.id = 'ansbox';
+    inp.setAttribute('inputmode', 'numeric'); inp.setAttribute('autocomplete', 'off');
+    inp.setAttribute('aria-label', 'What is ' + pieceText(step) + '?');
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit(); } });
+    inp.addEventListener('input', () => inp.classList.remove('miss'));
+    wrap.append(inp);
+  } else {
+    stepInput = FractionInput.create({ mixed: true, label: 'What is ' + pieceText(step) + '?', onEnter: () => submit() });
+    wrap.append(stepInput.el);
+  }
+  const ok = document.createElement('button');
+  ok.type = 'button'; ok.className = 'ok'; ok.textContent = '✓';
+  ok.setAttribute('aria-label', 'Check this step');
+  ok.onclick = submit;
+  wrap.append(ok);
+  const host = anchor.classList.contains('frac') ? anchor : anchor;
+  host.after(wrap);
+  if (stepInput) stepInput.focus(); else wrap.querySelector('input').focus();
+}
+
+/* ---------------- taps ---------------- */
+function shake(nodes){ nodes.forEach(n => { n.classList.add('shake'); setTimeout(() => n.classList.remove('shake'), 420); }); }
+function tapOp(got){
+  if (stage !== 'pick' || mode !== 'solve') return null;
+  const allowed = allowedIndexes(toks);
+  if (allowed.includes(got)){ accept(got); return 'ok'; }
+  const cat = classifyWrong(toks, allowed, got);
+  wrong[cat]++;
+  missedThisStep = true;
+  const btn = allNodes().find(n => n.dataset.op !== undefined && +n.dataset.op === got);
+  const st = stepAt(toks, got);
+  const hit = allNodes().filter(n => {
+    const f = +n.dataset.from, t = +n.dataset.to;
+    return n === btn || (!n.classList.contains('frac') && ((f >= st.L[0] && t <= st.L[1]) || (f >= st.R[0] && t <= st.R[1])));
+  });
+  shake(hit);
+  say(cat === 'bar' ? 'bar' : 'bad', WRONG[cat]);
+  return cat;
+}
+strip.addEventListener('click', e => {
+  const btn = e.target.closest('button.op');
+  if (!btn) return;
+  tapOp(+btn.dataset.op);
+});
+function accept(i){
+  step = stepAt(toks, i);
+  if (!missedThisStep) decFirst++;
+  stage = 'answer';
+  missedThisValue = false;
+  say('', '');
+  draw();
+}
+/* the step's value: whole steps compare as integers, fractional steps
+   go through the three-outcome check from lesson 2 */
+function submit(){
+  if (stage !== 'answer') return;
+  if (!stepInput){
+    const inp = document.getElementById('ansbox');
+    const raw = String(inp.value).replace(/[\s,]/g, '');
+    if (!raw) return;
+    if (!/^-?\d+$/.test(raw) || parseInt(raw, 10) !== step.value.n){
+      inp.classList.add('miss', 'shake'); setTimeout(() => inp.classList.remove('shake'), 420);
+      missedThisValue = true;
+      say('bad', 'Not that.', 'Work out only the piece that is lit up: ' + pieceText(step) + '.');
+      inp.select();
+      return;
+    }
+    if (!missedThisValue) arithFirst++;
+    collapse();
+    return;
+  }
+  const v = stepInput.value();
+  if (v.w === null && v.n === null && v.d === null){ say('', 'Type the value first.'); return; }
+  if ((v.n === null) !== (v.d === null)){ say('', 'A fraction needs a top and a bottom.', 'For a whole number on its own, leave both fraction boxes empty.'); return; }
+  if (v.d === 0){ say('', 'The bottom cannot be 0.'); return; }
+  const E = stepInput.rational();
+  if (!E) return;
+  const box = stepInput;          /* captured: the step may collapse before the timer fires */
+  const shakeIt = () => { box.el.classList.remove('shake'); void box.el.offsetWidth; box.el.classList.add('shake'); setTimeout(() => box.el.classList.remove('shake'), 420); };
+  if (!R.eq(E, step.value)){
+    stepInput.mark('miss'); shakeIt();
+    missedThisValue = true;
+    say('bad', 'Not that.', 'Work out only the piece that is lit up: ' + pieceText(step) + '.');
+    return;
+  }
+  const fraction = v.n !== null && v.n !== 0;
+  if (fraction && R.gcd(v.n, v.d) !== 1){
+    slips++; stepInput.mark('slip'); shakeIt();
+    say('slip', 'Right amount. Not lowest terms yet.', 'Some number goes into both the top and the bottom. Divide them both by it.');
+    return;
+  }
+  if (fraction && v.n >= v.d){
+    slips++; stepInput.mark('slip'); shakeIt();
+    say('slip', 'Right amount. Make it a mixed number.', 'The top is at least as big as the bottom, so there is a whole hiding in there. Pull it out to the left.');
+    return;
+  }
+  if (!missedThisValue) arithFirst++;
+  collapse();
+}
+function collapse(){
+  const done = step;
+  const going = allNodes().filter(n => n.classList.contains('lit') || n.classList.contains('lit-op'));
+  going.forEach(n => n.classList.add('going'));
+  const ans = strip.querySelector('.answer'); if (ans) ans.classList.add('going');
+  const wait = reduced() ? 0 : 230;
+  setTimeout(() => {
+    toks = applyStep(toks, done);
+    taken++;
+    step = null; stepInput = null;
+    missedThisStep = false;
+    const over = pendingIndex(toks) < 0;
+    stage = over ? 'done' : 'pick';
+    draw();
+    hintBtn.textContent = 'Hint';
+    hintBtn.disabled = over || hintsUsed >= 3;
+    if (over) finish();
+    else if (done.bar) say('good', 'The bar became ' + numText(done.value) + '.', 'Now it is one number like any other. Carry on outside.');
+  }, wait);
+}
+function finish(){
+  solved++;
+  const cleanRun = decFirst === total && arithFirst === total && hintsUsed === 0 && slips === 0;
+  if (cleanRun) clean++;
+  saveProgress();
+  drawTally();
+  pushRecord({ t: Date.now(), mode: 'solve', problem: problemText, steps: total, dec: decFirst, arith: arithFirst, slips, wrong, hints: hintsUsed });
+  if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'bars' });
+  banner.className = 'banner show';
+  banner.textContent = cleanRun
+    ? 'Every step right, first try, no hints, finished form.'
+    : 'Solved. ' + decFirst + ' of ' + total + ' decisions and ' + arithFirst + ' of ' + total + ' values on the first try' + (slips ? ', ' + slips + (slips === 1 ? ' reduce-slip' : ' reduce-slips') : '') + '.';
+  say('good', 'Done. ' + numText(toks[0].v) + '.', 'Tap New problem for another.');
+}
+
+/* ---------------- hints ----------------
+   One: the four ranks plus the bar rule. Two: which region is pending.
+   Three: the rank of the leftmost pending operation. None names it. */
+function regionName(g){
+  if (g === null) return 'outside';
+  if (g[0] === 'T') return 'the top of the bar';
+  if (g[0] === 'B') return 'the bottom of the bar';
+  return 'inside the parentheses';
+}
+function hintText(){
+  const allowed = allowedIndexes(toks);
+  if (!allowed.length) return '';
+  const t = toks[allowed[0]];
+  if (hintsUsed === 1){
+    return 'Four ranks, in this order: parentheses; exponents; multiply and divide, left to right; add and subtract, left to right. '
+      + 'And the bar: everything above it and everything below it gets finished first, then the bar itself is a divide.';
+  }
+  if (hintsUsed === 2){
+    if (t.k === 'bar') return 'Both halves of the bar are single numbers. The bar itself is ready: top over bottom.';
+    if (t.g !== null){
+      const regions = [...new Set(allowed.map(i => toks[i].g))].map(regionName);
+      return (regions.length === 1 ? 'There is still work ' + regions[0] + '.' : 'There is still work ' + regions.join(' and ') + '; either can go next.') + ' Nothing outside counts until that is done.';
+    }
+    return t.op === '^' ? 'Everything is settled but the top level, and something there is still a power.'
+      : (RANK[t.op] === 3 ? 'The top level is what is left, and you are on the multiply and divide rank.' : 'Only adding and subtracting left. You are on the last rank.');
+  }
+  const where = t.k === 'bar' ? 'The bar' : 'The leftmost move, ' + regionName(t.g) + ',';
+  const rank = t.k === 'bar' || RANK[t.op] === 3 ? 'the multiply and divide rank' : (t.op === '^' ? 'the exponent rank' : 'the add and subtract rank');
+  return where + ' is on ' + rank + '.';
+}
+hintBtn.onclick = () => {
+  if (mode !== 'solve' || stage === 'done' || hintsUsed >= 3) return;
+  hintsUsed++;
+  say('', hintText());
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- Reciprocal round ----------------
+   Forty-five seconds. A number appears, proper, improper, whole, or
+   mixed; she types its reciprocal. Right means equal in value. */
+const SPEED_SECONDS = 45;
+let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+let cur = null, runStreak = 0, bestStreak = 0, recipTimer = 0;
+const shownEl = document.getElementById('shown');
+const recipOk = document.getElementById('recipOk');
+const streakEl = document.getElementById('streak');
+const recipInput = FractionInput.create({ mixed: true, label: 'The reciprocal', onEnter: () => submitRecip() });
+document.getElementById('recipHost').append(recipInput.el);
+recipInput.setDisabled(true);
+const RECIP_DENS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12];
+function makeRecip(){
+  const kind = pick(['proper', 'proper', 'improper', 'whole', 'mixed', 'mixed']);
+  const d = pick(RECIP_DENS);
+  if (kind === 'whole'){ const n = rand(2, 12); return { r: R.make(n, 1), show: () => fx(n, 1), text: String(n) }; }
+  if (kind === 'proper'){ let n; do { n = rand(1, d - 1); } while (R.gcd(n, d) !== 1); return { r: R.make(n, d), show: () => fx(n, d), text: n + '/' + d }; }
+  if (kind === 'improper'){ let n; do { n = rand(d + 1, 3 * d); } while (R.gcd(n, d) !== 1); return { r: R.make(n, d), show: () => fx(n, d), text: n + '/' + d }; }
+  let n; do { n = rand(1, d - 1); } while (R.gcd(n, d) !== 1);
+  const w = rand(1, 5);
+  return { r: R.fromParts(w, n, d), show: () => fx(n, d, w), text: w + ' ' + n + '/' + d };
+}
+function drawSpeedBar(){ document.getElementById('score').textContent = speedScore; document.getElementById('best').textContent = best; }
+function drawStreak(){
+  streakEl.textContent = '';
+  if (!speedOn) return;
+  streakEl.append('Streak ', el('b', '', String(runStreak)));
+  if (bestStreak > 1) streakEl.append(' · best this round ' + bestStreak);
+}
+function nextRecip(){
+  cur = makeRecip();
+  shownEl.textContent = '';
+  shownEl.append(cur.show());
+  recipInput.clear(); recipInput.setDisabled(false); recipOk.disabled = false;
+  recipInput.focus();
+  drawStreak();
+}
+function submitRecip(){
+  if (!speedOn || !cur) return;
+  const v = recipInput.value();
+  if (v.w === null && v.n === null && v.d === null) return;
+  if ((v.n === null) !== (v.d === null) || v.d === 0){ say('', 'A fraction needs a top and a bottom, and the bottom cannot be 0.'); return; }
+  const E = recipInput.rational();
+  if (!E) return;
+  speedSeen++;
+  const want = R.make(cur.r.d, cur.r.n);
+  const right = R.eq(E, want);
+  if (right){
+    speedScore++; runStreak++; if (runStreak > bestStreak) bestStreak = runStreak;
+    say('good', R.text(want) + '. Yes.', cur.text + ' × ' + R.text(want) + ' = 1.');
+  } else {
+    runStreak = 0;
+    recipInput.mark('miss');
+    say('bad', 'Not that.', (cur.r.d === 1 ? 'A whole number is itself over 1, so its reciprocal is 1 over it.' : (cur.r.n > cur.r.d && cur.text.includes(' ') ? 'Improper first: ' + cur.text + ' = ' + cur.r.n + '/' + cur.r.d + '. Then flip.' : 'Top and bottom trade places.')) + ' Next.');
+  }
+  drawSpeedBar(); drawStreak();
+  cur = null;
+  recipInput.setDisabled(true); recipOk.disabled = true;
+  clearTimeout(recipTimer);
+  recipTimer = setTimeout(() => { if (speedOn) nextRecip(); }, reduced() ? 0 : (right ? 350 : 1200));
+}
+recipOk.onclick = submitRecip;
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0; runStreak = 0; bestStreak = 0;
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  banner.className = 'banner';
+  nextBtn.textContent = 'Stop';
+  drawSpeedBar();
+  tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  say('', 'Type the reciprocal.', 'Enter or the tick checks it. Mixed numbers go improper first.');
+  nextRecip();
+}
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer); clearTimeout(recipTimer);
+  speedTimer = 0; cur = null;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  shownEl.textContent = '—';
+  recipInput.clear(); recipInput.setDisabled(true); recipOk.disabled = true;
+  drawStreak();
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar(); drawTally();
+  pushRecord({ t: Date.now(), mode: 'recip', problem: SPEED_SECONDS + ' second round', score: speedScore, seen: speedSeen, streak: bestStreak });
+  if (isBest && window.Tokens) Tokens.earnBest('bars:recip');
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest ? speedScore + ' right. That is a new best.' : speedScore + ' right. Best so far is ' + best + '.';
+  say('', '');
+}
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  {key:'solve', tab:'Solve it',
+   note:'Tap the operation that goes next, then work out only that piece. The fraction bar is a pair of parentheses you cannot see: its top and bottom get finished first, then the bar itself turns into a fraction.'},
+  {key:'recip', tab:'Reciprocal round',
+   note:'Forty-five seconds. A number appears and you type its reciprocal. Mixed numbers go improper first. No hints in here.'}
+];
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = el('button', 'mode-tab', m.tab);
+  b.type = 'button';
+  b.setAttribute('aria-pressed', String(m.key === mode));
+  b.onclick = () => setMode(m.key);
+  modesEl.append(b);
+});
+function setMode(nextMode){
+  if (speedOn) stopSpeed(false);
+  mode = nextMode;
+  Array.prototype.forEach.call(modesEl.children, (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  speedBar.hidden = mode !== 'recip';
+  strip.hidden = mode !== 'solve';
+  document.getElementById('stepline').hidden = mode !== 'solve';
+  recipbox.hidden = mode !== 'recip';
+  hintBtn.disabled = mode === 'recip';
+  banner.className = 'banner';
+  if (mode === 'recip'){
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0; drawSpeedBar();
+    shownEl.textContent = '—';
+    say('', 'Forty-five seconds.', 'Tap Start the round when you are ready.');
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+/* the first problem of a visit is the book's example; after that they
+   are generated */
+function newProblem(given){
+  const made = given || (!usedBook ? { toks: BOOK(), steps: 6, value: R.make(36, 13) } : makeExpression());
+  if (!given) usedBook = true;
+  toks = made.toks.map(t => Object.assign({}, t));
+  dissolve(toks);
+  problemText = exprText(toks);
+  total = made.steps;
+  taken = 0; step = null; stepInput = null; stage = 'pick';
+  decFirst = 0; arithFirst = 0; slips = 0;
+  missedThisStep = false; missedThisValue = false;
+  wrong = emptyTally(); hintsUsed = 0;
+  banner.className = 'banner';
+  hintBtn.disabled = false; hintBtn.textContent = 'Hint';
+  draw();
+  say('', 'Read it through first.', 'The bar is invisible parentheses: whatever sits above it and below it comes before anything outside.');
+}
+nextBtn.onclick = () => {
+  if (mode !== 'recip'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+
+/* ---------------- Start over ---------------- */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){ clearTimeout(armed); armed = 0; clearBtn.classList.remove('arming'); clearBtn.textContent = 'Start over'; }
+clearBtn.onclick = () => {
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming'); clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportBtn = document.getElementById('export');
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+exportBtn.onclick = async () => {
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(() => { exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text; exportBox.hidden = false; exportBox.focus(); exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+loadProgress();
+loadLog();
+drawTally();
+drawSpeedBar();
+drawLog();
+const failures = R.selfCheck();
+if (failures.length){
+  say('bad', 'This page has a problem:', 'the fraction arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+  nextBtn.disabled = true;
+} else if (selfCheck()){
+  setMode('solve');
+} else {
+  nextBtn.disabled = true;
+}
+</script>
+</body>
+</html>

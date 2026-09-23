@@ -22,5 +22,6 @@ const SHOP_ITEMS = [
   { id: 'card-pride',       name: 'Skater insert card, For Pride & Country', cost: 90, icon: '\u{1F3C5}', photo: 'shop-img/skater-insert-pride-country.jpg', visible: true },
   { id: 'card-blizzard',    name: 'Skater insert card, Winter Blizzard',  cost: 90,  icon: '\u{2744}',  photo: 'shop-img/skater-insert-winter-blizzard.jpg', visible: true },
   { id: 'card-gold-medal',  name: 'Skater gold-medal moment card',        cost: 150, icon: '\u{1F947}', photo: 'shop-img/skater-card-gold-medal.jpg',        visible: true },
-  { id: 'collage-tee',      name: 'Purple skater-collage t-shirt',         cost: 120, icon: '\u{1F455}', photo: 'shop-img/skater-collage-tee-purple.jpg',    visible: true }
+  { id: 'collage-tee',      name: 'Purple skater-collage t-shirt',         cost: 120, icon: '\u{1F455}', photo: 'shop-img/skater-collage-tee-purple.jpg',    visible: true },
+  { id: 'sticker-pack',     name: 'Music sticker multipack, 50 small stickers', cost: 50, icon: '\u{1F3B5}', photo: 'shop-img/music-sticker-multipack.jpg',        visible: true }
 ];

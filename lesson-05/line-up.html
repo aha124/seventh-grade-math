@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Line Them Up — Adding, Subtracting, and Multiplying Decimals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+.tierline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.tierline b{color:var(--board);font-weight:700}
+.tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+.tier-pick{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.45rem 0 0}
+.tier-pick .lab{font-family:var(--body);font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.pick{
+  font-family:var(--display);font-size:.95rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:999px;
+  min-height:44px;padding:0 .75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+
+/* ---- the problem ---- */
+.problem{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:1rem .6rem;min-height:5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.problem .op{color:var(--gold)}
+.problem .q{color:#93A9B8;font-weight:600}
+
+.steps{
+  margin:.6rem 0 0;padding:.6rem .9rem;
+  background:#F6FAFC;border:1.5px solid var(--line);border-radius:3px;
+  font-size:.92rem;color:var(--board-soft);
+}
+.steps b{color:var(--board);font-weight:600}
+.steps ol{margin:.2rem 0 0;padding-left:1.2rem}
+.steps li{margin:.15rem 0}
+
+/* ---- the answer ---- */
+.answer-row{
+  display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;
+  margin:.9rem 0 0;padding:.8rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.answer-row .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.decbox{
+  width:8rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.7rem;
+  border:1.5px solid var(--edge);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.decbox.miss{border-color:var(--gold);background:#FBF0DF}
+.decbox.point{border-color:var(--gold);background:#FFF8E8}
+.decbox.ok{border-color:var(--good);background:#EEF7F1}
+.decbox:disabled{opacity:.6}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.decbox.shake{animation:shake .38s ease-in-out}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.point{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.point b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+
+.slip{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#FFF8E8;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+.slip[hidden]{display:none}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box[hidden]{display:none}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+@media (prefers-reduced-motion:reduce){ .decbox.shake{animation:none} }
+/* ---- the stacked layout ----
+   The hint that matters most on this page: the problem written the way
+   it goes on paper, points in one column, and every zero she has to add
+   drawn in gold so it is obvious it was not there before. For a multiply
+   the factors are stacked on the right instead, because that is the one
+   time the points are not lined up. Every character sits in a fixed-width
+   cell so the columns hold at any font size. */
+.stackbox{
+  display:flex;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:.6rem 0 0;padding:.8rem .6rem .9rem;
+  background:#F6FAFC;border:1.5px solid var(--line);border-radius:3px;
+}
+.stackbox[hidden]{display:none}
+.stk{display:inline-flex;flex-direction:column;align-items:flex-end;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,6vw,2.1rem);line-height:1.15;color:var(--board)}
+.stk .ln{display:flex}
+.stk .ln.sum{border-top:3px solid var(--board);margin-top:.15rem;padding-top:.1rem}
+.stk .c{display:inline-block;width:.62em;text-align:center}
+.stk .c.pt{width:.34em}
+.stk .c.pad{color:var(--gold)}
+.stk .c.op{color:var(--gold);width:.9em;text-align:left}
+.stk .c.q{color:#93A9B8}
+.stack-note{flex:1 1 100%;margin:.2rem 0 0;text-align:center;font-size:.92rem;color:var(--board-soft)}
+.stack-note b{color:#8A5F1E;font-weight:600}
+
+.showstack{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:var(--paper);border:1.5px solid var(--line);color:var(--edge);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.showstack:disabled{opacity:.35;cursor:default}
+
+/* ---- the change round ---- */
+.changebox{
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  margin:.5rem 0 0;padding:1rem .6rem 1.1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.changebox .tag{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,7vw,2.4rem);color:var(--board);font-variant-numeric:tabular-nums;line-height:1.1;text-align:center}
+.changebox .tag small{display:block;font-family:var(--body);font-weight:500;font-size:.95rem;color:#7C93A5;letter-spacing:0}
+.changebox .paid{font-family:var(--display);font-weight:600;font-size:1.25rem;color:var(--board-soft);text-align:center}
+.changebox .paid b{color:var(--gold)}
+.changebox .idle{font-family:var(--body);font-size:.95rem;color:#7C93A5;margin:0;text-align:center;max-width:36ch}
+.changebox .streak{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);min-height:1.4em}
+.changebox .streak b{color:var(--gold)}
+.dollar{font-family:var(--display);font-weight:700;font-size:1.7rem;color:var(--board-soft)}
+.changebox .answer-row{gap:.5rem;padding:.7rem .6rem;flex-wrap:nowrap}
+.changebox .decbox{width:6.5rem}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Line Them <span>Up</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div id="solveView">
+    <div class="tierline">
+      <span id="kindName"></span>
+      <span class="ask" id="ask"></span>
+    </div>
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="stackbox" id="stackbox" hidden aria-live="polite"></div>
+    <div class="answer-row">
+      <span class="lab">Your answer</span>
+      <input class="decbox" id="ansBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer">
+      <button class="ok" id="check" type="button" aria-label="Check my answer">✓</button>
+    </div>
+  </div>
+
+  <div id="changeView" hidden>
+    <div class="changebox">
+      <div class="tag" id="tag"><small>It costs</small>—</div>
+      <div class="paid" id="paid"></div>
+      <div class="answer-row" style="margin:.2rem 0 0">
+        <span class="lab">Change</span>
+        <span class="dollar" aria-hidden="true">$</span>
+        <input class="decbox" id="chgBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your change, in dollars">
+        <button class="ok" id="chgOk" type="button" aria-label="Check">✓</button>
+      </div>
+      <div class="streak" id="streak"></div>
+      <p class="idle" id="changeIdle">A price and what was handed over. Type the change. Count up from the price, the way a cashier does.</p>
+    </div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="showstack" id="showStack" type="button">Stack it</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Correct, slip, or miss">Result</th>
+              <th scope="col" title="Which named mistake came up">Named</th>
+              <th scope="col">Help</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. 4.5 and 4.50 are the same answer. Two mistakes get named out loud because they are the ones this lesson is about: digits lined up on the right instead of at the point, and a point placed after the end zeros were already dropped.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script>
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- exact decimals ----------------
+   The same {core, places} shape as lesson 2's Point Placement: 3.12 is
+   {312, 2}, 14 is {14, 0}. Adding and subtracting first bring both to
+   the same number of places, which is exactly the lining up this page
+   teaches, and multiplying adds the places. No float is ever made. */
+const POW10 = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000];
+function fmt(d){
+  if (d.places === 0) return String(d.core);
+  const neg = d.core < 0;
+  const s = String(Math.abs(d.core)).padStart(d.places + 1, '0');
+  return (neg ? '-' : '') + s.slice(0, s.length - d.places) + '.' + s.slice(s.length - d.places);
+}
+function canon(d){
+  let core = d.core, places = d.places;
+  while (places > 0 && core % 10 === 0){ core = core / 10; places--; }
+  return { core, places };
+}
+function same(a, b){
+  const x = canon(a), y = canon(b);
+  return x.core === y.core && x.places === y.places;
+}
+function widen(d, p){ return d.core * POW10[p - d.places]; }
+function add(a, b){ const p = Math.max(a.places, b.places); return { core: widen(a, p) + widen(b, p), places: p }; }
+function sub(a, b){ const p = Math.max(a.places, b.places); return { core: widen(a, p) - widen(b, p), places: p }; }
+function mul(a, b){ return { core: a.core * b.core, places: a.places + b.places }; }
+function cmp(a, b){ const p = Math.max(a.places, b.places); const x = widen(a, p), y = widen(b, p); return x < y ? -1 : (x > y ? 1 : 0); }
+function parseDecimal(str){
+  const s = String(str).replace(/\s+/g, '').replace(/^\$/, '');
+  if (!/^\d*\.?\d*$/.test(s) || s === '' || s === '.') return null;
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  const frac = i < 0 ? '' : s.slice(i + 1);
+  const digits = (whole + frac).replace(/^0+(?=\d)/, '');
+  if (digits.length > 9 || frac.length > 8) return null;
+  return { core: parseInt(digits || '0', 10), places: frac.length };
+}
+/* The two named mistakes, each worked out exactly.
+   rightAligned: the digits stacked flush right, as if both numbers had
+   the same number of places as the longer one. 26.82 + 7.3 comes out
+   2682 + 73 = 2755, so 27.55; 6.843 − 4 comes out 6.839.
+   droppedZero: the end zeros of the whole-number product thrown away
+   before the point was placed. 70 × 2.3: 1610 becomes 161, one place,
+   16.1. */
+function rightAligned(p){
+  if (p.a.places === p.b.places) return null;
+  const P = Math.max(p.a.places, p.b.places);
+  const core = p.op === '+' ? p.a.core + p.b.core : p.a.core - p.b.core;
+  if (core < 0) return null;
+  const r = { core, places: P };
+  return same(r, p.answer) ? null : r;
+}
+function droppedZero(p){
+  if (p.op !== '×') return null;
+  let core = p.a.core * p.b.core;
+  if (core === 0 || core % 10 !== 0) return null;
+  while (core % 10 === 0) core = core / 10;
+  const r = { core, places: p.a.places + p.b.places };
+  return same(r, p.answer) ? null : r;
+}
+/* the digits right, the point somewhere else (for multiplying) */
+function pointShift(user, correct){
+  const u = canon(user), c = canon(correct);
+  if (u.core === 0 || c.core === 0) return null;
+  const su = String(u.core).replace(/0+$/, ''), sc = String(c.core).replace(/0+$/, '');
+  if (su !== sc) return null;
+  const k = (c.places - u.places) + (String(u.core).length - String(c.core).length);
+  return k === 0 ? null : k;
+}
+function roundWhole(d){
+  if (d.places === 0) return d.core;
+  const half = 5 * POW10[d.places - 1];
+  const n = d.core + half;
+  return (n - n % POW10[d.places]) / POW10[d.places];
+}
+function estimateText(p){
+  const ra = roundWhole(p.a), rb = roundWhole(p.b);
+  if (p.op === '×'){
+    if (ra === 0 && rb === 0) return 'Both are less than 1, so the answer is smaller than either one.';
+    if (ra === 0) return fmt(p.a) + ' is less than 1, so the answer is less than ' + fmt(p.b) + '.';
+    if (rb === 0) return fmt(p.b) + ' is less than 1, so the answer is less than ' + fmt(p.a) + '.';
+    return 'About ' + ra + ' × ' + rb + ' = ' + (ra * rb) + '.';
+  }
+  const v = p.op === '+' ? ra + rb : ra - rb;
+  return 'About ' + ra + ' ' + (p.op === '+' ? '+' : '−') + ' ' + rb + ' = ' + v + '.';
+}
+
+/* ---------------- the generator ----------------
+   Add and subtract: two numbers under 100 (the first can reach 100 for
+   a subtraction from a round number), 0 to 3 places each, and in four
+   problems out of five the two have different numbers of places, since
+   that is when the lining up matters. About one in four has a whole
+   number in it. A subtraction always comes out positive, and most of
+   them borrow. No number ends in a 0 after the point.
+   Multiply (Mixed tab only): the lesson 2 ranges, plus about one in
+   three built so the whole-number product ends in a zero, because that
+   is when the dropped-zero mistake is possible. */
+function num(places, lo, hi){
+  for (let t = 0; t < 60; t++){
+    const whole = rand(lo, hi);
+    if (places === 0) return { core: whole, places: 0 };
+    const frac = rand(1, POW10[places] - 1);
+    if (frac % 10 === 0) continue;
+    return { core: whole * POW10[places] + frac, places };
+  }
+  return { core: 7, places: 0 };
+}
+function borrows(a, b){
+  /* true if any column of a − b needs a borrow */
+  const p = Math.max(a.places, b.places);
+  let x = widen(a, p), y = widen(b, p);
+  while (y > 0){ if (x % 10 < y % 10) return true; x = Math.floor(x / 10); y = Math.floor(y / 10); }
+  return false;
+}
+function makeAddSub(){
+  for (let t = 0; t < 400; t++){
+    const op = Math.random() < 0.5 ? '+' : '−';
+    let pa = rand(0, 3), pb = rand(0, 3);
+    if (Math.random() < 0.8 && pa === pb) continue;
+    if (pa === 0 && pb === 0) continue;
+    let a = num(pa, 0, op === '−' ? 60 : 40), b = num(pb, 0, 40);
+    if (op === '−' && Math.random() < 0.2){ a = { core: pick([5, 10, 12, 20, 25, 50, 100]), places: 0 }; b = num(rand(1, 3), 0, 9); }
+    if (a.core === 0 || b.core === 0) continue;
+    if (op === '−'){
+      if (cmp(a, b) <= 0) continue;
+      if (!borrows(a, b) && Math.random() < 0.7) continue;
+    }
+    const answer = op === '+' ? add(a, b) : sub(a, b);
+    return { a, b, op, answer, kind: 'addsub', text: fmt(a) + ' ' + op + ' ' + fmt(b) };
+  }
+  const a = { core: 2682, places: 2 }, b = { core: 73, places: 1 };
+  return { a, b, op: '+', answer: add(a, b), kind: 'addsub', text: '26.82 + 7.3' };
+}
+function makeMul(){
+  for (let t = 0; t < 600; t++){
+    const zeroEnd = Math.random() < 0.35;
+    const total = pick([1, 2, 2, 3, 3]);
+    const pa = rand(0, total), pb = total - pa;
+    const a = num(pa, pa ? 0 : 2, pa ? 30 : 90), b = num(pb, pb ? 0 : 2, pb ? 12 : 9);
+    if (a.core < 2 || b.core < 2) continue;
+    const prod = a.core * b.core;
+    if (prod >= 100000) continue;
+    if (zeroEnd !== (prod % 10 === 0)) continue;
+    return { a, b, op: '×', answer: mul(a, b), kind: 'mul', text: fmt(a) + ' × ' + fmt(b) };
+  }
+  const a = { core: 70, places: 0 }, b = { core: 23, places: 1 };
+  return { a, b, op: '×', answer: mul(a, b), kind: 'mul', text: '70 × 2.3' };
+}
+
+/* ---------------- saved progress ---------------- */
+const STORE_KEY = 'seventh-grade-math:lineup';
+let solved = 0, clean = 0, best = 0;
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (Number.isFinite(s.solved)) solved = Math.max(0, Math.floor(s.solved));
+    if (Number.isFinite(s.clean))  clean  = Math.max(0, Math.floor(s.clean));
+    if (Number.isFinite(s.best))   best   = Math.max(0, Math.floor(s.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+function saveProgress(){
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ solved, clean, best })); } catch (e) {}
+}
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally(); drawSpeedBar(); clearLog();
+}
+function drawTally(){
+  document.getElementById('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   Same shape and 200 cap as the other practice pages. A solve record has
+   its outcome (correct, slip, miss), the counts of each named mistake
+   (right: lined up on the right; zero: dropped the end zero first;
+   point: multiply digits right, point wrong), plain misses, whether the
+   stack was opened, and hints. A round record has score, seen, streak. */
+const LOG_KEY = 'seventh-grade-math:lineup-log';
+const LOG_CAP = 200, LOG_SHOWN = 20;
+const MODE_LABEL = { addsub: 'Add and subtract', mixed: 'Mixed', change: 'Change round' };
+const OUTCOME_LABEL = { correct: 'Correct', slip: 'Slip', miss: 'Miss' };
+let log = [];
+const validRecord = r => r && typeof r === 'object' && typeof r.t === 'number' && isFinite(r.t) && typeof r.mode === 'string' && typeof r.problem === 'string';
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+function saveLog(){ try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {} }
+function clearLog(){ log = []; try { localStorage.removeItem(LOG_KEY); } catch (e) {} drawLog(); }
+function pushRecord(rec){
+  log.push(rec);
+  if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+  saveLog(); drawLog();
+}
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+      + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  } catch (e) { return ''; }
+}
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const slip = document.getElementById('slip');
+  rows.textContent = ''; accuracy.textContent = ''; slip.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  document.getElementById('logEmpty').hidden = log.length > 0;
+  document.querySelector('.log-scroll').hidden = log.length === 0;
+  slip.hidden = log.length === 0;
+  if (!log.length) return;
+
+  const solves = log.filter(r => r.mode !== 'change');
+  const sum = k => solves.reduce((n, r) => n + (Number(r[k]) || 0), 0);
+  const chip = (label, value, loud) => {
+    const li = document.createElement('li');
+    if (loud) li.className = 'loud';
+    const b = document.createElement('b');
+    b.textContent = String(value);
+    li.append(label + ' ', b);
+    accuracy.append(li);
+  };
+  const nRight = sum('right'), nZero = sum('zero'), nPoint = sum('point');
+  if (solves.length){
+    chip('Correct', solves.filter(r => r.outcome === 'correct').length + ' of ' + solves.length);
+    chip('Lined up on the right', nRight, nRight > 0);
+    chip('Dropped the zero first', nZero, nZero > 0);
+    chip('Point slips', nPoint);
+    chip('Misses', sum('misses'));
+  }
+  const rounds = log.filter(r => r.mode === 'change');
+  if (rounds.length) chip('Best change round', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+
+  const lead = document.createElement('b');
+  if (!solves.length){
+    slip.textContent = 'No problems logged yet, only change rounds.';
+  } else if (!nRight && !nZero){
+    lead.textContent = 'No named mistakes.';
+    slip.append(lead, ' Every time, the points were lined up for adding and subtracting, and the point was placed before any zeros came off.');
+  } else {
+    lead.textContent = 'Named mistakes: ' + (nRight + nZero) + '.';
+    const bits = [];
+    if (nRight) bits.push('lined up on the right ' + nRight + (nRight === 1 ? ' time' : ' times') + ' (stack by the point, and give the short one zeros)');
+    if (nZero) bits.push('dropped the end zero before placing the point ' + nZero + (nZero === 1 ? ' time' : ' times') + ' (count places in the full product first)');
+    slip.append(lead, ' ' + bits.join('; ') + '.');
+  }
+
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = (text, cls) => {
+      const td = document.createElement('td');
+      const s = document.createElement('span');
+      if (cls) s.className = cls;
+      s.textContent = text;
+      td.append(s);
+      return td;
+    };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+    if (r.mode === 'change'){
+      tr.append(cell((Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0) + (Number(r.streak) ? ', streak ' + r.streak : ''), 'score'));
+      tr.append(cell('—', 'none'), cell(''));
+    } else {
+      const extra = Number(r.misses) ? ' (' + r.misses + (r.misses === 1 ? ' miss)' : ' misses)') : '';
+      tr.append(cell((OUTCOME_LABEL[r.outcome] || r.outcome) + extra, r.outcome === 'correct' ? 'yes' : (r.outcome === 'slip' ? 'slipc' : 'no')));
+      const named = [];
+      if (Number(r.right)) named.push('right-aligned');
+      if (Number(r.zero)) named.push('dropped zero');
+      if (Number(r.point)) named.push('point');
+      tr.append(named.length ? cell(named.join(', '), 'slipc') : cell('none', 'none'));
+      const help = [];
+      if (r.stacked) help.push('stack');
+      if (Number(r.hints)) help.push('+' + r.hints);
+      tr.append(cell(help.join(' '), 'hints'));
+    }
+    rows.append(tr);
+  });
+}
+
+async function copyText(text){
+  try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.top = '-1000px';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- page state ---------------- */
+const sayEl = document.getElementById('say');
+const banner = document.getElementById('banner');
+const hintBtn = document.getElementById('hint');
+const stackBtn = document.getElementById('showStack');
+const nextBtn = document.getElementById('next');
+const checkBtn = document.getElementById('check');
+const problemEl = document.getElementById('problem');
+const stackbox = document.getElementById('stackbox');
+const ansBox = document.getElementById('ansBox');
+const solveView = document.getElementById('solveView');
+const changeView = document.getElementById('changeView');
+
+let mode = 'addsub';
+let problem = null, stage = 'idle';
+let misses = 0, rightHits = 0, zeroHits = 0, pointHits = 0, hintsUsed = 0, stacked = false;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+/* ---------------- the stack ----------------
+   Add or subtract: both numbers padded to the same places, points in one
+   column, the added zeros (and a whole number's point) in gold, and a
+   "?" row under the line. Multiply: the factors flush right as written,
+   no padding, and a note that this is the one time the points do not
+   line up. */
+function cellsFor(d, P, W){
+  /* [{ch, cls}] for d laid out with W whole digits and P places */
+  const s = fmt(d);
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  const frac = i < 0 ? '' : s.slice(i + 1);
+  const out = [];
+  for (let k = 0; k < W - whole.length; k++) out.push({ ch: '', cls: '' });
+  for (const ch of whole) out.push({ ch, cls: '' });
+  if (P > 0){
+    out.push({ ch: '.', cls: 'pt' + (i < 0 ? ' pad' : '') });
+    for (let k = 0; k < P; k++) out.push(k < frac.length ? { ch: frac[k], cls: '' } : { ch: '0', cls: 'pad' });
+  }
+  return out;
+}
+function lineEl(cells, opChar, cls){
+  const ln = document.createElement('div');
+  ln.className = 'ln' + (cls ? ' ' + cls : '');
+  const op = document.createElement('span');
+  op.className = 'c op';
+  op.textContent = opChar || '';
+  ln.append(op);
+  cells.forEach(c => {
+    const s = document.createElement('span');
+    s.className = 'c' + (c.cls ? ' ' + c.cls : '');
+    s.textContent = c.ch;
+    ln.append(s);
+  });
+  return ln;
+}
+function drawStack(){
+  stackbox.textContent = '';
+  const p = problem;
+  const stk = document.createElement('div');
+  stk.className = 'stk';
+  const note = document.createElement('p');
+  note.className = 'stack-note';
+  if (p.op === '×'){
+    const rows = [fmt(p.a), fmt(p.b)];
+    const W = Math.max(rows[0].length, rows[1].length);
+    const asCells = s => { const o = []; for (let k = 0; k < W - s.length; k++) o.push({ ch: '', cls: '' }); for (const ch of s) o.push({ ch, cls: ch === '.' ? 'pt' : '' }); return o; };
+    stk.append(lineEl(asCells(rows[0]), ''), lineEl(asCells(rows[1]), '×'));
+    const q = asCells('?').map(c => (c.ch === '?' ? { ch: '?', cls: 'q' } : c));
+    stk.append(lineEl(q, '', 'sum'));
+    const lead = document.createElement('b');
+    lead.textContent = 'Multiplying: the points do NOT line up.';
+    note.append(lead, ' Stack them on the right, multiply ' + p.a.core + ' × ' + p.b.core + ' as whole numbers, then count the places: '
+      + p.a.places + ' + ' + p.b.places + ' = ' + (p.a.places + p.b.places) + '.');
+  } else {
+    const P = Math.max(p.a.places, p.b.places);
+    const W = Math.max(...[p.a, p.b, p.answer].map(d => { const s = fmt(d); const i = s.indexOf('.'); return i < 0 ? s.length : i; }));
+    stk.append(lineEl(cellsFor(p.a, P, W), ''), lineEl(cellsFor(p.b, P, W), p.op));
+    const q = cellsFor({ core: 0, places: 0 }, P, W).map((c, k, arr) => (k === arr.length - 1 ? { ch: '?', cls: 'q' } : { ch: '', cls: c.cls.includes('pt') ? 'pt' : '' }));
+    stk.append(lineEl(q, '', 'sum'));
+    const padded = (p.a.places < P ? 1 : 0) + (p.b.places < P ? 1 : 0);
+    const lead = document.createElement('b');
+    lead.textContent = 'Points in one straight line.';
+    note.append(lead, padded
+      ? ' The gold ' + (P - Math.min(p.a.places, p.b.places) === 1 ? 'zero was' : 'zeros were') + ' added so both have ' + P + (P === 1 ? ' place' : ' places') + '. It does not change the number.'
+      : ' Same number of places already, so no zeros needed.');
+    if (p.a.places === 0 || p.b.places === 0) note.append(' A whole number\'s point is hiding at its end.');
+  }
+  stackbox.append(stk, note);
+  stackbox.hidden = false;
+}
+stackBtn.onclick = () => {
+  if (mode === 'change' || stage !== 'open') return;
+  stacked = true;
+  drawStack();
+  stackBtn.disabled = true;
+};
+
+/* ---------------- a problem ---------------- */
+function drawProblem(){
+  problemEl.textContent = '';
+  const op = document.createElement('span');
+  op.className = 'op';
+  op.textContent = problem.op;
+  const q = document.createElement('span');
+  q.className = 'q';
+  q.textContent = '= ?';
+  problemEl.append(fmt(problem.a), op, fmt(problem.b), q);
+  problemEl.setAttribute('aria-label', problem.text.replace('×', 'times').replace('−', 'minus').replace('+', 'plus'));
+  const kn = document.getElementById('kindName');
+  kn.textContent = '';
+  const b = document.createElement('b');
+  b.textContent = problem.op === '×' ? 'Multiply' : (problem.op === '+' ? 'Add' : 'Subtract');
+  kn.append(b, problem.op === '×' ? ' · count the places' : ' · line up the points');
+  document.getElementById('ask').textContent = stage === 'done' ? '' : 'Type the answer as a decimal.';
+}
+function newProblem(){
+  const p = mode === 'mixed' ? (Math.random() < 0.45 ? makeMul() : makeAddSub()) : makeAddSub();
+  loadProblem(p);
+}
+function loadProblem(p){
+  problem = p;
+  stage = 'open';
+  misses = 0; rightHits = 0; zeroHits = 0; pointHits = 0; hintsUsed = 0; stacked = false;
+  banner.className = 'banner';
+  hintBtn.disabled = false; hintBtn.textContent = 'Hint';
+  stackBtn.disabled = false;
+  stackbox.hidden = true; stackbox.textContent = '';
+  checkBtn.disabled = false;
+  ansBox.value = ''; ansBox.className = 'decbox'; ansBox.disabled = false;
+  drawProblem();
+  if (p.op === '×') say('', 'Multiply.', 'Points do not line up for this one. Multiply the digits, then count the places.');
+  else say('', 'Estimate first.', 'Then stack it with the points in a line.');
+  ansBox.focus();
+}
+
+/* ---------------- checking ----------------
+   Equal (end zeros ignored) is correct. Then, in order: lined up on the
+   right, dropped the zero before placing the point, digits right with
+   the point elsewhere (multiply only). Those three are slips: named,
+   counted apart, not misses. Anything else is a miss, and a multiply
+   that came out as the sum is named too. */
+function shakeBox(){
+  ansBox.classList.remove('shake'); void ansBox.offsetWidth; ansBox.classList.add('shake');
+  setTimeout(() => ansBox.classList.remove('shake'), 420);
+}
+function check(){
+  if (mode === 'change' || stage !== 'open') return;
+  const raw = ansBox.value;
+  if (!raw.trim()){ say('', 'Type an answer first.'); return; }
+  const E = parseDecimal(raw);
+  if (!E){ say('', 'Just digits and one point.', 'Like 4.65 or 0.08.'); return; }
+  const p = problem;
+  if (same(E, p.answer)){ finish(); return; }
+
+  const ra = rightAligned(p);
+  if (ra && same(E, ra)){
+    rightHits++;
+    ansBox.classList.add('point'); shakeBox();
+    say('point', 'Those digits were lined up on the right, not at the point.',
+      estimateText(p) + ' Stack it with the points in one column and give the shorter one zeros.');
+    return;
+  }
+  const dz = droppedZero(p);
+  if (dz && same(E, dz)){
+    zeroHits++;
+    ansBox.classList.add('point'); shakeBox();
+    say('point', 'The zero came off too early.', 'Place the point in the full product ' + (p.a.core * p.b.core) + ' first, then drop end zeros.');
+    return;
+  }
+  if (p.op === '×' && pointShift(E, p.answer) !== null){
+    pointHits++;
+    ansBox.classList.add('point'); shakeBox();
+    say('point', 'Your multiplication is right. The point is in the wrong place:', 'count the decimal places in the problem. ' + estimateText(p));
+    return;
+  }
+  misses++;
+  ansBox.classList.add('miss'); shakeBox();
+  if (p.op === '×' && same(E, add(p.a, p.b))) say('bad', 'That is what you get adding them.', 'This one is multiply.');
+  else if (p.op === '−' && same(E, sub(p.b, p.a))) say('bad', 'Not that.', 'Check the borrowing, column by column from the right.');
+  else say('bad', 'Not that.', estimateText(p) + (p.op === '×' ? ' Check the whole-number multiplication, then count the places.' : ' Check each column from the right.'));
+}
+function finish(){
+  stage = 'done';
+  ansBox.classList.remove('miss', 'point'); ansBox.classList.add('ok');
+  ansBox.disabled = true; checkBtn.disabled = true; hintBtn.disabled = true; stackBtn.disabled = true;
+  const slips = rightHits + zeroHits + pointHits;
+  const outcome = misses ? 'miss' : (slips ? 'slip' : 'correct');
+  const cleanRun = outcome === 'correct' && hintsUsed === 0 && !stacked;
+  solved++;
+  if (cleanRun) clean++;
+  saveProgress(); drawTally();
+  pushRecord({ t: Date.now(), mode, problem: problem.text, outcome, misses, right: rightHits, zero: zeroHits, point: pointHits, stacked, hints: hintsUsed });
+  if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'lineup' });
+  drawProblem();
+  banner.className = 'banner show';
+  banner.textContent = cleanRun ? 'Right, first try, no help.'
+    : (outcome === 'correct' ? 'Right, first try.' + (stacked ? ' Next time, try it before you stack it.' : '')
+    : (outcome === 'slip' ? 'Right in the end. The named mistake is the one to watch.' : 'Solved, after ' + misses + (misses === 1 ? ' miss.' : ' misses.')));
+  say('good', fmt(canon(problem.answer)) + '. That is it.', estimateText(problem) + ' Tap New problem for another.');
+}
+
+/* ---------------- hints ----------------
+   The stack is its own button and is the first thing to try. Hints go
+   one: the rule for this operation; two: an estimate and how many places
+   the answer will have; three: the whole-number part of the answer (or,
+   for a multiply, the whole-number product). Nothing gives the answer. */
+function hintText(){
+  const p = problem;
+  if (p.op === '×'){
+    const prod = p.a.core * p.b.core, P = p.a.places + p.b.places;
+    if (hintsUsed === 1) return 'Multiply like there is no point at all: ' + p.a.core + ' × ' + p.b.core + '. Then count the places in the problem.';
+    if (hintsUsed === 2) return estimateText(p) + ' The answer gets ' + P + (P === 1 ? ' place.' : ' places.');
+    return p.a.core + ' × ' + p.b.core + ' = ' + prod + '. Place the point ' + P + ' from the right end' + (String(prod).length <= P ? ', with a zero in front if you run out of digits' : '') + '. Then drop any end zeros.';
+  }
+  const P = Math.max(p.a.places, p.b.places);
+  if (hintsUsed === 1) return 'Write it stacked with the points in one column. Give the shorter one zeros so both have ' + P + (P === 1 ? ' place.' : ' places.') + ' Tap Stack it to see.';
+  if (hintsUsed === 2) return estimateText(p) + ' The answer has ' + P + (P === 1 ? ' place.' : ' places.');
+  const w = Math.floor(Math.abs(p.answer.core) / POW10[p.answer.places]);
+  return 'The whole-number part of the answer is ' + w + '. Now the ' + (P === 1 ? 'tenths.' : 'digits after the point.');
+}
+hintBtn.onclick = () => {
+  if (mode === 'change' || stage !== 'open' || hintsUsed >= 3) return;
+  hintsUsed++;
+  say('', hintText());
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- the change round ----------------
+   Sixty seconds. A price and what was handed over; type the change. The
+   price is under $50 and the payment is the next bill up, or two or three
+   twenties, the way the test's word problem puts it. Wrong or right, the
+   next one comes, and a wrong one shows the count-up. */
+const SPEED_SECONDS = 60;
+let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+let chg = null, runStreak = 0, bestStreak = 0, chgTimer = 0;
+const chgBox = document.getElementById('chgBox');
+const chgOk = document.getElementById('chgOk');
+function makeChange(){
+  for (let t = 0; t < 100; t++){
+    const cents = rand(101, 4999);
+    if (cents % 100 === 0) continue;
+    const dollars = cents / 100;
+    const bills = [[5, 'a $5 bill'], [10, 'a $10 bill'], [20, 'a $20 bill'], [40, 'two $20 bills'], [50, 'a $50 bill'], [60, 'three $20 bills']]
+      .filter(b => b[0] * 100 > cents && b[0] * 100 - cents < 2000);
+    if (!bills.length) continue;
+    const b = pick(bills);
+    return { price: { core: cents, places: 2 }, paid: b[0], paidText: b[1], answer: { core: b[0] * 100 - cents, places: 2 } };
+  }
+  return { price: { core: 3175, places: 2 }, paid: 40, paidText: 'two $20 bills', answer: { core: 825, places: 2 } };
+}
+function countUp(c){
+  /* 3.65 → 3.70 → 4.00 → 5.00, as text: nickel/dime to a round ten, then to the dollar, then bills */
+  const steps = [];
+  let at = c.price.core;
+  const target = c.paid * 100;
+  const toTen = (10 - at % 10) % 10;
+  if (toTen){ steps.push([at + toTen, toTen]); at += toTen; }
+  const toDollar = (100 - at % 100) % 100;
+  if (toDollar && at < target){ steps.push([at + toDollar, toDollar]); at += toDollar; }
+  if (at < target) steps.push([target, target - at]);
+  const money = v => v >= 100 ? '$' + fmt({ core: v, places: 2 }) : v + '¢';
+  return fmt(c.price) + steps.map(s => ' → ' + fmt({ core: s[0], places: 2 }) + ' (' + money(s[1]) + ')').join('');
+}
+function drawSpeedBar(){
+  document.getElementById('score').textContent = speedScore;
+  document.getElementById('best').textContent = best;
+}
+function drawStreak(){
+  const el = document.getElementById('streak');
+  el.textContent = '';
+  if (!speedOn) return;
+  el.append('Streak ');
+  const b = document.createElement('b');
+  b.textContent = String(runStreak);
+  el.append(b);
+  if (bestStreak > 1) el.append(' · best this round ' + bestStreak);
+}
+function drawChange(){
+  const tag = document.getElementById('tag'), paid = document.getElementById('paid');
+  tag.textContent = '';
+  paid.textContent = '';
+  const sm = document.createElement('small');
+  sm.textContent = 'It costs';
+  tag.append(sm, chg ? '$' + fmt(chg.price) : '—');
+  if (chg){
+    paid.append('Paid with ');
+    const b = document.createElement('b');
+    b.textContent = chg.paidText;
+    paid.append(b);
+  }
+}
+function nextChange(){
+  chg = makeChange();
+  chg.locked = false;
+  chgBox.value = ''; chgBox.className = 'decbox'; chgBox.disabled = false; chgOk.disabled = false;
+  drawChange(); drawStreak();
+  chgBox.focus();
+}
+function checkChange(){
+  if (!speedOn || !chg || chg.locked) return;
+  const E = parseDecimal(chgBox.value);
+  if (!E){ say('', 'Just digits and one point.', 'Like 8.25.'); return; }
+  chg.locked = true;
+  speedSeen++;
+  const right = same(E, chg.answer);
+  chgBox.disabled = true; chgOk.disabled = true;
+  chgBox.classList.add(right ? 'ok' : 'miss');
+  if (right){
+    speedScore++; runStreak++;
+    if (runStreak > bestStreak) bestStreak = runStreak;
+    say('good', '$' + fmt(chg.answer) + '. Yes.', '');
+  } else {
+    runStreak = 0;
+    say('bad', 'It is $' + fmt(chg.answer) + '.', 'Count up: ' + countUp(chg) + '.');
+  }
+  drawSpeedBar(); drawStreak();
+  clearTimeout(chgTimer);
+  chgTimer = setTimeout(() => { if (speedOn) nextChange(); }, reduced() ? 0 : (right ? 450 : 2200));
+}
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0; runStreak = 0; bestStreak = 0;
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  banner.className = 'banner';
+  nextBtn.textContent = 'Stop';
+  document.getElementById('changeIdle').hidden = true;
+  drawSpeedBar(); tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  say('', 'Count up from the price.', 'To the next ten cents, to the next dollar, then to the bills.');
+  nextChange();
+}
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer); clearTimeout(chgTimer); speedTimer = 0;
+  chg = null;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  chgBox.value = ''; chgBox.className = 'decbox'; chgBox.disabled = true; chgOk.disabled = true;
+  drawChange(); drawStreak();
+  document.getElementById('changeIdle').hidden = false;
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar(); drawTally();
+  pushRecord({ t: Date.now(), mode: 'change', problem: SPEED_SECONDS + ' second round', score: speedScore, seen: speedSeen, streak: bestStreak });
+  if (isBest && speedScore > 0 && window.Tokens) Tokens.earnBest('lineup:change');
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest ? speedScore + ' right. That is a new best.' : speedScore + ' right. Best so far is ' + best + '.';
+  say('', '');
+}
+chgOk.onclick = checkChange;
+chgBox.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); checkChange(); } });
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  { key: 'addsub', tab: 'Add and subtract',
+    note: 'Adding and subtracting only. Estimate, then stack it in your head or on paper with the points in a line. Stack it shows you the lined-up version if you want it, but a problem done without it counts as clean.' },
+  { key: 'mixed', tab: 'Mixed',
+    note: 'Adding, subtracting, and multiplying, shuffled. Decide first: line up the points, or multiply and count the places?' },
+  { key: 'change', tab: 'Change round',
+    note: 'Sixty seconds. A price and the money handed over; type the change. Count up from the price the way a cashier does.' }
+];
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab;
+  b.onclick = () => setMode(m.key);
+  modesEl.append(b);
+});
+function setMode(next){
+  if (speedOn) stopSpeed(false);
+  mode = next;
+  Array.prototype.forEach.call(modesEl.children, (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  const isChange = mode === 'change';
+  document.getElementById('speedBar').hidden = !isChange;
+  solveView.hidden = isChange;
+  changeView.hidden = !isChange;
+  hintBtn.hidden = isChange;
+  stackBtn.hidden = isChange;
+  banner.className = 'banner';
+  if (isChange){
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0; drawSpeedBar();
+    chg = null; drawChange(); drawStreak();
+    chgBox.disabled = true; chgOk.disabled = true;
+    say('', 'Sixty seconds.', 'Tap Start the round when you are ready.');
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+nextBtn.onclick = () => {
+  if (mode !== 'change'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+checkBtn.onclick = check;
+ansBox.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); check(); } });
+function digitsOnly(box){
+  let v = box.value.replace(/[^0-9.]/g, '');
+  const i = v.indexOf('.');
+  if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+  box.value = v.slice(0, 11);
+  box.classList.remove('miss', 'point');
+}
+ansBox.addEventListener('input', () => digitsOnly(ansBox));
+chgBox.addEventListener('input', () => digitsOnly(chgBox));
+
+/* ---------------- Start over ---------------- */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){ clearTimeout(armed); armed = 0; clearBtn.classList.remove('arming'); clearBtn.textContent = 'Start over'; }
+clearBtn.onclick = () => {
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming');
+  clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+document.getElementById('export').onclick = async () => {
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(() => { exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text; exportBox.hidden = false; exportBox.focus(); exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+/* ---------------- self-check ----------------
+   Every verdict comes from these helpers, including the two named
+   mistakes, so their cases (the book's own examples among them) run at
+   load. If one fails the page says so and stops. */
+function selfCheck(){
+  const f = [];
+  const t = (name, ok) => { if (!ok) f.push(name); };
+  const D = s => parseDecimal(s);
+  const P = (a, op, b) => { const A = D(a), B = D(b); return { a: A, b: B, op, answer: op === '+' ? add(A, B) : (op === '−' ? sub(A, B) : mul(A, B)) }; };
+  t('book 26.82 + 7.3', same(P('26.82', '+', '7.3').answer, D('34.12')));
+  t('book 12.14 − 10.75', same(P('12.14', '−', '10.75').answer, D('1.39')));
+  t('book 37.22 + 24', same(P('37.22', '+', '24').answer, D('61.22')));
+  t('book 9 − 6.15', same(P('9', '−', '6.15').answer, D('2.85')));
+  t('book 5.75 × 3.6', same(P('5.75', '×', '3.6').answer, D('20.7')));
+  t('book 70 × 2.3', same(P('70', '×', '2.3').answer, D('161')));
+  t('right-aligned 26.82 + 7.3', same(rightAligned(P('26.82', '+', '7.3')), D('27.55')));
+  t('right-aligned 6.843 − 4', same(rightAligned(P('6.843', '−', '4')), D('6.839')));
+  t('no right-aligned same places', rightAligned(P('2.5', '+', '1.5')) === null);
+  t('dropped zero 70 × 2.3', same(droppedZero(P('70', '×', '2.3')), D('16.1')));
+  t('dropped zero 0.612 × 5', same(droppedZero(P('0.612', '×', '5')), D('0.306')));
+  t('no dropped zero 14.3 × 0.5', droppedZero(P('14.3', '×', '0.5')) === null);
+  t('point shift', pointShift(D('209.28'), D('20.928')) === 1);
+  t('fmt 0.06', fmt({ core: 6, places: 2 }) === '0.06');
+  t('parse $8.25', same(D('$8.25'), { core: 825, places: 2 }));
+  t('same 4.5 4.50', same(D('4.5'), D('4.50')));
+  t('change 40 − 31.75', (() => { const c = { price: D('31.75'), paid: 40 }; return same({ core: c.paid * 100 - c.price.core, places: 2 }, D('8.25')); })());
+  t('count-up 3.65 from 5', countUp({ price: D('3.65'), paid: 5 }) === '3.65 → 3.70 (5¢) → 4.00 (30¢) → 5.00 ($1.00)');
+  return f;
+}
+
+loadProgress();
+loadLog();
+drawTally();
+drawSpeedBar();
+drawLog();
+function tabFromHash(){
+  const m = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+  return m && MODES.some(x => x.key === m[1]) ? m[1] : null;
+}
+const failures = selfCheck();
+if (failures.length){
+  say('bad', 'This page has a problem:', 'the decimal arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+  nextBtn.disabled = true; checkBtn.disabled = true;
+} else {
+  setMode(tabFromHash() || 'addsub');
+}
+</script>
+</body>
+</html>

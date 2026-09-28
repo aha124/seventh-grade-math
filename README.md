@@ -44,6 +44,8 @@ lesson-03/area.html      the area model: of means multiply, canceling, why divis
 lesson-03/multiply-practice.html    graded multiply and divide with the four named mistakes, plus the cancel speed round
 lesson-03/flip.html      why keep-change-flip works: reciprocals, the complex fraction, her turn
 lesson-03/bar-practice.html         graded order of operations with fraction bars, plus the reciprocal speed round
+lesson-05/place-value.html          decimals in words, as fractions in lowest terms, and the compare round
+lesson-05/line-up.html   graded add, subtract, and mixed with multiply, the stacked view, plus the change round
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares
@@ -74,7 +76,7 @@ things. `Rational` is exact fraction arithmetic with integers only
 `isReduced`, `toMixed`, `fromParts`, `text`); no decimal ever enters it, and
 `Rational.selfCheck()` runs its unit cases so every page that loads it
 can refuse to drill if one fails. `FractionInput.create()` is the entry
-control: a top box over a bottom box with a real bar between, plus a
+control (pass `digits: 4` when a bottom of 1000 has to fit; the default is 3): a top box over a bottom box with a real bar between, plus a
 whole-number box for mixed numbers. It reports exactly what was typed,
 unreduced, so a page can tell `2/4` from `1/2` and say so. Its styles
 live in `shared/style.css` under "fraction input".

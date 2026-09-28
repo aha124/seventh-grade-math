@@ -133,7 +133,9 @@
   window.Rational = { gcd, lcm, make, add, sub, mul, div, cmp, eq, isReduced, toMixed, fromParts, text, pieceName, selfCheck };
 
   /* ---------------- the input ----------------
-     FractionInput.create({ mixed, label, onEnter, onChange }) returns
+     FractionInput.create({ mixed, label, onEnter, onChange, digits }) returns
+     (digits is the most digits a box takes, 3 unless a page asks for more;
+     lesson 5 asks for 4 so 217/1000 can be typed)
        el         the element to put on the page
        value()    { w, n, d } as typed; null for an empty box
        rational() the value of what was typed, unreduced, or null if the
@@ -144,6 +146,7 @@
   function create(opts){
     opts = opts || {};
     let mixed = !!opts.mixed;
+    const maxDigits = Number.isInteger(opts.digits) && opts.digits > 0 ? opts.digits : 3;
 
     const root = document.createElement('div');
     root.className = 'frac-input';
@@ -159,7 +162,7 @@
       i.setAttribute('autocomplete', 'off');
       i.setAttribute('autocorrect', 'off');
       i.setAttribute('spellcheck', 'false');
-      i.setAttribute('maxlength', '3');
+      i.setAttribute('maxlength', String(maxDigits));
       i.setAttribute('aria-label', label);
       return i;
     }
@@ -206,7 +209,7 @@
     }
     function onInput(e){
       const i = e.target;
-      const clean = i.value.replace(/[^0-9]/g, '').slice(0, 3);
+      const clean = i.value.replace(/[^0-9]/g, '').slice(0, maxDigits);
       if (clean !== i.value) i.value = clean;
       root.classList.remove('ok', 'slip', 'miss');
       if (typeof opts.onChange === 'function') opts.onChange(api);

@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Place Value — Decimals in Words, Fractions, and Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+.tierline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.tierline b{color:var(--board);font-weight:700}
+.tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+.tier-pick{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.45rem 0 0}
+.tier-pick .lab{font-family:var(--body);font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.pick{
+  font-family:var(--display);font-size:.95rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:999px;
+  min-height:44px;padding:0 .75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+
+/* ---- the problem ---- */
+.problem{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:1rem .6rem;min-height:5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.problem .op{color:var(--gold)}
+.problem .q{color:#93A9B8;font-weight:600}
+
+.steps{
+  margin:.6rem 0 0;padding:.6rem .9rem;
+  background:#F6FAFC;border:1.5px solid var(--line);border-radius:3px;
+  font-size:.92rem;color:var(--board-soft);
+}
+.steps b{color:var(--board);font-weight:600}
+.steps ol{margin:.2rem 0 0;padding-left:1.2rem}
+.steps li{margin:.15rem 0}
+
+/* ---- the answer ---- */
+.answer-row{
+  display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;
+  margin:.9rem 0 0;padding:.8rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.answer-row .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.decbox{
+  width:8rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.7rem;
+  border:1.5px solid var(--edge);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.decbox.miss{border-color:var(--gold);background:#FBF0DF}
+.decbox.point{border-color:var(--gold);background:#FFF8E8}
+.decbox.ok{border-color:var(--good);background:#EEF7F1}
+.decbox:disabled{opacity:.6}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.decbox.shake{animation:shake .38s ease-in-out}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.point{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.point b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+
+.slip{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#FFF8E8;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+.slip[hidden]{display:none}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box[hidden]{display:none}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+@media (prefers-reduced-motion:reduce){ .decbox.shake{animation:none} }
+/* the prompt can be a decimal, words, or a fraction */
+.problem.words{font-family:var(--body);font-weight:600;font-size:clamp(1.15rem,4.6vw,1.6rem);line-height:1.35;text-align:center}
+.pfrac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.62em;line-height:1.05;margin-left:.08em}
+.pfrac span:first-child{border-bottom:3px solid var(--board);padding:0 .12em}
+
+/* Read it: three choices, one per line, each a full-width 44px+ target */
+.choices{display:flex;flex-direction:column;gap:.5rem;margin:.7rem 0 0}
+.choices[hidden]{display:none}
+.choice{
+  text-align:left;font-family:var(--body);font-size:1.05rem;font-weight:500;color:var(--board);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  min-height:48px;padding:.55rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.choice:hover:not(:disabled){border-color:var(--edge)}
+.choice.no{border-color:var(--gold);background:#FBF0DF;color:#7a5a2a;text-decoration:line-through}
+.choice.yes{border-color:var(--good);background:#EEF7F1}
+.choice:disabled{cursor:default}
+
+/* the fraction answer needs room for 1000 on the bottom */
+.frac-input input{width:4.4rem}
+.answer-row[hidden]{display:none}
+
+/* Compare round */
+.cmpbox{
+  display:flex;flex-direction:column;align-items:center;gap:.8rem;
+  margin:.5rem 0 0;padding:1.1rem .6rem 1.2rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.cmp-pair{display:flex;align-items:center;justify-content:center;gap:.9rem;flex-wrap:nowrap;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8.5vw,2.8rem);color:var(--board);font-variant-numeric:tabular-nums}
+.cmp-slot{display:inline-flex;align-items:center;justify-content:center;min-width:1.4em;height:1.3em;border-bottom:3px solid var(--line);color:var(--gold)}
+.cmp-btns{display:flex;gap:.7rem}
+.cmp-btn{
+  width:64px;height:56px;font-family:var(--display);font-weight:700;font-size:2rem;line-height:1;
+  background:var(--paper);color:var(--board);border:2px solid var(--edge);border-radius:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.cmp-btn:disabled{opacity:.4;cursor:default}
+.cmp-btn.hit{background:#EEF7F1;border-color:var(--good);color:var(--good);opacity:1}
+.cmp-btn.miss{background:#FBF0DF;border-color:var(--gold);color:#8A5F1E;opacity:1}
+.cmpbox .streak{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);min-height:1.4em}
+.cmpbox .streak b{color:var(--gold)}
+.cmpbox .idle{font-family:var(--body);font-size:.95rem;color:#7C93A5;margin:0;text-align:center;max-width:36ch}
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Place <span>Value</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div id="solveView">
+    <div class="tierline">
+      <span id="kindName"></span>
+      <span class="ask" id="ask"></span>
+    </div>
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="choices" id="choices" role="group" aria-label="Which is right" hidden></div>
+    <div class="answer-row" id="decRow" hidden>
+      <span class="lab">Your answer</span>
+      <input class="decbox" id="ansBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer as a decimal">
+      <button class="ok" id="check" type="button" aria-label="Check my answer">✓</button>
+    </div>
+    <div class="answer-row" id="fracRow" hidden>
+      <span class="lab">Answer</span>
+      <span id="fracSlot"></span>
+      <button class="ok" id="checkFrac" type="button" aria-label="Check my answer">✓</button>
+    </div>
+  </div>
+
+  <div id="cmpView" hidden>
+    <div class="cmpbox">
+      <div class="cmp-pair" aria-live="polite"><span id="cmpA">—</span><span class="cmp-slot" id="cmpSlot"></span><span id="cmpB">—</span></div>
+      <div class="cmp-btns" role="group" aria-label="Pick the sign">
+        <button class="cmp-btn" type="button" data-sign="<" aria-label="less than">&lt;</button>
+        <button class="cmp-btn" type="button" data-sign="=" aria-label="equal to">=</button>
+        <button class="cmp-btn" type="button" data-sign=">" aria-label="greater than">&gt;</button>
+      </div>
+      <div class="streak" id="streak"></div>
+      <p class="idle" id="cmpIdle">Two decimals. Tap the sign that goes between them. Whole numbers first; if they match, give the shorter one zeros and compare.</p>
+    </div>
+  </div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Correct, slip, or miss">Result</th>
+              <th scope="col">Hints</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. Fractions are graded in lowest terms, the way the test asks: 25/100 is the right amount but not finished, and the page says so. A missing placeholder zero (5.7 for five and seven hundredths) is named on its own, because it is the mistake this lesson is about.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script src="../shared/fraction-input.js"></script>
+<script>
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = rand(0, i); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- exact decimals ----------------
+   {core, places} as on the other decimal pages: 5.382 is {5382, 3}. */
+const POW10 = [1, 10, 100, 1000, 10000, 100000, 1000000];
+function fmt(d){
+  if (d.places === 0) return String(d.core);
+  const s = String(d.core).padStart(d.places + 1, '0');
+  return s.slice(0, s.length - d.places) + '.' + s.slice(s.length - d.places);
+}
+function canon(d){
+  let core = d.core, places = d.places;
+  while (places > 0 && core % 10 === 0){ core = core / 10; places--; }
+  return { core, places };
+}
+function same(a, b){ const x = canon(a), y = canon(b); return x.core === y.core && x.places === y.places; }
+function cmp(a, b){
+  const p = Math.max(a.places, b.places);
+  const x = a.core * POW10[p - a.places], y = b.core * POW10[p - b.places];
+  return x < y ? -1 : (x > y ? 1 : 0);
+}
+function parseDecimal(str){
+  const s = String(str).replace(/\s+/g, '');
+  if (!/^\d*\.?\d*$/.test(s) || s === '' || s === '.') return null;
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  const frac = i < 0 ? '' : s.slice(i + 1);
+  const digits = (whole + frac).replace(/^0+(?=\d)/, '');
+  if (digits.length > 9 || frac.length > 6) return null;
+  return { core: parseInt(digits || '0', 10), places: frac.length };
+}
+const wholePart = d => Math.floor(d.core / POW10[d.places]);
+const fracPart = d => d.core % POW10[d.places];
+
+/* ---------------- numbers in words ----------------
+   The book's style: lowercase, hyphens only from twenty-one to
+   ninety-nine, a comma after "thousand" in a whole number, "and" only at
+   the point, and no hyphen between the number and the place name. */
+const ONES = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const TENS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function under100(n){ return n < 20 ? ONES[n] : TENS[Math.floor(n / 10)] + (n % 10 ? '-' + ONES[n % 10] : ''); }
+function under1000(n){
+  const h = Math.floor(n / 100), r = n % 100;
+  if (!h) return under100(r);
+  return ONES[h] + ' hundred' + (r ? ' ' + under100(r) : '');
+}
+function words(n, comma){
+  if (n < 1000) return under1000(n);
+  const th = Math.floor(n / 1000), r = n % 1000;
+  return under1000(th) + ' thousand' + (r ? (comma ? ', ' : ' ') + under1000(r) : '');
+}
+const PLACE = ['', 'tenths', 'hundredths', 'thousandths', 'ten thousandths'];
+const PLACE_ONE = ['', 'tenth', 'hundredth', 'thousandth', 'ten thousandth'];
+const WRONG_THS = ['', 'tens', 'hundreds', 'thousands', 'ten thousands'];
+function placeWord(k, n, table){ return n === 1 ? PLACE_ONE[k] : (table || PLACE)[k]; }
+function decimalWords(d, places, table){
+  /* places lets a distractor name a different last place */
+  const w = wholePart(d), f = fracPart(d);
+  const frac = words(f, false) + ' ' + (table ? table[places] : placeWord(places, f));
+  if (d.places === 0) return words(w, true);
+  return w ? words(w, true) + ' and ' + frac : frac;
+}
+function mixedHTML(w, n, d){
+  /* a mixed number as a fraction with a real bar; text only, built safely */
+  const wrap = document.createElement('span');
+  if (w) wrap.append(String(w));
+  const fr = document.createElement('span');
+  fr.className = 'pfrac';
+  const top = document.createElement('span'); top.textContent = String(n);
+  const bot = document.createElement('span'); bot.textContent = d.toLocaleString('en-US');
+  fr.append(top, bot);
+  wrap.append(fr);
+  return wrap;
+}
+
+/* ---------------- generators ----------------
+   Decimals with 1 to 3 places (the test's range), whole part 0 to 60,
+   never ending in 0 after the point. Write it leans on the placeholder
+   cases, where the digits after the point are fewer than the places
+   (7/100, 23/1000). To a fraction leans on decimals that reduce. */
+function decimal(places, maxWhole){
+  for (let t = 0; t < 80; t++){
+    const f = rand(1, POW10[places] - 1);
+    if (f % 10 === 0) continue;
+    const w = Math.random() < 0.3 ? 0 : rand(1, maxWhole);
+    return { core: w * POW10[places] + f, places };
+  }
+  return { core: 25, places: 2 };
+}
+function makeRead(){
+  const d = decimal(pick([1, 2, 2, 3, 3]), 60);
+  const k = d.places;
+  const right = decimalWords(d, k);
+  const opts = [right];
+  const up = k < 3 ? decimalWords(d, k + 1, PLACE) : null;
+  const down = k > 1 ? decimalWords(d, k - 1, PLACE) : null;
+  const ths = decimalWords(d, k, WRONG_THS);
+  shuffle([up, down, ths].filter(Boolean)).forEach(o => { if (opts.length < 3 && !opts.includes(o)) opts.push(o); });
+  return { kind: 'read', d, answer: right, options: shuffle(opts), text: fmt(d) };
+}
+function makeWrite(){
+  const placeholder = Math.random() < 0.45;
+  for (let t = 0; t < 80; t++){
+    const k = pick([1, 2, 2, 3, 3]);
+    const d = decimal(k, 60);
+    const f = fracPart(d);
+    const short = String(f).length < k;
+    if (placeholder !== short) continue;
+    const asWords = Math.random() < 0.5;
+    return { kind: 'write', d, asWords, answer: d, text: asWords ? decimalWords(d, k) : (wholePart(d) ? wholePart(d) + ' ' : '') + f + '/' + POW10[k] };
+  }
+  const d = { core: 507, places: 2 };
+  return { kind: 'write', d, asWords: false, answer: d, text: '5 7/100' };
+}
+function makeFraction(){
+  for (let t = 0; t < 120; t++){
+    const d = decimal(pick([1, 2, 2, 3, 3]), 30);
+    const f = fracPart(d), den = POW10[d.places];
+    const g = Rational.gcd(f, den);
+    if (g === 1 && Math.random() < 0.7) continue;     /* most of them should reduce */
+    return { kind: 'fraction', d, answer: Rational.make(d.core, den), text: fmt(d) };
+  }
+  const d = { core: 475, places: 2 };
+  return { kind: 'fraction', d, answer: Rational.make(475, 100), text: '4.75' };
+}
+function makeCompare(){
+  /* one of five shapes: the longer one is smaller (0.09 vs 0.089), the
+     longer one is bigger, equal with end zeros, a digit apart at the same
+     length, or different whole numbers with a longer tail on the small
+     side. Every shape has the same whole number except the last. */
+  const shape = pick(['longSmall', 'longSmall', 'longBig', 'equal', 'sameLen', 'whole']);
+  const w = Math.random() < 0.4 ? 0 : rand(1, 20);
+  const A = (core, places) => ({ core: w * POW10[places] + core, places });
+  let a, b;
+  if (shape === 'longSmall'){ const x = rand(1, 9); a = A(x, 1); b = A((x - 1) * 10 + rand(1, 9), 2); if (Math.random() < 0.5){ const y = rand(11, 99); if (y % 10){ a = A(y, 2); b = A((y - 1) * 10 + rand(1, 9), 3); } } }
+  else if (shape === 'longBig'){ const x = rand(1, 8); a = A(x, 1); b = A(x * 10 + rand(1, 9), 2); }
+  else if (shape === 'equal'){ const x = rand(1, 9); a = A(x, 1); b = A(x * 10, 2); if (Math.random() < 0.5) b = A(x * 100, 3); }
+  else if (shape === 'sameLen'){ const x = rand(11, 98); if (x % 10 === 0) return makeCompare(); a = A(x, 2); b = A(x + 1, 2); }
+  else { const lo = rand(0, 8); a = { core: (lo + 1) * 10 + rand(1, 9), places: 1 }; b = { core: lo * 1000 + rand(101, 999), places: 3 }; if (b.core % 10 === 0) b.core++; }
+  if (Math.random() < 0.5){ const t = a; a = b; b = t; }
+  const c = cmp(a, b);
+  return { a, b, sign: c < 0 ? '<' : (c > 0 ? '>' : '='), shape };
+}
+
+/* ---------------- saved progress ---------------- */
+const STORE_KEY = 'seventh-grade-math:placevalue';
+let solved = 0, clean = 0, best = 0;
+function loadProgress(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (Number.isFinite(s.solved)) solved = Math.max(0, Math.floor(s.solved));
+    if (Number.isFinite(s.clean))  clean  = Math.max(0, Math.floor(s.clean));
+    if (Number.isFinite(s.best))   best   = Math.max(0, Math.floor(s.best));
+    if (clean > solved) clean = solved;
+  } catch (e) { solved = 0; clean = 0; best = 0; }
+}
+function saveProgress(){ try { localStorage.setItem(STORE_KEY, JSON.stringify({ solved, clean, best })); } catch (e) {} }
+function clearProgress(){
+  solved = 0; clean = 0; best = 0;
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  drawTally(); drawSpeedBar(); clearLog();
+}
+function drawTally(){
+  document.getElementById('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+  document.getElementById('clear').hidden = solved === 0 && clean === 0 && best === 0;
+}
+
+/* ---------------- problem log ----------------
+   A solve record: outcome (correct, slip, miss), misses, reduce-slips,
+   placeholder slips, hints. A round record: score, seen, streak, and how
+   many of the "longer one is smaller" pairs were missed, since that is
+   the trap the test sets. */
+const LOG_KEY = 'seventh-grade-math:placevalue-log';
+const LOG_CAP = 200, LOG_SHOWN = 20;
+const MODE_LABEL = { read: 'Read it', write: 'Write it', fraction: 'To a fraction', compare: 'Compare round' };
+const OUTCOME_LABEL = { correct: 'Correct', slip: 'Slip', miss: 'Miss' };
+let log = [];
+const validRecord = r => r && typeof r === 'object' && typeof r.t === 'number' && isFinite(r.t) && typeof r.mode === 'string' && typeof r.problem === 'string';
+function loadLog(){
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+  } catch (e) { log = []; }
+}
+function saveLog(){ try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) {} }
+function clearLog(){ log = []; try { localStorage.removeItem(LOG_KEY); } catch (e) {} drawLog(); }
+function pushRecord(rec){ log.push(rec); if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP); saveLog(); drawLog(); }
+function whenText(t){
+  try {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  } catch (e) { return ''; }
+}
+function drawLog(){
+  const rows = document.getElementById('logRows');
+  const accuracy = document.getElementById('accuracy');
+  const slip = document.getElementById('slip');
+  rows.textContent = ''; accuracy.textContent = ''; slip.textContent = '';
+  document.getElementById('export').disabled = log.length === 0;
+  document.getElementById('logEmpty').hidden = log.length > 0;
+  document.querySelector('.log-scroll').hidden = log.length === 0;
+  slip.hidden = log.length === 0;
+  if (!log.length) return;
+  const solves = log.filter(r => r.mode !== 'compare');
+  const sum = k => solves.reduce((n, r) => n + (Number(r[k]) || 0), 0);
+  const chip = (label, value, loud) => {
+    const li = document.createElement('li');
+    if (loud) li.className = 'loud';
+    const b = document.createElement('b');
+    b.textContent = String(value);
+    li.append(label + ' ', b);
+    accuracy.append(li);
+  };
+  const nReduce = sum('reduce'), nHolder = sum('holder');
+  if (solves.length){
+    chip('Correct', solves.filter(r => r.outcome === 'correct').length + ' of ' + solves.length);
+    ['read', 'write', 'fraction'].forEach(m => {
+      const inMode = solves.filter(r => r.mode === m);
+      if (inMode.length && inMode.length !== solves.length) chip(MODE_LABEL[m], inMode.filter(r => r.outcome === 'correct').length + ' of ' + inMode.length);
+    });
+    chip('Not reduced', nReduce, nReduce > 0);
+    chip('Missing a placeholder zero', nHolder, nHolder > 0);
+    chip('Misses', sum('misses'));
+  }
+  const rounds = log.filter(r => r.mode === 'compare');
+  if (rounds.length){
+    chip('Best compare round', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+    const trap = rounds.reduce((n, r) => n + (Number(r.trap) || 0), 0);
+    if (trap) chip('Longer-is-bigger misses', trap, true);
+  }
+  const lead = document.createElement('b');
+  if (!solves.length){ slip.textContent = 'No problems logged yet, only compare rounds.'; }
+  else if (!nReduce && !nHolder){
+    lead.textContent = 'No slips.';
+    slip.append(lead, ' Every fraction came out in lowest terms and every placeholder zero was there.');
+  } else {
+    lead.textContent = 'Slips: ' + (nReduce + nHolder) + '.';
+    const bits = [];
+    if (nReduce) bits.push('not reduced ' + nReduce + (nReduce === 1 ? ' time' : ' times') + ' (only 2s and 5s can cancel from 10, 100, 1,000)');
+    if (nHolder) bits.push('a placeholder zero missing ' + nHolder + (nHolder === 1 ? ' time' : ' times') + ' (hundredths is two places even when the top is one digit)');
+    slip.append(lead, ' ' + bits.join('; ') + '.');
+  }
+  log.slice(-LOG_SHOWN).reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const cell = (text, cls) => { const td = document.createElement('td'); const s = document.createElement('span'); if (cls) s.className = cls; s.textContent = text; td.append(s); return td; };
+    tr.append(cell(whenText(r.t)), cell(MODE_LABEL[r.mode] || r.mode), cell(r.problem));
+    if (r.mode === 'compare'){
+      tr.append(cell((Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0) + (Number(r.streak) ? ', streak ' + r.streak : ''), 'score'), cell(''));
+    } else {
+      const extra = [];
+      if (Number(r.misses)) extra.push(r.misses + (r.misses === 1 ? ' miss' : ' misses'));
+      if (Number(r.reduce)) extra.push('not reduced');
+      if (Number(r.holder)) extra.push('placeholder');
+      tr.append(cell((OUTCOME_LABEL[r.outcome] || r.outcome) + (extra.length ? ' (' + extra.join(', ') + ')' : ''), r.outcome === 'correct' ? 'yes' : (r.outcome === 'slip' ? 'slipc' : 'no')));
+      tr.append(cell(Number(r.hints) ? '+' + r.hints : '', 'hints'));
+    }
+    rows.append(tr);
+  });
+}
+async function copyText(text){
+  try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------------- page state ---------------- */
+const sayEl = document.getElementById('say');
+const banner = document.getElementById('banner');
+const hintBtn = document.getElementById('hint');
+const nextBtn = document.getElementById('next');
+const problemEl = document.getElementById('problem');
+const choicesEl = document.getElementById('choices');
+const decRow = document.getElementById('decRow');
+const fracRow = document.getElementById('fracRow');
+const ansBox = document.getElementById('ansBox');
+const solveView = document.getElementById('solveView');
+const cmpView = document.getElementById('cmpView');
+const fin = FractionInput.create({ mixed: true, digits: 4, label: 'Your answer as a fraction', onEnter: () => checkFraction() });
+document.getElementById('fracSlot').append(fin.el);
+
+let mode = 'read';
+let problem = null, stage = 'idle';
+let misses = 0, reduceHits = 0, holderHits = 0, hintsUsed = 0;
+
+function say(kind, text, extra){
+  sayEl.className = 'say' + (kind ? ' ' + kind : '');
+  sayEl.textContent = '';
+  if (!text) return;
+  const lead = document.createElement('b');
+  lead.textContent = text;
+  sayEl.append(lead);
+  if (extra) sayEl.append(' ' + extra);
+}
+
+function drawProblem(){
+  const p = problem;
+  problemEl.textContent = '';
+  problemEl.className = 'problem';
+  const kn = document.getElementById('kindName');
+  kn.textContent = '';
+  const b = document.createElement('b');
+  if (p.kind === 'read'){
+    problemEl.append(fmt(p.d));
+    b.textContent = 'Read it';
+    kn.append(b, ' · which is this in words?');
+  } else if (p.kind === 'write'){
+    if (p.asWords){ problemEl.className = 'problem words'; problemEl.append(p.text); }
+    else problemEl.append(mixedHTML(wholePart(p.d), fracPart(p.d), POW10[p.d.places]));
+    b.textContent = 'Write it';
+    kn.append(b, ' · as a decimal');
+  } else {
+    problemEl.append(fmt(p.d));
+    b.textContent = 'To a fraction';
+    kn.append(b, ' · lowest terms');
+  }
+  problemEl.setAttribute('aria-label', p.kind === 'write' && !p.asWords ? decimalWords(p.d, p.d.places) : p.text);
+  document.getElementById('ask').textContent = stage === 'done' ? '' : (p.kind === 'read' ? 'Tap the right one.' : (p.kind === 'write' ? 'Type the decimal.' : 'Whole number box can stay empty.'));
+}
+function drawChoices(){
+  choicesEl.textContent = '';
+  problem.options.forEach(o => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'choice';
+    btn.textContent = o;
+    btn.onclick = () => pickChoice(btn, o);
+    choicesEl.append(btn);
+  });
+}
+function newProblem(){
+  loadProblem(mode === 'read' ? makeRead() : (mode === 'write' ? makeWrite() : makeFraction()));
+}
+function loadProblem(p){
+  problem = p;
+  stage = 'open';
+  misses = 0; reduceHits = 0; holderHits = 0; hintsUsed = 0;
+  banner.className = 'banner';
+  hintBtn.disabled = false; hintBtn.textContent = 'Hint';
+  choicesEl.hidden = p.kind !== 'read';
+  decRow.hidden = p.kind !== 'write';
+  fracRow.hidden = p.kind !== 'fraction';
+  document.getElementById('check').disabled = false;
+  document.getElementById('checkFrac').disabled = false;
+  ansBox.value = ''; ansBox.className = 'decbox'; ansBox.disabled = false;
+  fin.clear(); fin.setDisabled(false);
+  drawProblem();
+  if (p.kind === 'read'){ drawChoices(); say('', 'Count the digits after the point.', 'That tells you the name of the last place.'); }
+  else if (p.kind === 'write'){ say('', 'How many places?', 'Tenths is one, hundredths two, thousandths three. A zero holds any empty place.'); ansBox.focus(); }
+  else { say('', 'Digits after the point go on top.', 'The bottom is 1 with one zero for every digit. Then reduce.'); fin.focus(); }
+}
+
+/* ---------------- checking ---------------- */
+function shake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 420); }
+function pickChoice(btn, text){
+  if (stage !== 'open') return;
+  if (text === problem.answer){
+    btn.classList.add('yes');
+    Array.prototype.forEach.call(choicesEl.children, c => { c.disabled = true; });
+    finish();
+    return;
+  }
+  misses++;
+  btn.classList.add('no');
+  btn.disabled = true;
+  const k = problem.d.places;
+  if (/ (tens|hundreds|thousands)$/.test(text)) say('bad', 'Hundreds are big. Hundredths are pieces.', 'Everything after the point ends in ths.');
+  else say('bad', 'Count the digits after the point:', k + (k === 1 ? ' digit, so the last place is tenths.' : (k === 2 ? ' digits, so the last place is hundredths.' : ' digits, so the last place is thousandths.')));
+}
+function checkDecimal(){
+  if (mode !== 'write' || stage !== 'open') return;
+  if (!ansBox.value.trim()){ say('', 'Type an answer first.'); return; }
+  const E = parseDecimal(ansBox.value);
+  if (!E){ say('', 'Just digits and one point.', 'Like 5.07.'); return; }
+  const C = problem.answer;
+  if (same(E, C)){ finish(); return; }
+  if (wholePart(E) === wholePart(C) && fracPart(E) === fracPart(C) && E.places !== C.places){
+    holderHits++;
+    ansBox.classList.add('point'); shake(ansBox);
+    const k = C.places;
+    say('point', 'Right digits, wrong place.', (k === 2 ? 'Hundredths is two places' : (k === 3 ? 'Thousandths is three places' : 'Tenths is one place')) + ' after the point, so a zero has to hold the empty spot.');
+    return;
+  }
+  misses++;
+  ansBox.classList.add('miss'); shake(ansBox);
+  if (wholePart(E) !== wholePart(C)) say('bad', 'Check the whole number.', 'It goes in front of the point.');
+  else say('bad', 'Not that.', 'Say your answer out loud in words and see if it matches.');
+}
+function checkFraction(){
+  if (mode !== 'fraction' || stage !== 'open') return;
+  const v = fin.value();
+  const r = fin.rational();
+  if (!r){ say('', 'Fill in the top and the bottom.', 'Put the whole number in the left box.'); return; }
+  const target = problem.answer;
+  const R = Rational.make(r.n, r.d);
+  if (Rational.eq(R, target)){
+    const proper = v.n !== null && v.d !== null && v.n < v.d;
+    const lowest = v.n === null || Rational.isReduced(v.n, v.d);
+    const wholeRight = (v.w || 0) === wholePart(problem.d);
+    if (proper && lowest && wholeRight){ finish(); return; }
+    reduceHits++;
+    fin.mark('slip'); shake(fin.el);
+    if (!lowest){
+      const g = Rational.gcd(v.n, v.d);
+      say('slip', 'Right amount. Not in lowest terms yet.', 'Both ' + v.n + ' and ' + v.d + ' can be divided by ' + (g % 5 === 0 ? '5' : '2') + '. Keep going until nothing cancels.');
+    } else {
+      say('slip', 'Right amount. Write it as a mixed number.', 'The whole number goes in the left box.');
+    }
+    return;
+  }
+  misses++;
+  fin.mark('miss'); shake(fin.el);
+  const d = problem.d, f = fracPart(d);
+  const k = d.places;
+  const wrongPlaces = [k - 1, k + 1].some(j => j >= 1 && j <= 4 && Rational.eq(R, Rational.make(wholePart(d) * POW10[j] + f, POW10[j])));
+  if (wrongPlaces) say('bad', 'Count the digits after the point.', k + (k === 1 ? ' digit means tenths: 10 on the bottom.' : (k === 2 ? ' digits means hundredths: 100 on the bottom.' : ' digits means thousandths: 1000 on the bottom.')));
+  else if ((v.w || 0) !== wholePart(d)) say('bad', 'Check the whole number.', 'Everything in front of the point stays out front.');
+  else say('bad', 'Not that.', 'Write the digits after the point over 1 with ' + k + (k === 1 ? ' zero' : ' zeros') + ', then reduce.');
+}
+function finish(){
+  stage = 'done';
+  ansBox.classList.remove('miss', 'point'); ansBox.classList.add('ok'); ansBox.disabled = true;
+  fin.mark('ok'); fin.setDisabled(true);
+  document.getElementById('check').disabled = true;
+  document.getElementById('checkFrac').disabled = true;
+  hintBtn.disabled = true;
+  const slips = reduceHits + holderHits;
+  const outcome = misses ? 'miss' : (slips ? 'slip' : 'correct');
+  const cleanRun = outcome === 'correct' && hintsUsed === 0;
+  solved++;
+  if (cleanRun) clean++;
+  saveProgress(); drawTally();
+  pushRecord({ t: Date.now(), mode, problem: problem.text, outcome, misses, reduce: reduceHits, holder: holderHits, hints: hintsUsed });
+  if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: 'placevalue' });
+  drawProblem();
+  banner.className = 'banner show';
+  banner.textContent = cleanRun ? 'Right, first try, no hints.' : (outcome === 'slip' ? 'Right in the end. The slip is the part a test docks.' : (outcome === 'correct' ? 'Right, first try.' : 'Solved, after ' + misses + (misses === 1 ? ' miss.' : ' misses.')));
+  const d = problem.d;
+  if (problem.kind === 'fraction'){
+    const f = fracPart(d), den = POW10[d.places], g = Rational.gcd(f, den);
+    say('good', 'That is it.', fmt(d) + ' = ' + (wholePart(d) ? wholePart(d) + ' ' : '') + f + '/' + den + (g > 1 ? ', divide top and bottom by ' + g + ': ' + Rational.text(problem.answer) : ', and it will not reduce') + '. Tap New problem for another.');
+  } else {
+    say('good', 'That is it.', fmt(d) + ' is ' + decimalWords(d, d.places) + '. Tap New problem for another.');
+  }
+}
+
+/* ---------------- hints ---------------- */
+function hintText(){
+  const d = problem.d, k = d.places, f = fracPart(d), den = POW10[k];
+  if (problem.kind === 'read'){
+    if (hintsUsed === 1) return 'Say the whole number, then "and" at the point, then the digits after the point like a normal number, then the name of the last place.';
+    if (hintsUsed === 2) return 'There ' + (k === 1 ? 'is 1 digit' : 'are ' + k + ' digits') + ' after the point.';
+    return 'The last place is the ' + PLACE_ONE[k] + 's place, and the digits after the point read as ' + words(f, false) + '.';
+  }
+  if (problem.kind === 'write'){
+    if (hintsUsed === 1) return 'Tenths is 1 place after the point, hundredths is 2, thousandths is 3. The number of zeros on the bottom tells you the same thing.';
+    if (hintsUsed === 2) return 'This one needs ' + k + (k === 1 ? ' place' : ' places') + ' after the point. ' + (String(f).length < k ? 'The top only has ' + String(f).length + (String(f).length === 1 ? ' digit' : ' digits') + ', so zeros fill in first.' : '');
+    return 'The whole number part is ' + wholePart(d) + '.';
+  }
+  if (hintsUsed === 1) return 'The digits after the point go on top. The bottom is 1 with one zero for every digit after the point: ' + k + (k === 1 ? ' zero.' : ' zeros.');
+  if (hintsUsed === 2) return 'Before reducing: ' + (wholePart(d) ? wholePart(d) + ' ' : '') + f + '/' + den + '. Only 2s and 5s can cancel from ' + den.toLocaleString('en-US') + '.';
+  const g = Rational.gcd(f, den);
+  return g > 1 ? 'Divide the top and bottom by ' + g + '.' : 'Nothing cancels here: ' + f + ' has no 2s or 5s in it. It is already in lowest terms.';
+}
+hintBtn.onclick = () => {
+  if (mode === 'compare' || stage !== 'open' || hintsUsed >= 3) return;
+  hintsUsed++;
+  say('', hintText());
+  hintBtn.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+  if (hintsUsed >= 3) hintBtn.disabled = true;
+};
+
+/* ---------------- the compare round ---------------- */
+const SPEED_SECONDS = 60;
+let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+let pair = null, runStreak = 0, bestStreak = 0, trapMisses = 0, pairTimer = 0;
+const cmpBtns = Array.prototype.slice.call(document.querySelectorAll('.cmp-btn'));
+function drawSpeedBar(){
+  document.getElementById('score').textContent = speedScore;
+  document.getElementById('best').textContent = best;
+}
+function drawStreak(){
+  const el = document.getElementById('streak');
+  el.textContent = '';
+  if (!speedOn) return;
+  el.append('Streak ');
+  const b = document.createElement('b');
+  b.textContent = String(runStreak);
+  el.append(b);
+  if (bestStreak > 1) el.append(' · best this round ' + bestStreak);
+}
+function drawPair(){
+  document.getElementById('cmpA').textContent = pair ? fmt(pair.a) : '—';
+  document.getElementById('cmpB').textContent = pair ? fmt(pair.b) : '—';
+  document.getElementById('cmpSlot').textContent = pair && pair.locked ? pair.sign : '';
+  cmpBtns.forEach(b => { b.className = 'cmp-btn'; b.disabled = !speedOn || !pair || pair.locked; });
+}
+function nextPair(){ pair = makeCompare(); pair.locked = false; drawPair(); drawStreak(); }
+function padTo(d, p){ return fmt({ core: d.core * POW10[p - d.places], places: p }); }
+function tapSign(btn){
+  if (!speedOn || !pair || pair.locked) return;
+  pair.locked = true;
+  speedSeen++;
+  const right = btn.dataset.sign === pair.sign;
+  drawPair();
+  btn.classList.add(right ? 'hit' : 'miss');
+  if (!right) cmpBtns.find(b => b.dataset.sign === pair.sign).classList.add('hit');
+  if (right){
+    speedScore++; runStreak++;
+    if (runStreak > bestStreak) bestStreak = runStreak;
+    say('good', 'Yes.', '');
+  } else {
+    runStreak = 0;
+    if (pair.shape === 'longSmall') trapMisses++;
+    const p = Math.max(pair.a.places, pair.b.places);
+    const sameWhole = wholePart(pair.a) === wholePart(pair.b);
+    say('bad', fmt(pair.a) + ' ' + pair.sign + ' ' + fmt(pair.b) + '.', sameWhole ? 'Pad them: ' + padTo(pair.a, p) + ' and ' + padTo(pair.b, p) + '. Longer is not bigger.' : 'Whole numbers first: ' + wholePart(pair.a) + ' and ' + wholePart(pair.b) + '.');
+  }
+  drawSpeedBar(); drawStreak();
+  clearTimeout(pairTimer);
+  pairTimer = setTimeout(() => { if (speedOn) nextPair(); }, reduced() ? 0 : (right ? 420 : 1700));
+}
+cmpBtns.forEach(b => { b.onclick = () => tapSign(b); });
+function tickClock(){
+  const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  document.getElementById('clock').textContent = left;
+  document.getElementById('clockWrap').classList.toggle('low', left <= 10);
+  if (left <= 0) stopSpeed(true);
+}
+function startSpeed(){
+  speedOn = true;
+  speedScore = 0; speedSeen = 0; runStreak = 0; bestStreak = 0; trapMisses = 0;
+  speedEndsAt = Date.now() + SPEED_SECONDS * 1000;
+  banner.className = 'banner';
+  nextBtn.textContent = 'Stop';
+  document.getElementById('cmpIdle').hidden = true;
+  drawSpeedBar(); tickClock();
+  clearInterval(speedTimer);
+  speedTimer = setInterval(tickClock, 200);
+  say('', 'Whole numbers first.', 'Then pad with zeros and compare.');
+  nextPair();
+}
+function stopSpeed(ranOut){
+  if (!speedOn) return;
+  speedOn = false;
+  clearInterval(speedTimer); clearTimeout(pairTimer); speedTimer = 0;
+  pair = null;
+  nextBtn.textContent = 'Start the round';
+  document.getElementById('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+  drawPair(); drawStreak();
+  document.getElementById('cmpIdle').hidden = false;
+  const isBest = speedScore > best;
+  if (isBest){ best = speedScore; saveProgress(); }
+  drawSpeedBar(); drawTally();
+  pushRecord({ t: Date.now(), mode: 'compare', problem: SPEED_SECONDS + ' second round', score: speedScore, seen: speedSeen, streak: bestStreak, trap: trapMisses });
+  if (isBest && speedScore > 0 && window.Tokens) Tokens.earnBest('placevalue:compare');
+  banner.className = 'banner show' + (isBest ? ' best' : '');
+  banner.textContent = isBest ? speedScore + ' right. That is a new best.' : speedScore + ' right. Best so far is ' + best + '.';
+  say('', '');
+}
+
+/* ---------------- modes ---------------- */
+const MODES = [
+  { key: 'read', tab: 'Read it', note: 'A decimal and three ways to say it. Tap the one that is right. Watch the last word: tenths, hundredths, or thousandths.' },
+  { key: 'write', tab: 'Write it', note: 'Words or a fraction over 10, 100, or 1,000. Type it as a decimal. Some need a zero to hold a place.' },
+  { key: 'fraction', tab: 'To a fraction', note: 'A decimal. Write it as a fraction or mixed number in lowest terms, the way the test asks. The whole number goes in the left box.' },
+  { key: 'compare', tab: 'Compare round', note: 'Sixty seconds. Two decimals, tap <, =, or >. Some are built so the longer one is smaller.' }
+];
+const modesEl = document.getElementById('modes');
+MODES.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab;
+  b.onclick = () => setMode(m.key);
+  modesEl.append(b);
+});
+function setMode(next){
+  if (speedOn) stopSpeed(false);
+  mode = next;
+  Array.prototype.forEach.call(modesEl.children, (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === mode)));
+  document.getElementById('modeNote').textContent = MODES.find(m => m.key === mode).note;
+  const isCmp = mode === 'compare';
+  document.getElementById('speedBar').hidden = !isCmp;
+  solveView.hidden = isCmp;
+  cmpView.hidden = !isCmp;
+  hintBtn.hidden = isCmp;
+  banner.className = 'banner';
+  if (isCmp){
+    nextBtn.textContent = 'Start the round';
+    document.getElementById('clock').textContent = SPEED_SECONDS;
+    document.getElementById('clockWrap').classList.remove('low');
+    speedScore = 0; drawSpeedBar();
+    pair = null; drawPair(); drawStreak();
+    say('', 'Sixty seconds.', 'Tap Start the round when you are ready.');
+  } else {
+    nextBtn.textContent = 'New problem';
+    newProblem();
+  }
+}
+nextBtn.onclick = () => {
+  if (mode !== 'compare'){ newProblem(); return; }
+  if (speedOn) stopSpeed(false); else startSpeed();
+};
+document.getElementById('check').onclick = checkDecimal;
+document.getElementById('checkFrac').onclick = checkFraction;
+ansBox.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); checkDecimal(); } });
+ansBox.addEventListener('input', () => {
+  let v = ansBox.value.replace(/[^0-9.]/g, '');
+  const i = v.indexOf('.');
+  if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+  ansBox.value = v.slice(0, 10);
+  ansBox.classList.remove('miss', 'point');
+});
+document.addEventListener('keydown', e => {
+  if (mode !== 'compare' || !speedOn) return;
+  const b = cmpBtns.find(x => x.dataset.sign === e.key);
+  if (b){ e.preventDefault(); tapSign(b); }
+});
+
+/* ---------------- Start over ---------------- */
+const clearBtn = document.getElementById('clear');
+let armed = 0;
+function disarm(){ clearTimeout(armed); armed = 0; clearBtn.classList.remove('arming'); clearBtn.textContent = 'Start over'; }
+clearBtn.onclick = () => {
+  if (armed){ disarm(); clearProgress(); return; }
+  clearBtn.classList.add('arming');
+  clearBtn.textContent = 'Tap again to erase';
+  armed = setTimeout(disarm, 4000);
+};
+
+/* ---------------- export ---------------- */
+const exportNote = document.getElementById('exportNote');
+const exportBox = document.getElementById('exportBox');
+let noteTimer = 0;
+document.getElementById('export').onclick = async () => {
+  if (!log.length) return;
+  const text = JSON.stringify(log, null, 2);
+  const copied = await copyText(text);
+  clearTimeout(noteTimer);
+  if (copied){
+    exportBox.hidden = true;
+    exportNote.textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+    noteTimer = setTimeout(() => { exportNote.textContent = ''; }, 4000);
+  } else {
+    exportBox.value = text; exportBox.hidden = false; exportBox.focus(); exportBox.select();
+    exportNote.textContent = 'Could not reach the clipboard. Copy it from the box.';
+  }
+};
+
+/* ---------------- self-check ----------------
+   The coursebook's own examples, run at load. */
+function selfCheck(){
+  const f = [];
+  const t = (name, ok) => { if (!ok) f.push(name); };
+  const D = s => parseDecimal(s);
+  t('words 2,345.25', decimalWords(D('2345.25'), 2) === 'two thousand, three hundred forty-five and twenty-five hundredths');
+  t('words 18.5', decimalWords(D('18.5'), 1) === 'eighteen and five tenths');
+  t('words 3.12', decimalWords(D('3.12'), 2) === 'three and twelve hundredths');
+  t('words 0.275', decimalWords(D('0.275'), 3) === 'two hundred seventy-five thousandths');
+  t('words 42.2515', decimalWords(D('42.2515'), 4) === 'forty-two and two thousand five hundred fifteen ten thousandths');
+  t('words 0.01', decimalWords(D('0.01'), 2) === 'one hundredth');
+  t('wrong ths', decimalWords(D('3.12'), 2, WRONG_THS) === 'three and twelve hundreds');
+  t('fraction 17.023', Rational.eq(Rational.make(D('17.023').core, 1000), Rational.make(17023, 1000)));
+  t('reduce 0.376', Rational.text(Rational.make(376, 1000)) === '47/125');
+  t('reduce 15.75', Rational.text(Rational.make(1575, 100)) === '15 3/4');
+  t('compare 0.7 < 0.75', cmp(D('0.7'), D('0.75')) === -1);
+  t('compare 0.09 > 0.089', cmp(D('0.09'), D('0.089')) === 1);
+  t('compare 0.5 = 0.500', cmp(D('0.5'), D('0.500')) === 0);
+  t('same 9.5 9.50', same(D('9.5'), D('9.50')));
+  t('placeholder 5.07', wholePart(D('5.7')) === wholePart(D('5.07')) && fracPart(D('5.7')) === fracPart(D('5.07')));
+  const r = Rational.selfCheck();
+  if (r.length) f.push('Rational: ' + r[0]);
+  return f;
+}
+
+loadProgress();
+loadLog();
+drawTally();
+drawSpeedBar();
+drawLog();
+function tabFromHash(){
+  const m = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+  return m && MODES.some(x => x.key === m[1]) ? m[1] : null;
+}
+const failures = selfCheck();
+if (failures.length){
+  say('bad', 'This page has a problem:', 'its own checks failed (' + failures[0] + '). Do not use it until that is fixed.');
+  nextBtn.disabled = true;
+} else {
+  setMode(tabFromHash() || 'read');
+}
+</script>
+</body>
+</html>

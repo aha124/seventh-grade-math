@@ -1160,7 +1160,10 @@ if (failures.length){
   nextBtn.disabled = true;
   checkBtn.disabled = true;
 } else {
-  setMode('solve');
+  /* a #tab=<mode> fragment picks the opening tab, so lesson 5 can link
+     straight to the Place the point round */
+  const m = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+  setMode(m && MODES.some(x => x.key === m[1]) ? m[1] : 'solve');
 }
 </script>
 </body>

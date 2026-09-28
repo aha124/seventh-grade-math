@@ -43,11 +43,76 @@ const WARMUPS = [
     text: "45 seconds on the nine powers worth knowing cold." },
   { name: "LCD Match it", href: "lesson-02/fractions-practice.html#tab=match",
     text: "60 seconds of just the bottoms." },
+  { name: "Change round", href: "lesson-05/line-up.html#tab=change",
+    text: "60 seconds of making change, counting up from the price." },
   { name: "Dice game", version: DICE_VERSION,
     text: "grab the dice: " + (DICE_GAMES[DICE_VERSION] || "") + "." }
 ];
 
 const LESSONS = [
+  {
+    n: 5,
+    title: "Adding, subtracting, and multiplying decimals",
+    days: [
+      {
+        d: 1,
+        name: "Place value, words, fractions, and comparing",
+        note: "Coin warm-up first. Then the workbook, New Skills Practice 1 to 16. Then Place Value, any tab.",
+        pages: [
+          {
+            href: "lesson-05/place-value.html",
+            name: "Place value",
+            blurb: "Read a decimal in words, write words or a fraction over 10, 100, or 1,000 as a decimal, and turn a decimal into a fraction in lowest terms. Or run the 60 second round: two decimals, tap <, =, or >.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 2,
+        name: "Adding and subtracting decimals",
+        note: "Coin warm-up: how much to the next dollar. Workbook 17 to 24. Then Line them up on Add and subtract, and one Change round to finish.",
+        pages: [
+          {
+            href: "lesson-05/line-up.html",
+            name: "Line them up",
+            blurb: "Generated add and subtract problems, graded and never answered for you. Stack it shows the problem with the points in one column and the added zeros in gold. If your digits were lined up on the right instead of at the point, it says so. Or run the 60 second change round.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 3,
+        name: "Multiplying decimals",
+        note: "You did this in lesson 2. Warm up with one Place the point round, then the workbook, 25 to 28. Then Line them up on Mixed, where you have to decide: line up the points, or count the places?",
+        pages: [
+          {
+            href: "lesson-02/decimal-practice.html#tab=place",
+            name: "Point placement (from lesson 2)",
+            blurb: "The 60 second round: the digits are multiplied already, you tap where the point goes.",
+            cta: "Start the round"
+          },
+          {
+            href: "lesson-05/line-up.html#tab=mixed",
+            name: "Line them up: Mixed",
+            blurb: "Adding, subtracting, and multiplying, shuffled. Multiplying has its own named mistake: dropping the end zero before placing the point.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 4,
+        name: "Review day",
+        pages: [],
+        note: "Workbook day: the Skills Check, then the review sheet. The Compare round and the Mixed tab make good warm-ups."
+      },
+      {
+        d: 5,
+        name: "Test day",
+        pages: [],
+        note: "The test is on paper. Line up the points to add and subtract. Count the places to multiply. Every fraction in lowest terms."
+      }
+    ]
+  },
   {
     n: 3,
     title: "Multiplying and dividing fractions and mixed numbers",

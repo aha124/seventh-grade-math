@@ -46,6 +46,8 @@ lesson-03/flip.html      why keep-change-flip works: reciprocals, the complex fr
 lesson-03/bar-practice.html         graded order of operations with fraction bars, plus the reciprocal speed round
 lesson-05/place-value.html          decimals in words, as fractions in lowest terms, and the compare round
 lesson-05/line-up.html   graded add, subtract, and mixed with multiply, the stacked view, plus the change round
+lesson-07/percents.html  move the point, percent and decimal both ways, percent of, word problems, plus the percent round
+lesson-07/interest.html  simple interest, compound interest a year at a time in a table, plus the one-year interest round
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares
@@ -137,7 +139,8 @@ edit: `index.html` renders whatever is in that array.
    array, so add the page to the day it belongs to. A new lesson is a
    new `{ n, title, days }` object with all five days written out; a day
    with no pages carries a `note` instead, and the hub shows that note
-   in the row. Lesson order does not matter; the hub sorts on `n` and
+   in the row. A short week can have fewer days (lesson 7 has three:
+   two teaching days and the test). Lesson order does not matter; the hub sorts on `n` and
    shows the newest lesson first.
 7. Open `index.html` from the filesystem, click into the new page, and
    click the back link to make sure the relative paths are right.

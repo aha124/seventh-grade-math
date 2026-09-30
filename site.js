@@ -45,11 +45,57 @@ const WARMUPS = [
     text: "60 seconds of just the bottoms." },
   { name: "Change round", href: "lesson-05/line-up.html#tab=change",
     text: "60 seconds of making change, counting up from the price." },
+  { name: "Percent round", href: "lesson-07/percents.html#tab=round",
+    text: "60 seconds of decimals to percents and back." },
   { name: "Dice game", version: DICE_VERSION,
     text: "grab the dice: " + (DICE_GAMES[DICE_VERSION] || "") + "." }
 ];
 
 const LESSONS = [
+  {
+    n: 7,
+    title: "Percentages; simple and compound interest",
+    days: [
+      {
+        d: 1,
+        name: "Percents: move the point, convert, percent of",
+        note: "Whiteboard first. Afterward, any tab of Percent Of for extra practice.",
+        pages: [
+          {
+            href: "lesson-07/percents.html",
+            name: "Percent Of",
+            blurb: "Move the point for 10, 100, and 1,000. Turn percents into decimals and back. Find a percent of a number, then word problems: sales, tax, tips. Or run the 60 second Percent round.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 2,
+        name: "Simple and compound interest",
+        note: "Whiteboard first. Afterward, Simple and Compound on the interest page. Word problems on Percent Of make good review too.",
+        pages: [
+          {
+            href: "lesson-07/interest.html",
+            name: "Simple & Compound",
+            blurb: "Simple interest: one year, times the years. Compound: fill in the table a year at a time, and see how much more it earns. Or the 60 second round of one-year interest in your head.",
+            cta: "Start practicing"
+          },
+          {
+            href: "lesson-07/percents.html#tab=words",
+            name: "Percent word problems",
+            blurb: "Sales, tax, tips, and a share of a group. Read what the question asks for.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 3,
+        name: "Test day",
+        pages: [],
+        note: "The test is on paper. Percent to decimal first. Simple interest stays on the original principal; compound adds each year's interest before the next."
+      }
+    ]
+  },
   {
     n: 5,
     title: "Adding, subtracting, and multiplying decimals",

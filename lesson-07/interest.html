@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Interest — Simple and Compound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+.tierline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.tierline b{color:var(--board);font-weight:700}
+.tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+.tier-pick{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.45rem 0 0}
+.tier-pick .lab{font-family:var(--body);font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.pick{
+  font-family:var(--display);font-size:.95rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:999px;
+  min-height:44px;padding:0 .75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+
+/* ---- the problem ---- */
+.problem{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:1rem .6rem;min-height:5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.problem .op{color:var(--gold)}
+.problem .q{color:#93A9B8;font-weight:600}
+
+.steps{
+  margin:.6rem 0 0;padding:.6rem .9rem;
+  background:#F6FAFC;border:1.5px solid var(--line);border-radius:3px;
+  font-size:.92rem;color:var(--board-soft);
+}
+.steps b{color:var(--board);font-weight:600}
+.steps ol{margin:.2rem 0 0;padding-left:1.2rem}
+.steps li{margin:.15rem 0}
+
+/* ---- the answer ---- */
+.answer-row{
+  display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;
+  margin:.9rem 0 0;padding:.8rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.answer-row .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.decbox{
+  width:8rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.7rem;
+  border:1.5px solid var(--edge);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.decbox.miss{border-color:var(--gold);background:#FBF0DF}
+.decbox.point{border-color:var(--gold);background:#FFF8E8}
+.decbox.ok{border-color:var(--good);background:#EEF7F1}
+.decbox:disabled{opacity:.6}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.decbox.shake{animation:shake .38s ease-in-out}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.point{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.point b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+
+.slip{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#FFF8E8;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+.slip[hidden]{display:none}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box[hidden]{display:none}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+@media (prefers-reduced-motion:reduce){ .decbox.shake{animation:none} }
+
+/* ---- lesson 7 additions ---- */
+.problem.word{
+  display:block;text-align:left;font-family:var(--body);font-weight:500;
+  font-size:clamp(1.05rem,3.6vw,1.3rem);line-height:1.5;color:var(--board);padding:1rem 1.1rem;
+}
+.problem.word b{font-weight:700}
+.problem .sm{display:block;width:100%;text-align:center;font-family:var(--body);font-weight:500;font-size:1rem;color:#7C93A5;letter-spacing:0}
+.fix{font-family:var(--display);font-weight:700;font-size:1.7rem;color:var(--board-soft)}
+.fix[hidden]{display:none}
+.speedbox{
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  margin:.5rem 0 0;padding:1rem .6rem 1.1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.speedbox .big{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);font-variant-numeric:tabular-nums;text-align:center;line-height:1.1}
+.speedbox .big small{display:block;font-family:var(--body);font-weight:500;font-size:.95rem;color:#7C93A5;letter-spacing:0}
+.speedbox .idle{font-size:.95rem;color:#7C93A5;margin:0;text-align:center;max-width:36ch}
+.speedbox .streak{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);min-height:1.4em}
+.speedbox .streak b{color:var(--gold)}
+.speedbox .answer-row{gap:.5rem;padding:.7rem .6rem;flex-wrap:nowrap;margin:.2rem 0 0}
+.speedbox .decbox{width:7rem}
+/* ---- the compound table ---- */
+.ctable-wrap{margin:.6rem 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ctable{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--line);border-radius:3px;font-variant-numeric:tabular-nums}
+.ctable th,.ctable td{padding:.5rem .45rem;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.ctable thead th{font-family:var(--display);font-weight:600;font-size:1rem;color:var(--board-soft);background:#F6FAFC}
+.ctable tbody th{font-family:var(--display);font-weight:700;font-size:1.2rem;color:var(--ice);text-align:center;width:2.6rem}
+.ctable td{font-family:var(--display);font-weight:600;font-size:clamp(1.05rem,3.8vw,1.35rem);color:var(--board)}
+.ctable tr.done td.plus{color:var(--gold)}
+.ctable tr.done td.end{color:var(--good);font-weight:700}
+.ctable tr.now{background:#FFFDF8}
+.ctable td.later{color:#B6C8D4}
+.mbox{display:inline-flex;align-items:center;gap:.2rem}
+.mbox .dol{font-family:var(--display);font-weight:700;font-size:1.3rem;color:var(--board-soft)}
+.ctable .decbox{width:clamp(5.6rem,24vw,8.5rem);font-size:1.3rem}
+.cactions{display:flex;justify-content:flex-end;margin:.6rem 0 0}
+.cactions .ok{padding:0 1rem;font-size:1.15rem}
+
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Simple <span>&amp;</span> Compound</h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div id="solveView">
+    <div class="tierline">
+      <span id="kindName"></span>
+      <span class="ask" id="ask"></span>
+    </div>
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="answer-row">
+      <span class="lab">Your answer</span>
+      <span class="fix" id="pre" hidden></span>
+      <input class="decbox" id="ansBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer">
+      <span class="fix" id="suf" hidden></span>
+      <button class="ok" id="check" type="button" aria-label="Check my answer">✓</button>
+    </div>
+  </div>
+
+  <div id="speedView" hidden>
+    <div class="speedbox">
+      <div class="big" id="spBig"><small></small>—</div>
+      <div class="answer-row">
+        <span class="fix" id="spPre" hidden></span>
+        <input class="decbox" id="spBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer">
+        <span class="fix" id="spSuf" hidden></span>
+        <button class="ok" id="spOk" type="button" aria-label="Check">✓</button>
+      </div>
+      <div class="streak" id="streak"></div>
+      <p class="idle" id="spIdle">Sixty seconds. One year of interest on round numbers.</p>
+    </div>
+  </div>
+
+  <div id="customView" hidden><div class="tierline"><span><b>Compound interest</b></span><span class="ask" id="cRate"></span></div>
+    <div class="problem word" id="cQ"></div>
+    <div class="ctable-wrap">
+      <table class="ctable">
+        <thead><tr><th scope="col">Year</th><th scope="col">Start</th><th scope="col">Interest</th><th scope="col">End</th></tr></thead>
+        <tbody id="cRows"></tbody>
+      </table>
+    </div>
+    <div class="cactions"><button class="ok" id="cCheck" type="button" aria-label="Check this year">Check this year ✓</button></div>
+</div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Correct, slip, or miss">Result</th>
+              <th scope="col" title="Which named mistake came up">Named</th>
+              <th scope="col">Help</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. A dollar sign and commas are fine. Compound problems here are compounded once a year, like the book, and always come out to whole cents.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script>
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- exact decimals ----------------
+   The same {core, places} shape as lessons 2 and 5: 12.5 is {125, 1},
+   86 is {86, 0}. A percent is the same number with the point moved two
+   places, so every step of this lesson is a change to places, never a
+   float. Money is a decimal with two places. */
+const POW10 = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000];
+function fmt(d){
+  if (d.places === 0) return String(d.core);
+  const neg = d.core < 0;
+  const s = String(Math.abs(d.core)).padStart(d.places + 1, '0');
+  return (neg ? '-' : '') + s.slice(0, s.length - d.places) + '.' + s.slice(s.length - d.places);
+}
+function canon(d){
+  let core = d.core, places = d.places;
+  while (places > 0 && core % 10 === 0){ core = core / 10; places--; }
+  return { core, places };
+}
+function show(d){ return fmt(canon(d)); }
+function same(a, b){
+  if (!a || !b) return false;
+  const x = canon(a), y = canon(b);
+  return x.core === y.core && x.places === y.places;
+}
+function widen(d, p){ return d.core * POW10[p - d.places]; }
+function add(a, b){ const p = Math.max(a.places, b.places); return { core: widen(a, p) + widen(b, p), places: p }; }
+function sub(a, b){ const p = Math.max(a.places, b.places); return { core: widen(a, p) - widen(b, p), places: p }; }
+function mul(a, b){ return canon({ core: a.core * b.core, places: a.places + b.places }); }
+function times10(d, k){ /* k > 0 moves the point right, k < 0 left */
+  const c = canon(d);
+  if (k >= 0){ const drop = Math.min(k, c.places); return canon({ core: c.core * POW10[k - drop], places: c.places - drop }); }
+  return canon({ core: c.core, places: c.places - k });
+}
+function D(s){ return parseDecimal(s); }
+function parseDecimal(str){
+  const s = String(str).replace(/\s+/g, '').replace(/^\$/, '').replace(/,/g, '').replace(/%$/, '');
+  if (!/^\d*\.?\d*$/.test(s) || s === '' || s === '.') return null;
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  const frac = i < 0 ? '' : s.slice(i + 1);
+  const digits = (whole + frac).replace(/^0+(?=\d)/, '');
+  if (digits.length > 13 || frac.length > 9) return null;
+  return { core: parseInt(digits || '0', 10), places: frac.length };
+}
+/* round half up to p places */
+function roundTo(d, p){
+  const c = canon(d);
+  if (c.places <= p) return c;
+  const k = POW10[c.places - p];
+  const q = Math.floor(c.core / k), r = c.core % k;
+  return canon({ core: q + (r * 2 >= k ? 1 : 0), places: p });
+}
+function places(d){ return canon(d).places; }
+/* 50388.48 → "$50,388.48"; 12000 → "$12,000"; 4.5 → "$4.50" */
+function money(d){
+  const c = canon(d);
+  const p = c.places === 0 ? 0 : 2;
+  const s = fmt({ core: c.core * POW10[p - Math.min(p, c.places)], places: p });
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  return '$' + whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (i < 0 ? '' : s.slice(i));
+}
+function commas(d){ const s = show(d); const i = s.indexOf('.'); const w = i < 0 ? s : s.slice(0, i); return w.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (i < 0 ? '' : s.slice(i)); }
+/* the digits right, the point somewhere else: how many places off, or null */
+function pointShift(user, correct){
+  const u = canon(user), c = canon(correct);
+  if (u.core === 0 || c.core === 0) return null;
+  const su = String(u.core).replace(/0+$/, ''), sc = String(c.core).replace(/0+$/, '');
+  if (su !== sc) return null;
+  const k = (c.places - u.places) + (String(u.core).length - String(c.core).length);
+  return k === 0 ? null : k;
+}
+
+/* ---------------- the page engine ----------------
+   Every graded mode hands the engine a problem:
+     text     what the log shows
+     kind     the label over the problem ("Percent of a number")
+     big      the problem in big type, or word: a sentence problem
+     sub      optional small line under the big type
+     ask      the line on the right of the label
+     prefix   "$" or "" in front of the answer box
+     suffix   "%" or "" after it
+     answer   exact decimal
+     slips    [{ v, name, lead, extra }] answers that are named, in order
+     pointCheck  true to name "digits right, point wrong" as a slip
+     miss     text after "Not that." on a plain miss
+     hints    three strings
+     done     text after the answer when solved
+   A named slip is counted apart from a miss and does not make a solve
+   clean. The speed round asks for { big, sub, prefix, suffix, answer,
+   explain } items. A mode with custom: true owns #customView and calls
+   Engine.record() itself when a problem is finished. */
+const Engine = (function(){
+  let cfg = null;
+  let solved = 0, clean = 0, best = 0;
+  let log = [];
+  const LOG_CAP = 200, LOG_SHOWN = 20;
+  const $ = id => document.getElementById(id);
+  let mode = null, problem = null, stage = 'idle';
+  let misses = 0, slipHits = 0, slipNames = [], hintsUsed = 0;
+
+  function loadProgress(){
+    try {
+      const raw = localStorage.getItem(cfg.storeKey);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (Number.isFinite(s.solved)) solved = Math.max(0, Math.floor(s.solved));
+      if (Number.isFinite(s.clean))  clean  = Math.max(0, Math.floor(s.clean));
+      if (Number.isFinite(s.best))   best   = Math.max(0, Math.floor(s.best));
+      if (clean > solved) clean = solved;
+    } catch (e) { solved = 0; clean = 0; best = 0; }
+  }
+  function saveProgress(){ try { localStorage.setItem(cfg.storeKey, JSON.stringify({ solved, clean, best })); } catch (e) {} }
+  function clearProgress(){
+    solved = 0; clean = 0; best = 0;
+    try { localStorage.removeItem(cfg.storeKey); } catch (e) {}
+    drawTally(); drawSpeedBar(); log = []; try { localStorage.removeItem(cfg.logKey); } catch (e) {} drawLog();
+  }
+  function drawTally(){
+    $('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+    $('clear').hidden = solved === 0 && clean === 0 && best === 0;
+  }
+
+  /* ---------------- problem log ---------------- */
+  const validRecord = r => r && typeof r === 'object' && typeof r.t === 'number' && isFinite(r.t) && typeof r.mode === 'string' && typeof r.problem === 'string';
+  function loadLog(){
+    try {
+      const raw = localStorage.getItem(cfg.logKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+    } catch (e) { log = []; }
+  }
+  function saveLog(){ try { localStorage.setItem(cfg.logKey, JSON.stringify(log)); } catch (e) {} }
+  function pushRecord(rec){
+    log.push(rec);
+    if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+    saveLog(); drawLog();
+  }
+  function whenText(t){
+    try {
+      const d = new Date(t);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) { return ''; }
+  }
+  const OUTCOME_LABEL = { correct: 'Correct', slip: 'Slip', miss: 'Miss' };
+  function modeLabel(k){ const m = cfg.modes.find(x => x.key === k); return m ? m.tab : k; }
+  function drawLog(){
+    const rows = $('logRows'), accuracy = $('accuracy'), slip = $('slip');
+    rows.textContent = ''; accuracy.textContent = ''; slip.textContent = '';
+    $('export').disabled = log.length === 0;
+    $('logEmpty').hidden = log.length > 0;
+    document.querySelector('.log-scroll').hidden = log.length === 0;
+    slip.hidden = log.length === 0;
+    if (!log.length) return;
+    const solves = log.filter(r => r.mode !== 'round');
+    const chip = (label, value, loud) => {
+      const li = document.createElement('li');
+      if (loud) li.className = 'loud';
+      const b = document.createElement('b');
+      b.textContent = String(value);
+      li.append(label + ' ', b);
+      accuracy.append(li);
+    };
+    const counts = {};
+    solves.forEach(r => (Array.isArray(r.named) ? r.named : []).forEach(n => { counts[n] = (counts[n] || 0) + 1; }));
+    if (solves.length){
+      chip('Correct', solves.filter(r => r.outcome === 'correct').length + ' of ' + solves.length);
+      Object.keys(counts).forEach(n => chip(n, counts[n], true));
+      chip('Misses', solves.reduce((s, r) => s + (Number(r.misses) || 0), 0));
+    }
+    const rounds = log.filter(r => r.mode === 'round');
+    if (rounds.length) chip('Best round', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+    const lead = document.createElement('b');
+    const names = Object.keys(counts);
+    if (!solves.length) slip.textContent = 'No problems logged yet, only timed rounds.';
+    else if (!names.length){ lead.textContent = 'No named mistakes.'; slip.append(lead); }
+    else {
+      lead.textContent = 'Named mistakes:';
+      slip.append(lead, ' ' + names.map(n => n.toLowerCase() + ' ' + counts[n] + (counts[n] === 1 ? ' time' : ' times')).join('; ') + '.');
+    }
+    log.slice(-LOG_SHOWN).reverse().forEach(r => {
+      const tr = document.createElement('tr');
+      const cell = (text, cls) => {
+        const td = document.createElement('td');
+        const s = document.createElement('span');
+        if (cls) s.className = cls;
+        s.textContent = text;
+        td.append(s);
+        return td;
+      };
+      tr.append(cell(whenText(r.t)), cell(modeLabel(r.mode)), cell(r.problem));
+      if (r.mode === 'round'){
+        tr.append(cell((Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0) + (Number(r.streak) ? ', streak ' + r.streak : ''), 'score'));
+        tr.append(cell('—', 'none'), cell(''));
+      } else {
+        const extra = Number(r.misses) ? ' (' + r.misses + (r.misses === 1 ? ' miss)' : ' misses)') : '';
+        tr.append(cell((OUTCOME_LABEL[r.outcome] || r.outcome) + extra, r.outcome === 'correct' ? 'yes' : (r.outcome === 'slip' ? 'slipc' : 'no')));
+        const named = Array.isArray(r.named) ? r.named : [];
+        tr.append(named.length ? cell(named.join(', '), 'slipc') : cell('none', 'none'));
+        tr.append(cell(Number(r.hints) ? '+' + r.hints : '', 'hints'));
+      }
+      rows.append(tr);
+    });
+  }
+
+  /* ---------------- say, banner ---------------- */
+  function say(kind, text, extra){
+    const el = $('say');
+    el.className = 'say' + (kind ? ' ' + kind : '');
+    el.textContent = '';
+    if (!text) return;
+    const lead = document.createElement('b');
+    lead.textContent = text;
+    el.append(lead);
+    if (extra) el.append(' ' + extra);
+  }
+  function showBanner(text, isBest){
+    const b = $('banner');
+    b.className = 'banner show' + (isBest ? ' best' : '');
+    b.textContent = text;
+  }
+  function hideBanner(){ $('banner').className = 'banner'; }
+
+  /* A finished problem from any mode. outcome correct / slip / miss. */
+  function record(rec, cleanRun){
+    solved++;
+    if (cleanRun) clean++;
+    saveProgress(); drawTally();
+    pushRecord(Object.assign({ t: Date.now(), mode: mode.key }, rec));
+    if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: cfg.source });
+  }
+
+  /* ---------------- a graded problem ---------------- */
+  function drawProblem(){
+    const el = $('problem');
+    el.textContent = '';
+    el.className = 'problem' + (problem.word ? ' word' : '');
+    if (problem.word){
+      problem.word.forEach(part => {
+        if (typeof part === 'string') el.append(part);
+        else { const b = document.createElement('b'); b.textContent = part.b; el.append(b); }
+      });
+    } else {
+      el.append(problem.big);
+      if (problem.sub){ const s = document.createElement('span'); s.className = 'sm'; s.textContent = problem.sub; el.append(s); }
+    }
+    const kn = $('kindName');
+    kn.textContent = '';
+    const b = document.createElement('b');
+    b.textContent = problem.kind;
+    kn.append(b);
+    $('ask').textContent = stage === 'done' ? '' : (problem.ask || '');
+    $('pre').textContent = problem.prefix || ''; $('pre').hidden = !problem.prefix;
+    $('suf').textContent = problem.suffix || ''; $('suf').hidden = !problem.suffix;
+  }
+  function newProblem(){
+    problem = mode.make();
+    problem.slips = (problem.slips || []).filter(x => x.v && !same(x.v, problem.answer));
+    stage = 'open';
+    misses = 0; slipHits = 0; slipNames = []; hintsUsed = 0;
+    hideBanner();
+    const hb = $('hint'); hb.disabled = false; hb.textContent = 'Hint';
+    $('check').disabled = false;
+    const box = $('ansBox'); box.value = ''; box.className = 'decbox'; box.disabled = false;
+    drawProblem();
+    say('', problem.start || '', problem.startExtra || '');
+    box.focus();
+  }
+  function shake(box){
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    setTimeout(() => box.classList.remove('shake'), 420);
+  }
+  function check(){
+    if (!mode || mode.custom || mode.speed || stage !== 'open') return;
+    const box = $('ansBox');
+    if (!box.value.trim()){ say('', 'Type an answer first.'); return; }
+    const E = parseDecimal(box.value);
+    if (!E){ say('', 'Just digits and one point.', 'Like 10.75 or 0.09.'); return; }
+    const p = problem;
+    if (same(E, p.answer)){ finish(); return; }
+    for (const s of (p.slips || [])){
+      if (s.v && same(E, s.v)){
+        slipHits++; if (slipNames.indexOf(s.name) < 0) slipNames.push(s.name);
+        box.classList.add('point'); shake(box);
+        say('point', s.lead, s.extra || '');
+        return;
+      }
+    }
+    if (p.pointCheck && pointShift(E, p.answer) !== null){
+      slipHits++; if (slipNames.indexOf('Point slip') < 0) slipNames.push('Point slip');
+      box.classList.add('point'); shake(box);
+      say('point', 'The digits are right. The point is in the wrong place.', p.pointExtra || 'Count how many places it should move.');
+      return;
+    }
+    misses++;
+    box.classList.add('miss'); shake(box);
+    say('bad', 'Not that.', p.miss || '');
+  }
+  function finish(){
+    stage = 'done';
+    const box = $('ansBox');
+    box.classList.remove('miss', 'point'); box.classList.add('ok');
+    box.disabled = true; $('check').disabled = true; $('hint').disabled = true;
+    const outcome = misses ? 'miss' : (slipHits ? 'slip' : 'correct');
+    const cleanRun = outcome === 'correct' && hintsUsed === 0;
+    record({ problem: problem.text, outcome, misses, named: slipNames.slice(), hints: hintsUsed }, cleanRun);
+    drawProblem();
+    showBanner(cleanRun ? 'Right, first try, no help.'
+      : (outcome === 'correct' ? 'Right, first try.'
+      : (outcome === 'slip' ? 'Right in the end. The named mistake is the one to watch.' : 'Solved, after ' + misses + (misses === 1 ? ' miss.' : ' misses.'))));
+    say('good', (problem.prefix || '') + (problem.showAnswer || show(problem.answer)) + (problem.suffix || '') + '. That is it.', (problem.done ? problem.done + ' ' : '') + 'Tap New problem for another.');
+  }
+  function hint(){
+    if (!mode || mode.custom || mode.speed || stage !== 'open' || hintsUsed >= 3) return;
+    hintsUsed++;
+    say('', problem.hints[hintsUsed - 1]);
+    const hb = $('hint');
+    hb.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+    if (hintsUsed >= 3) hb.disabled = true;
+  }
+
+  /* ---------------- the timed round ---------------- */
+  let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+  let item = null, runStreak = 0, bestStreak = 0, itemTimer = 0;
+  function drawSpeedBar(){ $('score').textContent = speedScore; $('best').textContent = best; }
+  function drawStreak(){
+    const el = $('streak');
+    el.textContent = '';
+    if (!speedOn) return;
+    el.append('Streak ');
+    const b = document.createElement('b');
+    b.textContent = String(runStreak);
+    el.append(b);
+    if (bestStreak > 1) el.append(' · best this round ' + bestStreak);
+  }
+  function drawItem(){
+    const big = $('spBig');
+    big.textContent = '';
+    const sm = document.createElement('small');
+    sm.textContent = item ? (item.sub || '') : (cfg.speedIdleSub || '');
+    big.append(sm, item ? item.big : '—');
+    $('spPre').textContent = item ? (item.prefix || '') : ''; $('spPre').hidden = !(item && item.prefix);
+    $('spSuf').textContent = item ? (item.suffix || '') : ''; $('spSuf').hidden = !(item && item.suffix);
+  }
+  function nextItem(){
+    item = cfg.speedMake();
+    item.locked = false;
+    const box = $('spBox'); box.value = ''; box.className = 'decbox'; box.disabled = false; $('spOk').disabled = false;
+    drawItem(); drawStreak();
+    box.focus();
+  }
+  function checkItem(){
+    if (!speedOn || !item || item.locked) return;
+    const box = $('spBox');
+    const E = parseDecimal(box.value);
+    if (!E){ say('', 'Just digits and one point.'); return; }
+    item.locked = true;
+    speedSeen++;
+    const right = same(E, item.answer);
+    box.disabled = true; $('spOk').disabled = true;
+    box.classList.add(right ? 'ok' : 'miss');
+    const ans = (item.prefix || '') + (item.showAnswer || show(item.answer)) + (item.suffix || '');
+    if (right){ speedScore++; runStreak++; if (runStreak > bestStreak) bestStreak = runStreak; say('good', ans + '. Yes.', ''); }
+    else { runStreak = 0; say('bad', 'It is ' + ans + '.', item.explain || ''); }
+    drawSpeedBar(); drawStreak();
+    clearTimeout(itemTimer);
+    itemTimer = setTimeout(() => { if (speedOn) nextItem(); }, reduced() ? 0 : (right ? 450 : 2200));
+  }
+  function tickClock(){
+    const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+    $('clock').textContent = left;
+    $('clockWrap').classList.toggle('low', left <= 10);
+    if (left <= 0) stopSpeed(true);
+  }
+  function startSpeed(){
+    speedOn = true;
+    speedScore = 0; speedSeen = 0; runStreak = 0; bestStreak = 0;
+    speedEndsAt = Date.now() + cfg.speedSeconds * 1000;
+    hideBanner();
+    $('next').textContent = 'Stop';
+    $('spIdle').hidden = true;
+    drawSpeedBar(); tickClock();
+    clearInterval(speedTimer);
+    speedTimer = setInterval(tickClock, 200);
+    say('', cfg.speedLead || '', '');
+    nextItem();
+  }
+  function stopSpeed(ranOut){
+    if (!speedOn) return;
+    speedOn = false;
+    clearInterval(speedTimer); clearTimeout(itemTimer); speedTimer = 0;
+    item = null;
+    $('next').textContent = 'Start the round';
+    $('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+    const box = $('spBox'); box.value = ''; box.className = 'decbox'; box.disabled = true; $('spOk').disabled = true;
+    drawItem(); drawStreak();
+    $('spIdle').hidden = false;
+    const isBest = speedScore > best;
+    if (isBest){ best = speedScore; saveProgress(); }
+    drawSpeedBar(); drawTally();
+    pushRecord({ t: Date.now(), mode: 'round', problem: cfg.speedSeconds + ' second round', score: speedScore, seen: speedSeen, streak: bestStreak });
+    if (isBest && speedScore > 0 && window.Tokens) Tokens.earnBest(cfg.bestMode);
+    showBanner(isBest ? speedScore + ' right. That is a new best.' : speedScore + ' right. Best so far is ' + best + '.', isBest);
+    say('', '');
+  }
+
+  /* ---------------- modes ---------------- */
+  function setMode(next){
+    if (speedOn) stopSpeed(false);
+    mode = cfg.modes.find(m => m.key === next) || cfg.modes[0];
+    Array.prototype.forEach.call($('modes').children, (b, i) => b.setAttribute('aria-pressed', String(cfg.modes[i].key === mode.key)));
+    $('modeNote').textContent = mode.note;
+    $('speedBar').hidden = !mode.speed;
+    $('solveView').hidden = !!(mode.speed || mode.custom);
+    $('speedView').hidden = !mode.speed;
+    $('customView').hidden = !mode.custom;
+    $('hint').hidden = !!mode.speed;
+    hideBanner();
+    if (mode.speed){
+      $('next').textContent = 'Start the round';
+      $('clock').textContent = cfg.speedSeconds;
+      $('clockWrap').classList.remove('low');
+      speedScore = 0; drawSpeedBar();
+      item = null; drawItem(); drawStreak();
+      $('spBox').disabled = true; $('spOk').disabled = true;
+      say('', cfg.speedSeconds + ' seconds.', 'Tap Start the round when you are ready.');
+    } else {
+      $('next').textContent = 'New problem';
+      if (mode.custom) mode.start(); else newProblem();
+    }
+  }
+  function digitsOnly(box){
+    let v = box.value.replace(/[^0-9.,$%]/g, '');
+    const i = v.indexOf('.');
+    if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+    box.value = v.slice(0, 16);
+    box.classList.remove('miss', 'point');
+  }
+
+  async function copyText(text){
+    try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.top = '-1000px';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (ok) return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function init(c){
+    cfg = c;
+    loadProgress(); loadLog(); drawTally(); drawSpeedBar(); drawLog();
+    cfg.modes.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab;
+      b.onclick = () => setMode(m.key);
+      $('modes').append(b);
+    });
+    $('next').onclick = () => {
+      if (mode.speed){ if (speedOn) stopSpeed(false); else startSpeed(); return; }
+      if (mode.custom){ mode.start(); return; }
+      newProblem();
+    };
+    $('check').onclick = check;
+    $('hint').onclick = () => { if (mode && mode.custom) mode.hint(); else hint(); };
+    $('ansBox').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); check(); } });
+    $('ansBox').addEventListener('input', () => digitsOnly($('ansBox')));
+    $('spOk').onclick = checkItem;
+    $('spBox').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); checkItem(); } });
+    $('spBox').addEventListener('input', () => digitsOnly($('spBox')));
+
+    const clearBtn = $('clear');
+    let armed = 0;
+    const disarm = () => { clearTimeout(armed); armed = 0; clearBtn.classList.remove('arming'); clearBtn.textContent = 'Start over'; };
+    clearBtn.onclick = () => {
+      if (armed){ disarm(); clearProgress(); return; }
+      clearBtn.classList.add('arming');
+      clearBtn.textContent = 'Tap again to erase';
+      armed = setTimeout(disarm, 4000);
+    };
+
+    let noteTimer = 0;
+    $('export').onclick = async () => {
+      if (!log.length) return;
+      const text = JSON.stringify(log, null, 2);
+      const copied = await copyText(text);
+      clearTimeout(noteTimer);
+      if (copied){
+        $('exportBox').hidden = true;
+        $('exportNote').textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+        noteTimer = setTimeout(() => { $('exportNote').textContent = ''; }, 4000);
+      } else {
+        const bx = $('exportBox'); bx.value = text; bx.hidden = false; bx.focus(); bx.select();
+        $('exportNote').textContent = 'Could not reach the clipboard. Copy it from the box.';
+      }
+    };
+
+    const failures = cfg.selfCheck();
+    if (failures.length){
+      say('bad', 'This page has a problem:', 'the arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+      $('next').disabled = true; $('check').disabled = true;
+      return;
+    }
+    const m = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+    setMode(m && cfg.modes.some(x => x.key === m[1]) ? m[1] : cfg.modes[0].key);
+  }
+
+  return { init, say, showBanner, hideBanner, record, digitsOnly, shake, stage: () => stage, current: () => problem };
+})();
+
+/* ================= Interest: lesson 7, day 2 =================
+   Simple interest (principal × rate × years, always on the original
+   principal) and compound interest compounded annually, worked the way
+   the coursebook works it: a year at a time, each year's interest added
+   to the principal before the next year's is figured. Plus a timed round
+   of one-year interest in your head.
+
+   Named mistakes: giving the total when the interest was asked (or the
+   other way round), stopping after one year, compounding a simple
+   interest problem, figuring a later year's compound interest on the
+   original principal, and forgetting to add the interest in. Every
+   generated compound problem stays in whole cents every year. */
+
+const INT_KEY = 'seventh-grade-math:interest';
+const INT_LOG = 'seventh-grade-math:interest-log';
+
+function rate(r){ return times10({ core: r, places: 0 }, -2); }
+function yearsText(n){ return n + (n === 1 ? ' year' : ' years'); }
+/* year-by-year compound values; null if any year leaves whole cents */
+function compoundSteps(P, r, n){
+  const rows = [];
+  let start = canon(P);
+  for (let y = 1; y <= n; y++){
+    const i = mul(rate(r), start);
+    if (places(i) > 2) return null;
+    const end = canon(add(start, i));
+    rows.push({ y, start, i, end });
+    start = end;
+  }
+  return rows;
+}
+
+/* ---------------- simple interest ---------------- */
+function makeSimple(){
+  const P = { core: pick([rand(2, 100) * 500, rand(2, 20) * 1000, rand(3, 30) * 100]), places: 0 };
+  const r = pick([2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15]);
+  const n = pick([1, 2, 2, 3, 3, 4, 5, 6, 10]);
+  const one = mul(rate(r), P);
+  const I = mul(one, { core: n, places: 0 });
+  const total = add(P, I);
+  const askInterest = Math.random() < 0.55;
+  const forms = askInterest ? [
+    ['What is the ', { b: 'simple interest' }, ' on ', { b: money(P) }, ' at ', { b: r + '%' }, ' for ', { b: yearsText(n) }, '?'],
+    ['You borrow ', { b: money(P) }, ' for ', { b: yearsText(n) }, ' at ', { b: r + '%' }, ' simple interest. ', { b: 'How much interest will you pay?' }],
+    ['A savings bond of ', { b: money(P) }, ' earns ', { b: r + '%' }, ' simple interest for ', { b: yearsText(n) }, '. ', { b: 'How much interest does it earn?' }]
+  ] : [
+    ['You lend a friend ', { b: money(P) }, ' for ', { b: yearsText(n) }, ' at ', { b: r + '%' }, ' simple interest. ', { b: 'How much will they owe you at the end?' }],
+    ['A loan of ', { b: money(P) }, ' at ', { b: r + '%' }, ' simple interest for ', { b: yearsText(n) }, '. ', { b: 'What is the total amount due?' }]
+  ];
+  const ans = askInterest ? I : total;
+  const slips = [{ v: askInterest ? total : I, name: 'Interest vs. total', lead: askInterest ? 'That is the total owed.' : 'That is just the interest.',
+    extra: askInterest ? 'The question asks for the interest only.' : 'Owed means the principal plus the interest.' }];
+  if (n > 1){
+    slips.push({ v: askInterest ? one : add(P, one), name: 'Only one year', lead: 'That is one year of interest.', extra: 'It runs ' + yearsText(n) + '. Multiply by ' + n + '.' });
+    const steps = compoundSteps(P, r, n);
+    if (steps){
+      const last = steps[steps.length - 1].end;
+      slips.push({ v: askInterest ? sub(last, P) : last, name: 'Compounded it', lead: 'That is compound interest.', extra: 'Simple interest is on the original ' + money(P) + ' every year.' });
+    }
+  }
+  return {
+    kind: askInterest ? 'Simple interest' : 'Total owed', ask: askInterest ? 'Just the interest.' : 'Principal plus interest.',
+    word: pick(forms), text: money(P) + ' at ' + r + '% for ' + yearsText(n) + (askInterest ? ', interest' : ', total'),
+    prefix: '$', answer: ans, showAnswer: money(ans).slice(1), slips, pointCheck: true,
+    pointExtra: r + '% = ' + show(rate(r)) + '. Check that step.',
+    miss: 'One year first: ' + r + '% of ' + money(P) + '.',
+    hints: [
+      'One year first: ' + r + '% of ' + money(P) + '. ' + r + '% = ' + show(rate(r)) + '.',
+      'One year is ' + money(one) + '. Now multiply by ' + yearsText(n) + '.',
+      askInterest ? 'Interest asks for the interest only. Do not add the principal.' : 'Total owed = ' + money(P) + ' + the interest.'
+    ],
+    start: 'One year, then times the years.', startExtra: askInterest ? '' : 'Then add the principal.'
+  };
+}
+
+/* ---------------- compound interest: the year-by-year table ---------------- */
+const Comp = (function(){
+  const $ = id => document.getElementById(id);
+  let prob = null, row = 0, stage = 'idle', misses = 0, slipHits = 0, names = [], hintsUsed = 0;
+  function make(){
+    for (let t = 0; t < 500; t++){
+      const P = { core: pick([1000, 2000, 4000, 5000, 8000, 10000, 12000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 100000, 120000]), places: 0 };
+      const r = pick([2, 3, 4, 5, 6, 8, 10, 10, 12, 15, 20]);
+      const n = pick([2, 2, 3, 3, 3, 4]);
+      const steps = compoundSteps(P, r, n);
+      if (!steps) continue;
+      const q = Math.random() < 0.5
+        ? ['What is the value of ', { b: money(P) }, ' compounded annually at ', { b: r + '%' }, ' for ', { b: yearsText(n) }, '?']
+        : ['You put ', { b: money(P) }, ' in a bank account that earns ', { b: r + '%' }, ' interest compounded annually. ', { b: 'How much is in the account after ' + yearsText(n) + '?' }];
+      return { P, r, n, steps, q };
+    }
+    return { P: D('10000'), r: 10, n: 3, steps: compoundSteps(D('10000'), 10, 3), q: ['What is the value of $10,000 compounded annually at 10% for 3 years?'] };
+  }
+  function cell(tag, text, cls){ const c = document.createElement(tag); if (cls) c.className = cls; c.textContent = text; return c; }
+  function moneyBox(id, label){
+    const w = document.createElement('span');
+    w.className = 'mbox';
+    const d = cell('span', '$', 'dol');
+    const i = document.createElement('input');
+    i.className = 'decbox'; i.id = id; i.type = 'text'; i.inputMode = 'decimal'; i.autocomplete = 'off';
+    i.setAttribute('aria-label', label);
+    i.addEventListener('input', () => Engine.digitsOnly(i));
+    i.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); if (id === 'cInt' && !$('cEnd').value) $('cEnd').focus(); else check(); } });
+    w.append(d, i);
+    return w;
+  }
+  function draw(){
+    const q = $('cQ');
+    q.textContent = '';
+    prob.q.forEach(part => { if (typeof part === 'string') q.append(part); else { const b = document.createElement('b'); b.textContent = part.b; q.append(b); } });
+    $('cRate').textContent = prob.r + '% = ' + (hintsUsed >= 1 || stage === 'done' ? show(rate(prob.r)) : '?');
+    const body = $('cRows');
+    body.textContent = '';
+    prob.steps.forEach((s, k) => {
+      const tr = document.createElement('tr');
+      tr.append(cell('th', String(s.y)));
+      if (k < row || stage === 'done'){
+        tr.className = 'done';
+        tr.append(cell('td', money(s.start)), cell('td', '+ ' + money(s.i), 'plus'), cell('td', money(s.end), 'end'));
+      } else if (k === row){
+        tr.className = 'now';
+        tr.append(cell('td', money(s.start)));
+        const a = document.createElement('td'); a.append(moneyBox('cInt', 'Interest for year ' + s.y));
+        const b = document.createElement('td'); b.append(moneyBox('cEnd', 'New principal after year ' + s.y));
+        tr.append(a, b);
+      } else {
+        tr.append(cell('td', '—', 'later'), cell('td', '', 'later'), cell('td', '', 'later'));
+      }
+      body.append(tr);
+    });
+    $('cCheck').disabled = stage !== 'open';
+    const box = $('cInt');
+    if (box) box.focus();
+  }
+  function start(){
+    prob = make(); row = 0; stage = 'open'; misses = 0; slipHits = 0; names = []; hintsUsed = 0;
+    Engine.hideBanner();
+    const hb = $('hint'); hb.disabled = false; hb.textContent = 'Hint';
+    draw();
+    Engine.say('', 'A year at a time.', 'Interest on this year’s start, then add it on. That end is next year’s start.');
+  }
+  function slip(name, box, lead, extra){
+    slipHits++; if (names.indexOf(name) < 0) names.push(name);
+    box.classList.add('point'); Engine.shake(box); Engine.say('point', lead, extra);
+  }
+  function check(){
+    if (stage !== 'open') return;
+    const s = prob.steps[row];
+    const iBox = $('cInt'), eBox = $('cEnd');
+    const I = parseDecimal(iBox.value), E = parseDecimal(eBox.value);
+    if (!iBox.value.trim()){ Engine.say('', 'Interest first.', 'What is ' + prob.r + '% of ' + money(s.start) + '?'); iBox.focus(); return; }
+    if (!I){ Engine.say('', 'Just digits and one point.'); return; }
+    if (!same(I, s.i)){
+      const simple = mul(rate(prob.r), prob.P);
+      if (row > 0 && same(I, simple)) return slip('Used the old principal', iBox, 'That is ' + prob.r + '% of the original ' + money(prob.P) + '.', 'Compound interest is figured on the new principal, ' + money(s.start) + '.');
+      if (pointShift(I, s.i) !== null) return slip('Point slip', iBox, 'The digits are right. The point is in the wrong place.', prob.r + '% = ' + show(rate(prob.r)) + '.');
+      misses++; iBox.classList.add('miss'); Engine.shake(iBox);
+      Engine.say('bad', 'Not that interest.', prob.r + '% of ' + money(s.start) + ': multiply by ' + show(rate(prob.r)) + '.');
+      return;
+    }
+    iBox.classList.remove('miss', 'point'); iBox.classList.add('ok');
+    if (!eBox.value.trim()){ Engine.say('good', 'Interest is right.', 'Now add it to ' + money(s.start) + '.'); eBox.focus(); return; }
+    if (!E){ Engine.say('', 'Just digits and one point.'); return; }
+    if (!same(E, s.end)){
+      if (same(E, s.i)) return slip('Forgot to add', eBox, 'That is just the interest again.', 'The new principal is ' + money(s.start) + ' plus it.');
+      misses++; eBox.classList.add('miss'); Engine.shake(eBox);
+      Engine.say('bad', 'Check the adding.', money(s.start) + ' + ' + money(s.i) + '. Line up the points.');
+      return;
+    }
+    row++;
+    if (row < prob.n){
+      draw();
+      Engine.say('good', 'Year ' + s.y + ' done: ' + money(s.end) + '.', 'That is the new principal for year ' + (s.y + 1) + '.');
+      return;
+    }
+    finish();
+  }
+  function finish(){
+    stage = 'done';
+    const outcome = misses ? 'miss' : (slipHits ? 'slip' : 'correct');
+    const cleanRun = outcome === 'correct' && hintsUsed === 0;
+    Engine.record({ problem: money(prob.P) + ' at ' + prob.r + '% for ' + yearsText(prob.n) + ', compounded', outcome, misses, named: names.slice(), hints: hintsUsed }, cleanRun);
+    draw();
+    $('hint').disabled = true;
+    const last = prob.steps[prob.n - 1].end;
+    const simpleTotal = add(prob.P, mul(mul(rate(prob.r), prob.P), { core: prob.n, places: 0 }));
+    Engine.showBanner(cleanRun ? 'Right, first try, no help.' : (outcome === 'correct' ? 'Right, first try.' : (outcome === 'slip' ? 'Right in the end. The named mistake is the one to watch.' : 'Solved, after ' + misses + (misses === 1 ? ' miss.' : ' misses.'))));
+    Engine.say('good', money(last) + ' after ' + yearsText(prob.n) + '.', 'Simple interest would have made ' + money(simpleTotal) + ', so compounding earned ' + money(sub(last, simpleTotal)) + ' more. Tap New problem for another.');
+  }
+  function hint(){
+    if (stage !== 'open' || hintsUsed >= 3) return;
+    hintsUsed++;
+    const s = prob.steps[row];
+    const txt = hintsUsed === 1 ? prob.r + '% = ' + show(rate(prob.r)) + '. This year’s interest is ' + show(rate(prob.r)) + ' × ' + commas(s.start) + '.'
+      : hintsUsed === 2 ? 'Use this year’s start, ' + money(s.start) + ', not the original ' + money(prob.P) + '.'
+      : 'New principal = start + interest. Line up the points to add.';
+    const keep = { i: ($('cInt') || {}).value, e: ($('cEnd') || {}).value };
+    draw();
+    if ($('cInt')) $('cInt').value = keep.i || '';
+    if ($('cEnd')) $('cEnd').value = keep.e || '';
+    Engine.say('', txt);
+    $('hint').textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+    if (hintsUsed >= 3) $('hint').disabled = true;
+  }
+  function mount(){ $('cCheck').onclick = check; }
+  return { start, hint, mount, current: () => prob };
+})();
+
+/* ---------------- the timed round: one year in your head ---------------- */
+function makeRoundItem(){
+  const r = pick([10, 10, 5, 1, 2, 20, 50, 25, 3]);
+  const P = { core: pick([rand(1, 99) * 100, rand(1, 50) * 1000, rand(2, 40) * 50]), places: 0 };
+  const ans = mul(rate(r), P);
+  const how = { 10: 'move the point one left', 5: 'half of 10%', 1: 'move the point two left', 2: 'double 1%', 20: 'double 10%', 50: 'half', 25: 'half of half', 3: 'three times 1%' }[r];
+  return { sub: 'One year of interest', big: r + '% of ' + money(P), prefix: '$', answer: ans, showAnswer: money(ans).slice(1), explain: r + '% is ' + how + '.' };
+}
+
+function selfCheck(){
+  const f = [];
+  const t = (name, ok) => { if (!ok) f.push(name); };
+  const simple = (P, r, n) => mul(mul(rate(r), D(P)), { core: n, places: 0 });
+  const comp = (P, r, n) => { const s = compoundSteps(D(P), r, n); return s ? s[s.length - 1].end : null; };
+  t('book $20,000 at 8% for 3 years', same(simple('20000', 8, 3), D('4800')));
+  t('book $15,000 at 10% for 2 years owed', same(add(D('15000'), simple('15000', 10, 2)), D('18000')));
+  t('book $10,000 at 12% one year', same(simple('10000', 12, 1), D('1200')));
+  t('book $10,000 10% 3 years compounded', same(comp('10000', 10, 3), D('13310')));
+  t('book $50,000 20% 5 years compounded', same(comp('50000', 20, 5), D('124416')));
+  t('workbook 19', same(simple('30000', 9, 3), D('8100')));
+  t('workbook 20', same(add(D('10000'), simple('10000', 8, 1)), D('10800')));
+  t('workbook 21', same(comp('40000', 8, 3), D('50388.48')));
+  t('workbook 22 leaves cents', compoundSteps(D('20000'), 6, 4) === null);
+  t('test 17', same(simple('40000', 12, 10), D('48000')));
+  t('test 18', same(comp('120000', 12, 3), D('168591.36')));
+  t('money', money(D('13310')) === '$13,310' && money(D('23820.32')) === '$23,820.32' && money(D('.5')) === '$0.50');
+  return f;
+}
+
+Comp.mount();
+Engine.init({
+  storeKey: INT_KEY, logKey: INT_LOG, source: 'interest', bestMode: 'interest:round',
+  speedSeconds: 60, speedMake: makeRoundItem,
+  speedLead: 'One year of interest. Friendly rates, in your head.',
+  modes: [
+    { key: 'simple', tab: 'Simple', make: makeSimple,
+      note: 'Simple interest is always on the original principal: one year, times the years.' },
+    { key: 'compound', tab: 'Compound', custom: true, start: Comp.start, hint: Comp.hint,
+      note: 'Compounded annually: each year’s interest is added to the principal before the next year.' },
+    { key: 'round', tab: 'Interest round', speed: true,
+      note: 'Sixty seconds of one-year interest on round numbers.' }
+  ],
+  selfCheck
+});
+
+</script>
+</body>
+</html>

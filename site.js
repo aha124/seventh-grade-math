@@ -47,11 +47,70 @@ const WARMUPS = [
     text: "60 seconds of making change, counting up from the price." },
   { name: "Percent round", href: "lesson-07/percents.html#tab=round",
     text: "60 seconds of decimals to percents and back." },
+  { name: "Tip round", href: "lesson-08/part-whole.html#tab=tips",
+    text: "60 seconds of tips in your head: 10%, then double, halve, or add half." },
   { name: "Dice game", version: DICE_VERSION,
     text: "grab the dice: " + (DICE_GAMES[DICE_VERSION] || "") + "." }
 ];
 
 const LESSONS = [
+  {
+    n: 8,
+    title: "Converting between fractions, decimals, and percentages; square roots",
+    days: [
+      {
+        d: 1,
+        name: "Fractions, decimals, and percents",
+        note: "Whiteboard first. Afterward, any tab of Three Ways.",
+        pages: [
+          {
+            href: "lesson-08/three-ways.html",
+            name: "Three Ways",
+            blurb: "Fraction to decimal by dividing, fraction to percent, and decimals or percents back to fractions in lowest terms. Some decimals repeat. Or run the 60 second Benchmark round.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 2,
+        name: "Percent word problems",
+        note: "Whiteboard first. Afterward, Part of the Whole, and a Tip round.",
+        pages: [
+          {
+            href: "lesson-08/part-whole.html",
+            name: "Part of the Whole",
+            blurb: "Find the percent (part over whole) or find the part (percent times the number). Mixed makes you decide which. Or the 60 second Tip round.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 3,
+        name: "Square roots",
+        note: "Whiteboard first. Afterward, Square Roots: perfect squares, then guess and check.",
+        pages: [
+          {
+            href: "lesson-08/roots.html",
+            name: "Square Roots",
+            blurb: "Perfect squares on sight, then guess and check for the big ones: guess, square it, go higher or lower. Or the 60 second Squares round.",
+            cta: "Start practicing"
+          }
+        ]
+      },
+      {
+        d: 4,
+        name: "Review day",
+        pages: [],
+        note: "Workbook day: the Skills Check. Mixed on Part of the Whole and To a fraction on Three Ways make good warm-ups."
+      },
+      {
+        d: 5,
+        name: "Test day",
+        pages: [],
+        note: "The test is on paper. Part over whole, then divide. Every fraction in lowest terms."
+      }
+    ]
+  },
   {
     n: 7,
     title: "Percentages; simple and compound interest",

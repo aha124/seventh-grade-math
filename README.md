@@ -48,6 +48,9 @@ lesson-05/place-value.html          decimals in words, as fractions in lowest te
 lesson-05/line-up.html   graded add, subtract, and mixed with multiply, the stacked view, plus the change round
 lesson-07/percents.html  move the point, percent and decimal both ways, percent of, word problems, plus the percent round
 lesson-07/interest.html  simple interest, compound interest a year at a time in a table, plus the one-year interest round
+lesson-08/three-ways.html  fraction to decimal and percent, decimal or percent to a fraction, plus the benchmark round
+lesson-08/part-whole.html  percent word problems both ways (find the percent, find the part, mixed), plus the tip round
+lesson-08/roots.html     perfect squares, guess and check for bigger roots, plus the squares round
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares

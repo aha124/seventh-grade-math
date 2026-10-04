@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part of the Whole — Percent Word Problems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+:root{
+  --board-pad-top:1rem;
+  --board-pad-bottom:1.1rem;
+  --mark-size:clamp(1.8rem,6vw,2.7rem);
+}
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:.7rem}
+.clear{font-family:var(--body);font-size:.8rem;font-weight:500;letter-spacing:0;
+  background:none;border:none;padding:0;color:var(--ice);opacity:.75;
+  text-decoration:underline;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.clear:hover{opacity:1}
+.clear[hidden]{display:none}
+.clear.arming{color:var(--gold);opacity:1;text-decoration:none;font-weight:600}
+
+/* mode tabs */
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{
+  font-family:var(--display);font-size:1.05rem;font-weight:600;letter-spacing:.02em;
+  background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;
+  min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:58ch}
+
+/* speed bar */
+.speed-bar{
+  display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;
+  margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft);
+}
+.speed-bar[hidden]{display:none}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.speed-bar .clock.low b{color:var(--gold)}
+
+.tierline{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+  margin:1.1rem 0 0;font-family:var(--display);font-size:1.05rem;color:var(--board-soft);letter-spacing:.04em;
+}
+.tierline b{color:var(--board);font-weight:700}
+.tierline .ask{font-family:var(--body);font-size:.95rem;letter-spacing:0;color:#7C93A5}
+.tier-pick{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;margin:.45rem 0 0}
+.tier-pick .lab{font-family:var(--body);font-size:.85rem;color:#7C93A5;margin-right:.15rem}
+.pick{
+  font-family:var(--display);font-size:.95rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:999px;
+  min-height:44px;padding:0 .75rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.pick[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+
+/* ---- the problem ---- */
+.problem{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;
+  margin:.5rem 0 0;padding:1rem .6rem;min-height:5rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);
+  font-variant-numeric:tabular-nums;
+}
+.problem .op{color:var(--gold)}
+.problem .q{color:#93A9B8;font-weight:600}
+
+.steps{
+  margin:.6rem 0 0;padding:.6rem .9rem;
+  background:#F6FAFC;border:1.5px solid var(--line);border-radius:3px;
+  font-size:.92rem;color:var(--board-soft);
+}
+.steps b{color:var(--board);font-weight:600}
+.steps ol{margin:.2rem 0 0;padding-left:1.2rem}
+.steps li{margin:.15rem 0}
+
+/* ---- the answer ---- */
+.answer-row{
+  display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;
+  margin:.9rem 0 0;padding:.8rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px;
+}
+.answer-row .lab{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft)}
+.decbox{
+  width:8rem;min-height:44px;text-align:center;
+  font-family:var(--display);font-weight:700;font-size:1.7rem;
+  border:1.5px solid var(--edge);border-radius:3px;padding:.1rem .3rem;
+  background:#FFFDF8;color:var(--board);font-variant-numeric:tabular-nums;
+}
+.decbox.miss{border-color:var(--gold);background:#FBF0DF}
+.decbox.point{border-color:var(--gold);background:#FFF8E8}
+.decbox.ok{border-color:var(--good);background:#EEF7F1}
+.decbox:disabled{opacity:.6}
+@keyframes shake{
+  15%{transform:translateX(-3px)} 30%{transform:translateX(6px)}
+  45%{transform:translateX(-6px)} 60%{transform:translateX(5px)}
+  75%{transform:translateX(-3px)} 100%{transform:translateX(0)}
+}
+.decbox.shake{animation:shake .38s ease-in-out}
+.ok{
+  min-width:44px;min-height:44px;padding:0 .6rem;
+  font-family:var(--display);font-size:1.3rem;font-weight:700;
+  background:var(--gold);border:1.5px solid var(--gold);color:#fff;border-radius:3px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.ok:disabled{opacity:.35;cursor:default}
+
+.say{
+  min-height:3.4em;margin:.7rem 0 0;padding:.6rem .8rem;border-radius:2px;
+  font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line);
+}
+.say.good{border-left-color:var(--good)}
+.say.bad{border-left-color:var(--gold);color:var(--board)}
+.say.point{border-left-color:var(--gold);background:#FFF8E8;color:var(--board)}
+.say b{color:var(--board);font-weight:600}
+.say.point b{color:#8A5F1E}
+
+.banner{
+  margin:1.2rem 0 0;padding:.85rem 1rem;border-radius:3px;
+  background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);
+  font-family:var(--display);font-size:1.35rem;font-weight:600;display:none;
+}
+.banner.show{display:block}
+.banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+
+.actions{display:flex;gap:.6rem;margin:1.1rem 0 0;flex-wrap:wrap}
+.actions .btn{min-height:44px}
+.hbtn,.export-btn{
+  font-family:var(--display);font-size:1rem;font-weight:600;
+  background:none;border:1.5px solid var(--line);color:var(--board-soft);
+  border-radius:3px;min-height:44px;padding:.3rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.hbtn:disabled,.export-btn:disabled{opacity:.35;cursor:default}
+
+/* problem log, same shape as the other practice pages */
+details.log{margin:1.8rem 0 0;border-top:1.5px solid var(--line);padding-top:.9rem}
+details.log summary{font-family:var(--display);font-size:1.15rem;font-weight:600;color:var(--board-soft);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;min-height:44px;display:flex;align-items:center}
+details.log summary::-webkit-details-marker{display:none}
+details.log summary::before{content:"▸ ";color:var(--ice)}
+details.log[open] summary::before{content:"▾ ";color:var(--ice)}
+.log-body{margin:.9rem 0 0}
+.log-empty{margin:0;color:#7C93A5;font-size:.95rem}
+
+.accuracy{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 .9rem;padding:0;list-style:none}
+.accuracy li{
+  font-family:var(--display);font-size:1rem;font-weight:600;color:var(--board-soft);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  padding:.25rem .55rem;font-variant-numeric:tabular-nums;
+}
+.accuracy b{color:var(--board);font-weight:700}
+.accuracy li.loud{background:#FBF0D6;border-color:var(--gold);color:#8A5F1E;font-size:1.1rem}
+.accuracy li.loud b{color:#8A5F1E}
+
+.slip{
+  margin:0 0 .9rem;padding:.55rem .75rem;border-radius:2px;
+  background:#FFF8E8;border-left:4px solid var(--gold);
+  font-size:.95rem;color:var(--board-soft);
+}
+.slip b{color:var(--board);font-weight:600}
+.slip[hidden]{display:none}
+
+.log-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.log-table{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.log-table th,.log-table td{padding:.35rem .5rem;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+.log-table thead th{font-family:var(--display);font-weight:600;font-size:.95rem;color:var(--board-soft)}
+.log-table tbody tr:last-child td{border-bottom:none}
+.log-table .yes{color:var(--good);font-weight:600}
+.log-table .no{color:var(--gold);font-weight:600}
+.log-table .slipc{color:#8A5F1E;font-weight:600}
+.log-table .score{color:var(--edge);font-weight:600}
+.log-table .hints{font-size:.75em;color:#7C93A5;font-weight:500}
+.log-table .none{color:#93A9B8}
+
+.log-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.9rem 0 0}
+.export-note{font-size:.88rem;color:var(--board-soft)}
+.export-box[hidden]{display:none}
+.export-box{
+  display:block;width:100%;margin:.7rem 0 0;min-height:7rem;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;
+  border:1.5px solid var(--line);border-radius:3px;padding:.5rem;
+  background:var(--paper);color:var(--board-soft);
+}
+
+.foot{margin:2.2rem 0 0;font-size:.92rem;color:#7C93A5;max-width:60ch}
+@media (prefers-reduced-motion:reduce){ .decbox.shake{animation:none} }
+
+/* ---- lesson 7 additions ---- */
+.problem.word{
+  display:block;text-align:left;font-family:var(--body);font-weight:500;
+  font-size:clamp(1.05rem,3.6vw,1.3rem);line-height:1.5;color:var(--board);padding:1rem 1.1rem;
+}
+.problem.word b{font-weight:700}
+.problem .sm{display:block;width:100%;text-align:center;font-family:var(--body);font-weight:500;font-size:1rem;color:#7C93A5;letter-spacing:0}
+.fix{font-family:var(--display);font-weight:700;font-size:1.7rem;color:var(--board-soft)}
+.fix[hidden]{display:none}
+.speedbox{
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  margin:.5rem 0 0;padding:1rem .6rem 1.1rem;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+}
+.speedbox .big{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,8vw,2.8rem);color:var(--board);font-variant-numeric:tabular-nums;text-align:center;line-height:1.1}
+.speedbox .big small{display:block;font-family:var(--body);font-weight:500;font-size:.95rem;color:#7C93A5;letter-spacing:0}
+.speedbox .idle{font-size:.95rem;color:#7C93A5;margin:0;text-align:center;max-width:36ch}
+.speedbox .streak{font-family:var(--display);font-weight:600;font-size:1.05rem;color:var(--board-soft);min-height:1.4em}
+.speedbox .streak b{color:var(--gold)}
+.speedbox .answer-row{gap:.5rem;padding:.7rem .6rem;flex-wrap:nowrap;margin:.2rem 0 0}
+.speedbox .decbox{width:7rem}
+
+#fracSlot .frac-input input{width:4.4rem;font-size:1.4rem}
+#fracSlot .frac-input .fi-whole{width:3.4rem}
+
+</style>
+</head>
+<body>
+
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Part of the <span>Whole</span></h1>
+    <div class="tally">
+      <span id="tally">Solved 0 &nbsp;/&nbsp; Clean 0</span>
+      <button class="clear" id="clear" type="button" hidden>Start over</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="modeNote"></p>
+
+  <div class="speed-bar" id="speedBar" hidden>
+    <span class="clock" id="clockWrap">Seconds left <b id="clock">60</b></span>
+    <span>Correct <b id="score">0</b></span>
+    <span>Best <b id="best">0</b></span>
+  </div>
+
+  <div id="solveView">
+    <div class="tierline">
+      <span id="kindName"></span>
+      <span class="ask" id="ask"></span>
+    </div>
+    <div class="problem" id="problem" aria-live="polite"></div>
+    <div class="answer-row">
+      <span class="lab">Your answer</span>
+      <span class="fix" id="pre" hidden></span>
+      <input class="decbox" id="ansBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer">
+      <span class="fix" id="suf" hidden></span>
+      <span id="fracSlot" hidden></span>
+      <button class="ok" id="check" type="button" aria-label="Check my answer">✓</button>
+    </div>
+  </div>
+
+  <div id="speedView" hidden>
+    <div class="speedbox">
+      <div class="big" id="spBig"><small></small>—</div>
+      <div class="answer-row">
+        <span class="fix" id="spPre" hidden></span>
+        <input class="decbox" id="spBox" type="text" inputmode="decimal" autocomplete="off" aria-label="Your answer">
+        <span class="fix" id="spSuf" hidden></span>
+        <button class="ok" id="spOk" type="button" aria-label="Check">✓</button>
+      </div>
+      <div class="streak" id="streak"></div>
+      <p class="idle" id="spIdle">Sixty seconds of tips, to the cent.</p>
+    </div>
+  </div>
+
+  <div id="customView" hidden></div>
+
+  <p class="say" id="say" aria-live="polite"></p>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="hbtn" id="hint" type="button">Hint</button>
+  </div>
+
+  <details class="log">
+    <summary>Progress</summary>
+    <div class="log-body">
+      <ul class="accuracy" id="accuracy"></ul>
+      <p class="slip" id="slip"></p>
+      <div class="log-scroll">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Mode</th>
+              <th scope="col">Problem</th>
+              <th scope="col" title="Correct, slip, or miss">Result</th>
+              <th scope="col" title="Which named mistake came up">Named</th>
+              <th scope="col">Help</th>
+            </tr>
+          </thead>
+          <tbody id="logRows"></tbody>
+        </table>
+      </div>
+      <p class="log-empty" id="logEmpty" hidden>Nothing done yet. Finish a problem and it will show up here.</p>
+      <div class="log-actions">
+        <button class="export-btn" id="export" type="button">Export</button>
+        <span class="export-note" id="exportNote"></span>
+      </div>
+      <textarea class="export-box" id="exportBox" readonly hidden aria-label="Log as JSON"></textarea>
+    </div>
+  </details>
+
+  <p class="foot">Answers are checked, never shown. A dollar sign and commas are fine. Named mistakes: the fraction upside down, stopping at the decimal, answering the other question, and money left unrounded.</p>
+</main>
+
+<script src="../shared/tokens.js"></script>
+<script src="../shared/fraction-input.js"></script>
+<script>
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- exact decimals ----------------
+   The same {core, places} shape as lessons 2 and 5: 12.5 is {125, 1},
+   86 is {86, 0}. A percent is the same number with the point moved two
+   places, so every step of this lesson is a change to places, never a
+   float. Money is a decimal with two places. */
+const POW10 = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000];
+function fmt(d){
+  if (d.places === 0) return String(d.core);
+  const neg = d.core < 0;
+  const s = String(Math.abs(d.core)).padStart(d.places + 1, '0');
+  return (neg ? '-' : '') + s.slice(0, s.length - d.places) + '.' + s.slice(s.length - d.places);
+}
+function canon(d){
+  let core = d.core, places = d.places;
+  while (places > 0 && core % 10 === 0){ core = core / 10; places--; }
+  return { core, places };
+}
+function show(d){ return fmt(canon(d)); }
+function same(a, b){
+  if (!a || !b) return false;
+  const x = canon(a), y = canon(b);
+  return x.core === y.core && x.places === y.places;
+}
+function widen(d, p){ return d.core * POW10[p - d.places]; }
+function add(a, b){ const p = Math.max(a.places, b.places); return { core: widen(a, p) + widen(b, p), places: p }; }
+function sub(a, b){ const p = Math.max(a.places, b.places); return { core: widen(a, p) - widen(b, p), places: p }; }
+function mul(a, b){ return canon({ core: a.core * b.core, places: a.places + b.places }); }
+function times10(d, k){ /* k > 0 moves the point right, k < 0 left */
+  const c = canon(d);
+  if (k >= 0){ const drop = Math.min(k, c.places); return canon({ core: c.core * POW10[k - drop], places: c.places - drop }); }
+  return canon({ core: c.core, places: c.places - k });
+}
+function D(s){ return parseDecimal(s); }
+function parseDecimal(str){
+  const s = String(str).replace(/\s+/g, '').replace(/^\$/, '').replace(/,/g, '').replace(/%$/, '');
+  if (!/^\d*\.?\d*$/.test(s) || s === '' || s === '.') return null;
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  const frac = i < 0 ? '' : s.slice(i + 1);
+  const digits = (whole + frac).replace(/^0+(?=\d)/, '');
+  if (digits.length > 13 || frac.length > 9) return null;
+  return { core: parseInt(digits || '0', 10), places: frac.length };
+}
+/* round half up to p places */
+function roundTo(d, p){
+  const c = canon(d);
+  if (c.places <= p) return c;
+  const k = POW10[c.places - p];
+  const q = Math.floor(c.core / k), r = c.core % k;
+  return canon({ core: q + (r * 2 >= k ? 1 : 0), places: p });
+}
+function places(d){ return canon(d).places; }
+/* 50388.48 → "$50,388.48"; 12000 → "$12,000"; 4.5 → "$4.50" */
+function money(d){
+  const c = canon(d);
+  const p = c.places === 0 ? 0 : 2;
+  const s = fmt({ core: c.core * POW10[p - Math.min(p, c.places)], places: p });
+  const i = s.indexOf('.');
+  const whole = i < 0 ? s : s.slice(0, i);
+  return '$' + whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (i < 0 ? '' : s.slice(i));
+}
+function commas(d){ const s = show(d); const i = s.indexOf('.'); const w = i < 0 ? s : s.slice(0, i); return w.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (i < 0 ? '' : s.slice(i)); }
+/* the digits right, the point somewhere else: how many places off, or null */
+function pointShift(user, correct){
+  const u = canon(user), c = canon(correct);
+  if (u.core === 0 || c.core === 0) return null;
+  const su = String(u.core).replace(/0+$/, ''), sc = String(c.core).replace(/0+$/, '');
+  if (su !== sc) return null;
+  const k = (c.places - u.places) + (String(u.core).length - String(c.core).length);
+  return k === 0 ? null : k;
+}
+
+/* ---------------- the page engine ----------------
+   Every graded mode hands the engine a problem:
+     text     what the log shows
+     kind     the label over the problem ("Percent of a number")
+     big      the problem in big type, or word: a sentence problem
+     sub      optional small line under the big type
+     ask      the line on the right of the label
+     prefix   "$" or "" in front of the answer box
+     suffix   "%" or "" after it
+     answer   exact decimal
+     slips    [{ v, name, lead, extra }] answers that are named, in order
+     pointCheck  true to name "digits right, point wrong" as a slip
+     miss     text after "Not that." on a plain miss
+     hints    three strings
+     done     text after the answer when solved
+   A named slip is counted apart from a miss and does not make a solve
+   clean. The speed round asks for { big, sub, prefix, suffix, answer,
+   explain } items. A mode with custom: true owns #customView and calls
+   Engine.record() itself when a problem is finished. */
+const Engine = (function(){
+  let cfg = null;
+  let solved = 0, clean = 0, best = 0;
+  let log = [];
+  const LOG_CAP = 200, LOG_SHOWN = 20;
+  const $ = id => document.getElementById(id);
+  let mode = null, problem = null, stage = 'idle';
+  let misses = 0, slipHits = 0, slipNames = [], hintsUsed = 0;
+  let fin = null;   /* the shared fraction input, for problems with a fraction answer */
+  function useFrac(on){
+    $('ansBox').hidden = on;
+    const slot = $('fracSlot'); if (slot) slot.hidden = !on;
+    if (on){ $('pre').hidden = true; $('suf').hidden = true; }
+  }
+
+  function loadProgress(){
+    try {
+      const raw = localStorage.getItem(cfg.storeKey);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (Number.isFinite(s.solved)) solved = Math.max(0, Math.floor(s.solved));
+      if (Number.isFinite(s.clean))  clean  = Math.max(0, Math.floor(s.clean));
+      if (Number.isFinite(s.best))   best   = Math.max(0, Math.floor(s.best));
+      if (clean > solved) clean = solved;
+    } catch (e) { solved = 0; clean = 0; best = 0; }
+  }
+  function saveProgress(){ try { localStorage.setItem(cfg.storeKey, JSON.stringify({ solved, clean, best })); } catch (e) {} }
+  function clearProgress(){
+    solved = 0; clean = 0; best = 0;
+    try { localStorage.removeItem(cfg.storeKey); } catch (e) {}
+    drawTally(); drawSpeedBar(); log = []; try { localStorage.removeItem(cfg.logKey); } catch (e) {} drawLog();
+  }
+  function drawTally(){
+    $('tally').textContent = `Solved ${solved}  /  Clean ${clean}`;
+    $('clear').hidden = solved === 0 && clean === 0 && best === 0;
+  }
+
+  /* ---------------- problem log ---------------- */
+  const validRecord = r => r && typeof r === 'object' && typeof r.t === 'number' && isFinite(r.t) && typeof r.mode === 'string' && typeof r.problem === 'string';
+  function loadLog(){
+    try {
+      const raw = localStorage.getItem(cfg.logKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) log = parsed.filter(validRecord).slice(-LOG_CAP);
+    } catch (e) { log = []; }
+  }
+  function saveLog(){ try { localStorage.setItem(cfg.logKey, JSON.stringify(log)); } catch (e) {} }
+  function pushRecord(rec){
+    log.push(rec);
+    if (log.length > LOG_CAP) log.splice(0, log.length - LOG_CAP);
+    saveLog(); drawLog();
+  }
+  function whenText(t){
+    try {
+      const d = new Date(t);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) { return ''; }
+  }
+  const OUTCOME_LABEL = { correct: 'Correct', slip: 'Slip', miss: 'Miss' };
+  function modeLabel(k){ const m = cfg.modes.find(x => x.key === k); return m ? m.tab : k; }
+  function drawLog(){
+    const rows = $('logRows'), accuracy = $('accuracy'), slip = $('slip');
+    rows.textContent = ''; accuracy.textContent = ''; slip.textContent = '';
+    $('export').disabled = log.length === 0;
+    $('logEmpty').hidden = log.length > 0;
+    document.querySelector('.log-scroll').hidden = log.length === 0;
+    slip.hidden = log.length === 0;
+    if (!log.length) return;
+    const solves = log.filter(r => r.mode !== 'round');
+    const chip = (label, value, loud) => {
+      const li = document.createElement('li');
+      if (loud) li.className = 'loud';
+      const b = document.createElement('b');
+      b.textContent = String(value);
+      li.append(label + ' ', b);
+      accuracy.append(li);
+    };
+    const counts = {};
+    solves.forEach(r => (Array.isArray(r.named) ? r.named : []).forEach(n => { counts[n] = (counts[n] || 0) + 1; }));
+    if (solves.length){
+      chip('Correct', solves.filter(r => r.outcome === 'correct').length + ' of ' + solves.length);
+      Object.keys(counts).forEach(n => chip(n, counts[n], true));
+      chip('Misses', solves.reduce((s, r) => s + (Number(r.misses) || 0), 0));
+    }
+    const rounds = log.filter(r => r.mode === 'round');
+    if (rounds.length) chip('Best round', Math.max.apply(null, rounds.map(r => Number(r.score) || 0)));
+    const lead = document.createElement('b');
+    const names = Object.keys(counts);
+    if (!solves.length) slip.textContent = 'No problems logged yet, only timed rounds.';
+    else if (!names.length){ lead.textContent = 'No named mistakes.'; slip.append(lead); }
+    else {
+      lead.textContent = 'Named mistakes:';
+      slip.append(lead, ' ' + names.map(n => n.toLowerCase() + ' ' + counts[n] + (counts[n] === 1 ? ' time' : ' times')).join('; ') + '.');
+    }
+    log.slice(-LOG_SHOWN).reverse().forEach(r => {
+      const tr = document.createElement('tr');
+      const cell = (text, cls) => {
+        const td = document.createElement('td');
+        const s = document.createElement('span');
+        if (cls) s.className = cls;
+        s.textContent = text;
+        td.append(s);
+        return td;
+      };
+      tr.append(cell(whenText(r.t)), cell(modeLabel(r.mode)), cell(r.problem));
+      if (r.mode === 'round'){
+        tr.append(cell((Number(r.score) || 0) + ' of ' + (Number(r.seen) || 0) + (Number(r.streak) ? ', streak ' + r.streak : ''), 'score'));
+        tr.append(cell('—', 'none'), cell(''));
+      } else {
+        const extra = Number(r.misses) ? ' (' + r.misses + (r.misses === 1 ? ' miss)' : ' misses)') : '';
+        tr.append(cell((OUTCOME_LABEL[r.outcome] || r.outcome) + extra, r.outcome === 'correct' ? 'yes' : (r.outcome === 'slip' ? 'slipc' : 'no')));
+        const named = Array.isArray(r.named) ? r.named : [];
+        tr.append(named.length ? cell(named.join(', '), 'slipc') : cell('none', 'none'));
+        tr.append(cell(Number(r.hints) ? '+' + r.hints : '', 'hints'));
+      }
+      rows.append(tr);
+    });
+  }
+
+  /* ---------------- say, banner ---------------- */
+  function say(kind, text, extra){
+    const el = $('say');
+    el.className = 'say' + (kind ? ' ' + kind : '');
+    el.textContent = '';
+    if (!text) return;
+    const lead = document.createElement('b');
+    lead.textContent = text;
+    el.append(lead);
+    if (extra) el.append(' ' + extra);
+  }
+  function showBanner(text, isBest){
+    const b = $('banner');
+    b.className = 'banner show' + (isBest ? ' best' : '');
+    b.textContent = text;
+  }
+  function hideBanner(){ $('banner').className = 'banner'; }
+
+  /* A finished problem from any mode. outcome correct / slip / miss. */
+  function record(rec, cleanRun){
+    solved++;
+    if (cleanRun) clean++;
+    saveProgress(); drawTally();
+    pushRecord(Object.assign({ t: Date.now(), mode: mode.key }, rec));
+    if (window.Tokens) Tokens.earnSolve({ clean: cleanRun, source: cfg.source });
+  }
+
+  /* ---------------- a graded problem ---------------- */
+  function drawProblem(){
+    const el = $('problem');
+    el.textContent = '';
+    el.className = 'problem' + (problem.word ? ' word' : '');
+    if (problem.word){
+      problem.word.forEach(part => {
+        if (typeof part === 'string') el.append(part);
+        else { const b = document.createElement('b'); b.textContent = part.b; el.append(b); }
+      });
+    } else {
+      el.append(problem.big);
+      if (problem.sub){ const s = document.createElement('span'); s.className = 'sm'; s.textContent = problem.sub; el.append(s); }
+    }
+    const kn = $('kindName');
+    kn.textContent = '';
+    const b = document.createElement('b');
+    b.textContent = problem.kind;
+    kn.append(b);
+    $('ask').textContent = stage === 'done' ? '' : (problem.ask || '');
+    $('pre').textContent = problem.prefix || ''; $('pre').hidden = !problem.prefix;
+    $('suf').textContent = problem.suffix || ''; $('suf').hidden = !problem.suffix;
+  }
+  function newProblem(){
+    problem = mode.make();
+    problem.slips = (problem.slips || []).filter(x => x.v && !same(x.v, problem.answer));
+    stage = 'open';
+    misses = 0; slipHits = 0; slipNames = []; hintsUsed = 0;
+    hideBanner();
+    const hb = $('hint'); hb.disabled = false; hb.textContent = 'Hint';
+    $('check').disabled = false;
+    const box = $('ansBox'); box.value = ''; box.className = 'decbox'; box.disabled = false;
+    drawProblem();
+    useFrac(!!problem.frac);
+    if (problem.frac){ fin.clear(); fin.setDisabled(false); fin.setMixed(true); }
+    say('', problem.start || '', problem.startExtra || '');
+    if (problem.frac) fin.focus(); else box.focus();
+  }
+  function shake(box){
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    setTimeout(() => box.classList.remove('shake'), 420);
+  }
+  function check(){
+    if (!mode || mode.custom || mode.speed || stage !== 'open') return;
+    if (problem.frac){ checkFrac(); return; }
+    const box = $('ansBox');
+    if (!box.value.trim()){ say('', 'Type an answer first.'); return; }
+    const E = parseDecimal(box.value);
+    if (!E){ say('', 'Just digits and one point.', 'Like 10.75 or 0.09.'); return; }
+    const p = problem;
+    if (same(E, p.answer) || (p.accept && p.accept(E))){ finish(); return; }
+    for (const s of (p.slips || [])){
+      if (s.v && same(E, s.v)){
+        slipHits++; if (slipNames.indexOf(s.name) < 0) slipNames.push(s.name);
+        box.classList.add('point'); shake(box);
+        say('point', s.lead, s.extra || '');
+        return;
+      }
+    }
+    if (p.pointCheck && pointShift(E, p.answer) !== null){
+      slipHits++; if (slipNames.indexOf('Point slip') < 0) slipNames.push('Point slip');
+      box.classList.add('point'); shake(box);
+      say('point', 'The digits are right. The point is in the wrong place.', p.pointExtra || 'Count how many places it should move.');
+      return;
+    }
+    misses++;
+    box.classList.add('miss'); shake(box);
+    say('bad', 'Not that.', p.miss || '');
+  }
+  /* A fraction answer: equal and in lowest terms is correct; equal but
+     not reduced is the named slip; the problem may name other values. */
+  function checkFrac(){
+    const p = problem;
+    const r = fin.rational();
+    if (!r){ say('', 'Fill in the top and the bottom.', p.frac.d === 1 ? '' : 'A whole number goes in the big box on the left.'); return; }
+    const flash = kind => { fin.mark(kind); shake(fin.el); };
+    if (Rational.eq(r, p.frac)){
+      if (Rational.gcd(r.n % r.d, r.d) === 1 || r.n % r.d === 0){ finish(); return; }
+      slipHits++; if (slipNames.indexOf('Not in lowest terms') < 0) slipNames.push('Not in lowest terms');
+      flash('slip');
+      say('point', 'Same amount, not in lowest terms.', 'Divide the top and bottom by the same number until nothing else divides both.');
+      return;
+    }
+    for (const s of (p.fracSlips || [])){
+      if (Rational.eq(r, s.r)){
+        slipHits++; if (slipNames.indexOf(s.name) < 0) slipNames.push(s.name);
+        flash('slip'); say('point', s.lead, s.extra || '');
+        return;
+      }
+    }
+    misses++; flash('miss');
+    say('bad', 'Not that.', p.miss || '');
+  }
+  function finish(){
+    stage = 'done';
+    if (problem.frac){ fin.mark('ok'); fin.setDisabled(true); }
+    const box = $('ansBox');
+    box.classList.remove('miss', 'point'); box.classList.add('ok');
+    box.disabled = true; $('check').disabled = true; $('hint').disabled = true;
+    const outcome = misses ? 'miss' : (slipHits ? 'slip' : 'correct');
+    const cleanRun = outcome === 'correct' && hintsUsed === 0;
+    record({ problem: problem.text, outcome, misses, named: slipNames.slice(), hints: hintsUsed }, cleanRun);
+    drawProblem();
+    showBanner(cleanRun ? 'Right, first try, no help.'
+      : (outcome === 'correct' ? 'Right, first try.'
+      : (outcome === 'slip' ? 'Right in the end. The named mistake is the one to watch.' : 'Solved, after ' + misses + (misses === 1 ? ' miss.' : ' misses.'))));
+    say('good', (problem.prefix || '') + (problem.showAnswer || show(problem.answer)) + (problem.suffix || '') + '. That is it.', (problem.done ? problem.done + ' ' : '') + 'Tap New problem for another.');
+  }
+  function hint(){
+    if (!mode || mode.custom || mode.speed || stage !== 'open' || hintsUsed >= 3) return;
+    hintsUsed++;
+    say('', problem.hints[hintsUsed - 1]);
+    const hb = $('hint');
+    hb.textContent = hintsUsed >= 3 ? 'Hint' : 'Another hint';
+    if (hintsUsed >= 3) hb.disabled = true;
+  }
+
+  /* ---------------- the timed round ---------------- */
+  let speedOn = false, speedScore = 0, speedSeen = 0, speedTimer = 0, speedEndsAt = 0;
+  let item = null, runStreak = 0, bestStreak = 0, itemTimer = 0;
+  function drawSpeedBar(){ $('score').textContent = speedScore; $('best').textContent = best; }
+  function drawStreak(){
+    const el = $('streak');
+    el.textContent = '';
+    if (!speedOn) return;
+    el.append('Streak ');
+    const b = document.createElement('b');
+    b.textContent = String(runStreak);
+    el.append(b);
+    if (bestStreak > 1) el.append(' · best this round ' + bestStreak);
+  }
+  function drawItem(){
+    const big = $('spBig');
+    big.textContent = '';
+    const sm = document.createElement('small');
+    sm.textContent = item ? (item.sub || '') : (cfg.speedIdleSub || '');
+    big.append(sm, item ? item.big : '—');
+    $('spPre').textContent = item ? (item.prefix || '') : ''; $('spPre').hidden = !(item && item.prefix);
+    $('spSuf').textContent = item ? (item.suffix || '') : ''; $('spSuf').hidden = !(item && item.suffix);
+  }
+  function nextItem(){
+    item = cfg.speedMake();
+    item.locked = false;
+    const box = $('spBox'); box.value = ''; box.className = 'decbox'; box.disabled = false; $('spOk').disabled = false;
+    drawItem(); drawStreak();
+    box.focus();
+  }
+  function checkItem(){
+    if (!speedOn || !item || item.locked) return;
+    const box = $('spBox');
+    const E = parseDecimal(box.value);
+    if (!E){ say('', 'Just digits and one point.'); return; }
+    item.locked = true;
+    speedSeen++;
+    const right = same(E, item.answer);
+    box.disabled = true; $('spOk').disabled = true;
+    box.classList.add(right ? 'ok' : 'miss');
+    const ans = (item.prefix || '') + (item.showAnswer || show(item.answer)) + (item.suffix || '');
+    if (right){ speedScore++; runStreak++; if (runStreak > bestStreak) bestStreak = runStreak; say('good', ans + '. Yes.', ''); }
+    else { runStreak = 0; say('bad', 'It is ' + ans + '.', item.explain || ''); }
+    drawSpeedBar(); drawStreak();
+    clearTimeout(itemTimer);
+    itemTimer = setTimeout(() => { if (speedOn) nextItem(); }, reduced() ? 0 : (right ? 450 : 2200));
+  }
+  function tickClock(){
+    const left = Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+    $('clock').textContent = left;
+    $('clockWrap').classList.toggle('low', left <= 10);
+    if (left <= 0) stopSpeed(true);
+  }
+  function startSpeed(){
+    speedOn = true;
+    speedScore = 0; speedSeen = 0; runStreak = 0; bestStreak = 0;
+    speedEndsAt = Date.now() + cfg.speedSeconds * 1000;
+    hideBanner();
+    $('next').textContent = 'Stop';
+    $('spIdle').hidden = true;
+    drawSpeedBar(); tickClock();
+    clearInterval(speedTimer);
+    speedTimer = setInterval(tickClock, 200);
+    say('', cfg.speedLead || '', '');
+    nextItem();
+  }
+  function stopSpeed(ranOut){
+    if (!speedOn) return;
+    speedOn = false;
+    clearInterval(speedTimer); clearTimeout(itemTimer); speedTimer = 0;
+    item = null;
+    $('next').textContent = 'Start the round';
+    $('clock').textContent = ranOut ? 0 : Math.max(0, Math.ceil((speedEndsAt - Date.now()) / 1000));
+    const box = $('spBox'); box.value = ''; box.className = 'decbox'; box.disabled = true; $('spOk').disabled = true;
+    drawItem(); drawStreak();
+    $('spIdle').hidden = false;
+    const isBest = speedScore > best;
+    if (isBest){ best = speedScore; saveProgress(); }
+    drawSpeedBar(); drawTally();
+    pushRecord({ t: Date.now(), mode: 'round', problem: cfg.speedSeconds + ' second round', score: speedScore, seen: speedSeen, streak: bestStreak });
+    if (isBest && speedScore > 0 && window.Tokens) Tokens.earnBest(cfg.bestMode);
+    showBanner(isBest ? speedScore + ' right. That is a new best.' : speedScore + ' right. Best so far is ' + best + '.', isBest);
+    say('', '');
+  }
+
+  /* ---------------- modes ---------------- */
+  function setMode(next){
+    if (speedOn) stopSpeed(false);
+    mode = cfg.modes.find(m => m.key === next) || cfg.modes[0];
+    Array.prototype.forEach.call($('modes').children, (b, i) => b.setAttribute('aria-pressed', String(cfg.modes[i].key === mode.key)));
+    $('modeNote').textContent = mode.note;
+    $('speedBar').hidden = !mode.speed;
+    $('solveView').hidden = !!(mode.speed || mode.custom);
+    $('speedView').hidden = !mode.speed;
+    $('customView').hidden = !mode.custom;
+    $('hint').hidden = !!mode.speed;
+    hideBanner();
+    if (mode.speed){
+      $('next').textContent = 'Start the round';
+      $('clock').textContent = cfg.speedSeconds;
+      $('clockWrap').classList.remove('low');
+      speedScore = 0; drawSpeedBar();
+      item = null; drawItem(); drawStreak();
+      $('spBox').disabled = true; $('spOk').disabled = true;
+      say('', cfg.speedSeconds + ' seconds.', 'Tap Start the round when you are ready.');
+    } else {
+      $('next').textContent = 'New problem';
+      if (mode.custom) mode.start(); else newProblem();
+    }
+  }
+  function digitsOnly(box){
+    let v = box.value.replace(/[^0-9.,$%]/g, '');
+    const i = v.indexOf('.');
+    if (i >= 0) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, '');
+    box.value = v.slice(0, 16);
+    box.classList.remove('miss', 'point');
+  }
+
+  async function copyText(text){
+    try { if (navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.top = '-1000px';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if (ok) return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function init(c){
+    cfg = c;
+    loadProgress(); loadLog(); drawTally(); drawSpeedBar(); drawLog();
+    if (window.FractionInput && $('fracSlot')){
+      fin = FractionInput.create({ mixed: true, digits: 4, label: 'Your answer as a fraction', onEnter: () => check() });
+      $('fracSlot').append(fin.el);
+    }
+    cfg.modes.forEach(m => {
+      const b = document.createElement('button');
+      b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab;
+      b.onclick = () => setMode(m.key);
+      $('modes').append(b);
+    });
+    $('next').onclick = () => {
+      if (mode.speed){ if (speedOn) stopSpeed(false); else startSpeed(); return; }
+      if (mode.custom){ mode.start(); return; }
+      newProblem();
+    };
+    $('check').onclick = check;
+    $('hint').onclick = () => { if (mode && mode.custom) mode.hint(); else hint(); };
+    $('ansBox').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); check(); } });
+    $('ansBox').addEventListener('input', () => digitsOnly($('ansBox')));
+    $('spOk').onclick = checkItem;
+    $('spBox').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); checkItem(); } });
+    $('spBox').addEventListener('input', () => digitsOnly($('spBox')));
+
+    const clearBtn = $('clear');
+    let armed = 0;
+    const disarm = () => { clearTimeout(armed); armed = 0; clearBtn.classList.remove('arming'); clearBtn.textContent = 'Start over'; };
+    clearBtn.onclick = () => {
+      if (armed){ disarm(); clearProgress(); return; }
+      clearBtn.classList.add('arming');
+      clearBtn.textContent = 'Tap again to erase';
+      armed = setTimeout(disarm, 4000);
+    };
+
+    let noteTimer = 0;
+    $('export').onclick = async () => {
+      if (!log.length) return;
+      const text = JSON.stringify(log, null, 2);
+      const copied = await copyText(text);
+      clearTimeout(noteTimer);
+      if (copied){
+        $('exportBox').hidden = true;
+        $('exportNote').textContent = 'Copied ' + log.length + (log.length === 1 ? ' record.' : ' records.');
+        noteTimer = setTimeout(() => { $('exportNote').textContent = ''; }, 4000);
+      } else {
+        const bx = $('exportBox'); bx.value = text; bx.hidden = false; bx.focus(); bx.select();
+        $('exportNote').textContent = 'Could not reach the clipboard. Copy it from the box.';
+      }
+    };
+
+    const failures = cfg.selfCheck();
+    if (failures.length){
+      say('bad', 'This page has a problem:', 'the arithmetic no longer passes its own checks (' + failures[0] + '). Do not use it until that is fixed.');
+      $('next').disabled = true; $('check').disabled = true;
+      return;
+    }
+    const m = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+    setMode(m && cfg.modes.some(x => x.key === m[1]) ? m[1] : cfg.modes[0].key);
+  }
+
+  return { init, say, showBanner, hideBanner, record, digitsOnly, shake, stage: () => stage, current: () => problem };
+})();
+
+/* ================= Part of the Whole: lesson 8, day 2 =================
+   The book's two kinds of percent word problem. Find the part: change
+   the percent to a decimal and multiply (lesson 7). Find the percent:
+   the part over the whole is a fraction, divide to get a decimal, then
+   two places right. A Mixed tab makes her decide which kind it is, and
+   the Tip round is the book's mental math for this lesson: 10%, then
+   double it, halve it, or add half.
+   Named mistakes: the fraction upside down (whole over part), stopping
+   at the decimal, answering the other question, money left unrounded. */
+
+const PW_KEY = 'seventh-grade-math:partwhole';
+const PW_LOG = 'seventh-grade-math:partwhole-log';
+const R8 = Rational;
+const goodDen = d => { while (d % 2 === 0) d /= 2; while (d % 5 === 0) d /= 5; return d === 1; };
+function exactDec(n, d){ for (let k = 0; k <= 8; k++) if (POW10[k] % d === 0) return canon({ core: n * (POW10[k] / d), places: k }); return null; }
+
+/* ---------------- find the percent ---------------- */
+const WHAT = [
+  (p, w) => ['A survey asked ', { b: w + ' people' }, ' whether they like dogs or cats better. ', { b: p }, ' picked dogs. ', { b: 'What percent picked dogs?' }],
+  (p, w) => ['A store has ', { b: w + ' employees' }, ', and ', { b: p }, ' of them were out sick last week. ', { b: 'What percent were out sick?' }],
+  (p, w) => ['Out of the ', { b: w + ' farms' }, ' at a market, ', { b: p }, ' were selling strawberries. ', { b: 'What percent sold strawberries?' }],
+  (p, w) => ['You have ', { b: w + ' songs' }, ' on a playlist, and ', { b: p }, ' of them are from musicals. ', { b: 'What percent are from musicals?' }],
+  (p, w) => ['A test has ', { b: w + ' questions' }, ' and you got ', { b: p }, ' right. ', { b: 'What percent did you get right?' }],
+  (p, w) => ['There are ', { b: w + ' trees' }, ' in a yard and ', { b: p }, ' of them are maples. ', { b: 'What percent are maples?' }]
+];
+function makeWhat(){
+  for (let t = 0; t < 300; t++){
+    const w = pick([4, 5, 8, 10, 16, 20, 24, 25, 30, 32, 40, 48, 50, 60, 75, 80, 120, 200]);
+    const p = rand(1, w - 1);
+    const r = R8.make(p, w);
+    if (!goodDen(r.d)) continue;
+    const dec = exactDec(r.n, r.d);
+    const ans = times10(dec, 2);
+    const flip = exactDec(w, p);
+    return {
+      kind: 'Find the percent', ask: 'Part over whole.',
+      word: pick(WHAT)(p, w), text: p + ' out of ' + w + ' as a percent', suffix: '%', answer: ans,
+      slips: [
+        { v: dec, name: 'Stopped at the decimal', lead: 'That is the decimal.', extra: 'Move the point two places right for the percent.' },
+        { v: flip ? times10(flip, 2) : null, name: 'Upside down', lead: 'That is the whole over the part.', extra: 'The part goes on top: ' + p + '/' + w + '.' }
+      ],
+      pointCheck: true, miss: 'Write ' + p + '/' + w + ', divide, then two places right.',
+      hints: [
+        'Part over whole: ' + p + '/' + w + (r.d !== w ? ', which reduces to ' + r.n + '/' + r.d : '') + '.',
+        'Divide ' + r.n + ' ÷ ' + r.d + ' to get a decimal.',
+        r.n + ' ÷ ' + r.d + ' = ' + show(dec) + '. Now two places right.'
+      ],
+      start: 'Which number is the part, which is the whole?', startExtra: ''
+    };
+  }
+  return makeWhat();
+}
+
+/* ---------------- find the part ---------------- */
+function makePart(){
+  const kind = pick(['down', 'votes', 'tax', 'people']);
+  if (kind === 'down'){
+    const price = { core: rand(20, 199) * 5, places: 0 };
+    const pct = { core: pick([10, 15, 20, 25]), places: 0 };
+    const ans = mul(times10(pct, -2), price);
+    return {
+      kind: 'Find the part', ask: 'Percent to a decimal, then multiply.', prefix: '$', answer: ans, showAnswer: money(ans).slice(1),
+      word: ['A sofa costs ', { b: money(price) }, '. The store asks for a down payment of ', { b: show(pct) + '%' }, ' of the price. ', { b: 'How much is the down payment?' }],
+      text: show(pct) + '% down on ' + money(price),
+      slips: [{ v: sub(price, ans), name: 'Answered the other question', lead: 'That is what is left to pay.', extra: 'The down payment is just the ' + show(pct) + '%.' }],
+      pointCheck: true, miss: show(pct) + '% = ' + show(times10(pct, -2)) + '. Multiply by ' + commas(price) + '.',
+      hints: ['This is ' + show(pct) + '% of ' + money(price) + '.', show(pct) + '% = ' + show(times10(pct, -2)) + '.', 'Multiply ' + show(times10(pct, -2)) + ' × ' + show(price) + '.'],
+      start: 'Find the percent and the number.', startExtra: ''
+    };
+  }
+  if (kind === 'tax'){
+    const price = { core: rand(50, 999), places: 0 };
+    const pct = D(pick(['6', '6', '7', '5', '8']));
+    const exact = mul(times10(pct, -2), price), ans = roundTo(exact, 2);
+    return {
+      kind: 'Find the part', ask: 'Round money to the cent.', prefix: '$', answer: ans, showAnswer: money(ans).slice(1),
+      word: ['The sales tax is ', { b: show(pct) + '%' }, '. ', { b: 'How much tax' }, ' is there on a stereo that sells for ', { b: money(price) }, '?'],
+      text: show(pct) + '% tax on ' + money(price),
+      slips: [{ v: add(price, ans), name: 'Answered the other question', lead: 'That is the total.', extra: 'The question asks for the tax only.' }],
+      pointCheck: true, miss: show(pct) + '% = ' + show(times10(pct, -2)) + '.',
+      hints: ['This is ' + show(pct) + '% of ' + money(price) + '.', show(pct) + '% = ' + show(times10(pct, -2)) + '.', show(times10(pct, -2)) + ' × ' + show(price) + ' = ' + show(exact) + '.'],
+      start: 'Find the percent and the number.', startExtra: ''
+    };
+  }
+  for (let t = 0; t < 200; t++){
+    const w = kind === 'votes' ? pick([500, 572, 800, 1200, 1500, 2000, 640, 360]) : pick([20, 25, 40, 50, 60, 80, 120, 200, 300]);
+    const pct = { core: pick([10, 20, 25, 30, 40, 45, 55, 57, 60, 64, 75, 80, 85, 90]), places: 0 };
+    const ans = mul(times10(pct, -2), { core: w, places: 0 });
+    if (ans.places) continue;
+    const word = kind === 'votes'
+      ? [{ b: show(pct) + '%' }, ' of the ', { b: commas({ core: w, places: 0 }) + ' voters' }, ' in a town voted to build a new library. ', { b: 'How many voted for it?' }]
+      : ['A club has ', { b: w + ' members' }, ' and ', { b: show(pct) + '%' }, ' of them came to the picnic. ', { b: 'How many came?' }];
+    return {
+      kind: 'Find the part', ask: 'Percent to a decimal, then multiply.', answer: ans, word, text: show(pct) + '% of ' + w,
+      slips: [{ v: { core: w - ans.core, places: 0 }, name: 'Answered the other question', lead: 'That is how many did not.', extra: 'The question asks for the ' + show(pct) + '%.' }],
+      pointCheck: true, miss: show(pct) + '% = ' + show(times10(pct, -2)) + '. Multiply by ' + w + '.',
+      hints: ['This is ' + show(pct) + '% of ' + w + '.', show(pct) + '% = ' + show(times10(pct, -2)) + '.', '10% of ' + w + ' is ' + show(times10({ core: w, places: 0 }, -1)) + ', which tells you the size.'],
+      start: 'Find the percent and the number.', startExtra: ''
+    };
+  }
+  return makePart();
+}
+
+function makeMixed(){
+  const p = Math.random() < 0.5 ? makeWhat() : makePart();
+  p.ask = 'Which kind is it?';
+  p.start = 'Which kind?';
+  p.startExtra = 'Given a percent: multiply. Given a part and a whole: divide.';
+  return p;
+}
+
+/* ---------------- the tip round ----------------
+   A bill in dollars and cents and a tip of 10, 20, 15, or 5 percent,
+   rounded to the cent. 10% is the point moved one left; 20% doubles
+   it; 5% halves it; 15% is 10% plus half of 10%. */
+function makeTip(){
+  const bill = { core: rand(1200, 9800), places: 2 };
+  const pct = pick([10, 10, 20, 15, 5]);
+  const exact = mul(times10({ core: pct, places: 0 }, -2), bill);
+  const ans = roundTo(exact, 2);
+  const ten = roundTo(times10(bill, -1), 3);
+  const how = { 10: 'move the point one left', 20: 'double 10%', 5: 'half of 10%', 15: '10% plus half of it' }[pct];
+  return { sub: pct + '% tip, to the cent', big: money(bill), prefix: '$', answer: ans, showAnswer: money(ans).slice(1),
+    explain: '10% is ' + show(ten) + '; ' + pct + '% is ' + how + '.' };
+}
+
+function selfCheck(){
+  const f = [];
+  const t = (name, ok) => { if (!ok) f.push(name); };
+  const pctOf = (p, w) => { const r = R8.make(p, w); const d = exactDec(r.n, r.d); return d ? times10(d, 2) : null; };
+  t('book 27 of 48', same(pctOf(27, 48), D('56.25')));
+  t('book 12 of 25', same(pctOf(12, 25), D('48')));
+  t('book 75% of 572', same(mul(D('.75'), D('572')), D('429')));
+  t('book 15% of 995', same(mul(D('.15'), D('995')), D('149.25')));
+  t('workbook 5 of 20', same(pctOf(5, 20), D('25')));
+  t('workbook 18 of 30', same(pctOf(18, 30), D('60')));
+  t('workbook 2 of 5', same(pctOf(2, 5), D('40')));
+  t('test 6% of 599', same(mul(D('.06'), D('599')), D('35.94')));
+  t('test 8 of 40', same(pctOf(8, 40), D('20')));
+  t('test 57% of 1500', same(mul(D('.57'), D('1500')), D('855')));
+  t('test 4 of 16', same(pctOf(4, 16), D('25')));
+  t('book tip 37.50', same(roundTo(mul(D('.15'), D('37.50')), 2), D('5.63')));
+  t('terminating test', goodDen(16) && goodDen(40) && !goodDen(3) && !goodDen(30));
+  return f;
+}
+
+Engine.init({
+  storeKey: PW_KEY, logKey: PW_LOG, source: 'partwhole', bestMode: 'partwhole:tips',
+  speedSeconds: 60, speedMake: makeTip,
+  speedLead: 'Start with 10%. Double it, halve it, or add half.',
+  modes: [
+    { key: 'what', tab: 'Find the percent', make: makeWhat,
+      note: 'Part over whole makes a fraction. Divide to get a decimal, then two places right.' },
+    { key: 'part', tab: 'Find the part', make: makePart,
+      note: 'Percent to a decimal, then multiply. Same as lesson 7.' },
+    { key: 'mixed', tab: 'Mixed', make: makeMixed,
+      note: 'Decide first: are you given a percent, or a part and a whole?' },
+    { key: 'tips', tab: 'Tip round', speed: true,
+      note: 'Sixty seconds of tips in your head, to the cent.' }
+  ],
+  selfCheck
+});
+
+</script>
+</body>
+</html>

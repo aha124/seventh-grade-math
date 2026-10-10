@@ -413,3 +413,36 @@ const LESSONS = [
     ]
   }
 ];
+
+/* Anatomy: one body system a week, October to December. Same row shape
+   as a math day (d, name, pages, note); the hub labels them "Week". */
+const ANATOMY = [
+  { d: 1, name: "The body's map", pages: [
+      { href: "anatomy/week-01.html", name: "The Body's Map", blurb: "Which system does each organ belong to? Which level is it: cell, tissue, organ, system, or organism?", cta: "Start practicing" }
+    ], note: "The lesson is on the board. The worksheets are on paper." },
+  { d: 2, name: "Heart and blood", pages: [], note: "Coming up." },
+  { d: 3, name: "Lungs and breathing", pages: [], note: "Coming up." },
+  { d: 4, name: "Digestion", pages: [], note: "Coming up." },
+  { d: 5, name: "Brain and nerves", pages: [], note: "Coming up." },
+  { d: 6, name: "Hormones", pages: [], note: "Coming up." },
+  { d: 7, name: "Bones and muscles", pages: [], note: "Coming up." },
+  { d: 8, name: "Kidneys", pages: [], note: "Coming up." },
+  { d: 9, name: "Immune system and skin", pages: [], note: "Coming up." },
+  { d: 10, name: "Wrap-up", pages: [], note: "Put the whole body back together." }
+];
+
+/* Ghost Lab: the ghost detector build, one session every week or two.
+   The hub labels these "Session". */
+const GHOSTLAB = [
+  { d: 1, name: "Volts, amps, and watts", pages: [], note: "Batteries, an LED, and why it needs a resistor." },
+  { d: 2, name: "Breadboard circuits", pages: [], note: "Series, parallel, a button, a buzzer." },
+  { d: 3, name: "Electricity makes magnetism", pages: [], note: "A nail electromagnet, and the hum in the walls." },
+  { d: 4, name: "Soldering the EMF wand", pages: [], note: "Your first soldered circuit. It lights up near outlets." },
+  { d: 5, name: "Raspberry Pi and Python", pages: [], note: "Blink an LED from code." },
+  { d: 6, name: "Sensors and data", pages: [], note: "Temperature, humidity, motion, saved and graphed." },
+  { d: 7, name: "The EMF meter", pages: [], note: "A coil, an amplifier, and a green-to-red LED bar." },
+  { d: 8, name: "Seeing sound", pages: [], note: "A live spectrogram, and your own hearing range." },
+  { d: 9, name: "The case", pages: [], note: "Design it, print it, put it all inside." },
+  { d: 10, name: "Plan the hunt", pages: [], note: "Haunted spots, boring spots, and what counts as proof." },
+  { d: 11, name: "The ghost hunt", pages: [], note: "Film it, then graph what the meter saw." }
+];

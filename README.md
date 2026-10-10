@@ -51,6 +51,7 @@ lesson-07/interest.html  simple interest, compound interest a year at a time in 
 lesson-08/three-ways.html  fraction to decimal and percent, decimal or percent to a fraction, plus the benchmark round
 lesson-08/part-whole.html  percent word problems both ways (find the percent, find the part, mixed), plus the tip round
 lesson-08/roots.html     perfect squares, guess and check for bigger roots, plus the squares round
+anatomy/week-01.html     anatomy week 1: which system, which level (tap to answer, earns tokens)
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares
@@ -115,6 +116,15 @@ a generic filename that names only the object, cropped square around the
 item at 800px and with every bit of metadata stripped (EXIF carries the GPS
 position and the time the picture was taken). Card names describe the
 item, never a person.
+
+## Subjects
+
+The hub has three tabs: Math, Anatomy, and Ghost Lab. Math is built from
+`LESSONS`; Anatomy from `ANATOMY` (rows labeled "Week") and Ghost Lab from
+`GHOSTLAB` (rows labeled "Session"), both in `site.js` with the same row
+shape as a math day: `{ d, name, pages, note }`. `index.html#anatomy` and
+`#ghost` open those tabs, and the last tab picked is remembered on the
+device under `seventh-grade-math:hub-subject`.
 
 ## Adding a page
 

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Body's Map — Anatomy Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.ideas{margin:1.2rem 0 0;padding:.8rem 1rem;background:var(--paper);border:1.5px solid var(--line);border-left:5px solid var(--ice);border-radius:3px}
+.ideas h2{margin:0 0 .3rem;font-family:var(--display);font-size:1.25rem;color:var(--board)}
+.ideas ul{margin:0;padding-left:1.15rem}
+.ideas li{margin:.2rem 0;color:var(--board-soft)}
+.ideas b{color:var(--board)}
+.modes{display:flex;gap:.4rem;margin:1.3rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{font-family:var(--display);font-size:1.05rem;font-weight:600;background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft)}
+.q{margin:.7rem 0 0;padding:1.1rem .8rem;min-height:5rem;background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,7vw,2.4rem);color:var(--board);text-align:center}
+.q small{display:block;font-family:var(--body);font-weight:500;font-size:.95rem;color:#7C93A5}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.5rem;margin:.8rem 0 0}
+.choice{font-family:var(--display);font-size:1.15rem;font-weight:600;min-height:52px;padding:.4rem .6rem;cursor:pointer;
+  background:var(--paper);color:var(--board);border:1.5px solid var(--edge);border-radius:3px;-webkit-tap-highlight-color:transparent}
+.choice.no{border-color:var(--gold);background:#FBF0DF;color:#8A5F1E}
+.choice.yes{border-color:var(--good);background:#EEF7F1;color:var(--good)}
+.choice:disabled{cursor:default}
+.say{min-height:3.2em;margin:.8rem 0 0;padding:.6rem .8rem;border-radius:2px;font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line)}
+.say.good{border-left-color:var(--good)} .say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board)}
+.actions{display:flex;gap:.6rem;margin:1rem 0 0}
+.foot{margin:2rem 0 0;font-size:.92rem;color:#7C93A5}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html#anatomy">All subjects</a></div>
+    <h1 class="mark">The Body's <span>Map</span></h1>
+    <div class="tally" id="tally">Right 0</div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="ideas">
+    <h2>This week</h2>
+    <ul>
+      <li><b>Cell → tissue → organ → organ system → organism.</b> Small to big, like letters, words, sentences, chapters, a book.</li>
+      <li><b>Blood stays in tubes.</b> Arteries carry it away from the heart, veins bring it back, capillaries connect them.</li>
+      <li><b>Heart</b>: fist-sized, near the middle of the chest. <b>Liver</b>: the biggest organ inside you. <b>Small intestine</b>: about 20 feet long.</li>
+    </ul>
+  </section>
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="note"></p>
+  <div class="q" id="q" aria-live="polite"></div>
+  <div class="choices" id="choices"></div>
+  <p class="say" id="say" aria-live="polite"></p>
+  <div class="actions"><button class="btn primary" id="next" type="button">Next</button></div>
+  <p class="foot">Right on the first tap earns 2 tokens; right after a miss earns 1.</p>
+</main>
+<script src="../shared/tokens.js"></script>
+<script>
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const SYSTEMS = ['Circulatory', 'Respiratory', 'Digestive', 'Nervous', 'Urinary', 'Skeletal'];
+const ORGAN_Q = [
+  ['heart', 'Circulatory', 'It pumps blood through the tubes.'], ['arteries', 'Circulatory', 'They carry blood away from the heart.'],
+  ['veins', 'Circulatory', 'They carry blood back to the heart.'], ['lungs', 'Respiratory', 'They bring oxygen in.'],
+  ['trachea', 'Respiratory', 'The windpipe, from your throat to your lungs.'], ['stomach', 'Digestive', 'It churns food with acid.'],
+  ['small intestine', 'Digestive', 'About 20 feet of tube that soaks up food.'], ['large intestine', 'Digestive', 'It takes the water back out.'],
+  ['liver', 'Digestive', 'It makes bile to break down fat, and cleans up chemicals.'], ['brain', 'Nervous', 'The control center.'],
+  ['spinal cord', 'Nervous', 'The main cable from the brain down your back.'], ['nerves', 'Nervous', 'The wires that carry signals.'],
+  ['kidneys', 'Urinary', 'They filter the blood.'], ['bladder', 'Urinary', 'It stores what the kidneys filter out.'],
+  ['skull', 'Skeletal', 'The bone case around the brain.'], ['ribs', 'Skeletal', 'They cage in the heart and lungs.']
+];
+const LEVELS = ['Cell', 'Tissue', 'Organ', 'Organ system', 'Organism'];
+const LEVEL_Q = [
+  ['one red blood cell', 'Cell'], ['one nerve cell', 'Cell'], ['one muscle cell', 'Cell'],
+  ['heart muscle', 'Tissue'], ['the lining of the stomach', 'Tissue'], ['a patch of skin tissue', 'Tissue'],
+  ['the heart', 'Organ'], ['the stomach', 'Organ'], ['the brain', 'Organ'], ['a kidney', 'Organ'],
+  ['heart + blood vessels + blood', 'Organ system'], ['mouth + stomach + intestines', 'Organ system'], ['brain + spinal cord + nerves', 'Organ system'],
+  ['you', 'Organism'], ['your dog', 'Organism']
+];
+const MODES = [
+  { key: 'system', tab: 'Which system?', note: 'Tap the team this organ plays on.' },
+  { key: 'level', tab: 'Which level?', note: 'Cell, tissue, organ, organ system, or organism?' }
+];
+const KEY = 'seventh-grade-math:anatomy-1';
+let right = 0;
+try { right = Math.max(0, parseInt(localStorage.getItem(KEY), 10) || 0); } catch (e) {}
+const $ = id => document.getElementById(id);
+let mode = 'system', cur = null, last = null, misses = 0, done = false;
+function drawTally(){ $('tally').textContent = 'Right ' + right; }
+function say(kind, lead, extra){
+  const el = $('say'); el.className = 'say' + (kind ? ' ' + kind : ''); el.textContent = '';
+  if (!lead) return; const b = document.createElement('b'); b.textContent = lead; el.append(b); if (extra) el.append(' ' + extra);
+}
+function next(){
+  const bank = mode === 'system' ? ORGAN_Q : LEVEL_Q;
+  do { cur = pick(bank); } while (cur === last && bank.length > 1);
+  last = cur; misses = 0; done = false;
+  const q = $('q'); q.textContent = '';
+  const sm = document.createElement('small'); sm.textContent = mode === 'system' ? 'Which system?' : 'Which level?';
+  q.append(sm, cur[0]);
+  const box = $('choices'); box.textContent = '';
+  (mode === 'system' ? SYSTEMS : LEVELS).forEach(opt => {
+    const b = document.createElement('button'); b.className = 'choice'; b.type = 'button'; b.textContent = opt;
+    b.onclick = () => choose(b, opt); box.append(b);
+  });
+  say('', '');
+}
+function choose(btn, opt){
+  if (done) return;
+  if (opt !== cur[1]){ misses++; btn.classList.add('no'); btn.disabled = true; say('bad', 'Not that one.', 'Try again.'); return; }
+  done = true; btn.classList.add('yes');
+  Array.prototype.forEach.call($('choices').children, b => { b.disabled = true; });
+  right++; try { localStorage.setItem(KEY, String(right)); } catch (e) {}
+  drawTally();
+  if (window.Tokens) Tokens.earnSolve({ clean: misses === 0, source: 'anatomy-1' });
+  say('good', cur[1] + '.', (cur[2] || '') + ' Tap Next.');
+}
+MODES.forEach(m => {
+  const b = document.createElement('button'); b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab;
+  b.onclick = () => setMode(m.key); $('modes').append(b);
+});
+function setMode(k){
+  mode = k;
+  Array.prototype.forEach.call($('modes').children, (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === k)));
+  $('note').textContent = MODES.find(m => m.key === k).note;
+  last = null; next();
+}
+$('next').onclick = next;
+drawTally();
+setMode('system');
+</script>
+</body>
+</html>

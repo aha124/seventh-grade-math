@@ -146,6 +146,16 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
 .warm .go{font-family:var(--display);font-size:1rem;font-weight:600;color:var(--edge);margin-left:auto;white-space:nowrap}
 
 .nolist{margin:1.6rem 0 0;color:var(--board-soft)}
+
+/* Subjects. Math is the main one; Anatomy and Ghost Lab sit beside it
+   as tabs. The tab picked last is remembered on this device only. */
+.subjects{display:flex;gap:.4rem;flex-wrap:wrap;margin:1.3rem 0 0}
+.subject{font-family:var(--display);font-size:1.15rem;font-weight:600;letter-spacing:.02em;
+  background:var(--paper);color:var(--board-soft);border:1.5px solid var(--line);border-radius:3px;
+  min-height:44px;padding:.45rem 1rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.subject[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.subject-pane[hidden]{display:none}
+.pane-lede{margin:1.2rem 0 0;max-width:60ch;color:var(--board-soft)}
 .foot{margin:2.4rem 0 0;padding-top:1rem;border-top:1.5px solid var(--line);font-size:.95rem;color:#7C93A5;max-width:56ch}
 .foot-link{display:inline-block;min-height:44px;line-height:44px;margin-top:-.4rem;color:var(--edge);font-weight:600}
 </style>
@@ -160,7 +170,7 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
 </header>
 
 <main class="wrap">
-  <p class="lede">Pick the one you want to work on. You can come back to any of them as many times as you like.</p>
+  <p class="lede">Pick a subject, then the one you want to work on. You can come back to any of them as many times as you like.</p>
 
   <a class="counter" href="shop.html">
     <span class="counter-coin" aria-hidden="true"></span>
@@ -171,6 +181,13 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
     <span class="counter-go">Open the shop →</span>
   </a>
 
+  <div class="subjects" id="subjects" role="group" aria-label="Subjects">
+    <button class="subject" type="button" data-pane="math">Math</button>
+    <button class="subject" type="button" data-pane="anatomy">Anatomy</button>
+    <button class="subject" type="button" data-pane="ghost">Ghost Lab</button>
+  </div>
+
+  <div class="subject-pane" id="pane-math">
   <section class="warmups" id="warmups" hidden aria-label="Daily warm-ups">
     <h2>Daily warm-ups</h2>
     <ul id="warmupList"></ul>
@@ -178,6 +195,17 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
 
   <div id="lessons">
     <p class="nolist">The list could not load. Open <code>index.html</code> from the folder that holds <code>site.js</code>.</p>
+  </div>
+  </div>
+
+  <div class="subject-pane" id="pane-anatomy" hidden>
+    <p class="pane-lede">One body system a week. Each week has its own practice.</p>
+    <div id="anatomyList"></div>
+  </div>
+
+  <div class="subject-pane" id="pane-ghost" hidden>
+    <p class="pane-lede">Building a ghost detector, one session at a time, and testing what it really picks up.</p>
+    <div id="ghostList"></div>
   </div>
 
   <p class="foot">Everything here runs in the browser. Nothing you type gets sent anywhere. <a class="foot-link" href="grown-ups.html">Grown-ups</a></p>
@@ -211,7 +239,7 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
     return item;
   }
 
-  function rowFor(day){
+  function rowFor(day, word){
     const pages = Array.isArray(day.pages) ? day.pages : [];
     const row = document.createElement('li');
     row.className = 'day' + (pages.length ? '' : ' empty');
@@ -220,7 +248,7 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
     label.className = 'day-label';
     const num = document.createElement('span');
     num.className = 'dnum';
-    num.textContent = 'Day ' + day.d;
+    num.textContent = (word || 'Day') + ' ' + day.d;
     const name = document.createElement('span');
     name.className = 'dname';
     name.textContent = day.name;
@@ -277,6 +305,28 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
   host.textContent = '';
   host.append(frag);
 
+  /* Anatomy and Ghost Lab: one row per week or session, from ANATOMY and
+     GHOSTLAB in site.js, drawn with the same rows as the math days. */
+  function unit(listId, arr, word, title){
+    const el = document.getElementById(listId);
+    if (!el || typeof arr === 'undefined' || !Array.isArray(arr)) return;
+    const section = document.createElement('section');
+    section.className = 'lesson';
+    const head = document.createElement('h2');
+    head.className = 'lesson-head';
+    const t = document.createElement('span');
+    t.className = 'ltitle';
+    t.textContent = title;
+    head.append(t);
+    const rows = document.createElement('ol');
+    rows.className = 'days';
+    [...arr].sort((a, b) => a.d - b.d).forEach(r => rows.append(rowFor(r, word)));
+    section.append(head, rows);
+    el.append(section);
+  }
+  unit('anatomyList', typeof ANATOMY !== 'undefined' ? ANATOMY : undefined, 'Week', 'Anatomy, October to December');
+  unit('ghostList', typeof GHOSTLAB !== 'undefined' ? GHOSTLAB : undefined, 'Session', 'The ghost detector');
+
   /* the warm-up strip, from the WARMUPS array in site.js */
   const strip = document.getElementById('warmups');
   const list = document.getElementById('warmupList');
@@ -311,6 +361,22 @@ a.warm:hover .wname,a.warm:focus-visible .wname{color:var(--gold);text-decoratio
     });
     strip.hidden = false;
   }
+
+  /* subject tabs; #anatomy or #ghost in the URL opens that one */
+  const PANES = ['math', 'anatomy', 'ghost'];
+  const TAB_KEY = 'seventh-grade-math:hub-subject';
+  function show(name){
+    if (PANES.indexOf(name) < 0) name = 'math';
+    PANES.forEach(p => { document.getElementById('pane-' + p).hidden = p !== name; });
+    document.querySelectorAll('.subject').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pane === name)));
+    try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
+  }
+  document.querySelectorAll('.subject').forEach(b => { b.onclick = () => show(b.dataset.pane); });
+  const fromHash = (location.hash || '').replace('#', '');
+  let saved = null;
+  try { saved = localStorage.getItem(TAB_KEY); } catch (e) {}
+  show(PANES.indexOf(fromHash) >= 0 ? fromHash : (saved || 'math'));
+  window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (PANES.indexOf(h) >= 0) show(h); });
 })();
 </script>
 

@@ -51,6 +51,7 @@ lesson-07/interest.html  simple interest, compound interest a year at a time in 
 lesson-08/three-ways.html  fraction to decimal and percent, decimal or percent to a fraction, plus the benchmark round
 lesson-08/part-whole.html  percent word problems both ways (find the percent, find the part, mixed), plus the tip round
 lesson-08/roots.html     perfect squares, guess and check for bigger roots, plus the squares round
+lesson-09/factors.html   find every factor on a tap grid, prime or composite, plus the prime round
 anatomy/week-01.html     anatomy week 1: which system, which level (tap to answer, earns tokens)
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments

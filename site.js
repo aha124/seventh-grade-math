@@ -55,6 +55,50 @@ const WARMUPS = [
 
 const LESSONS = [
   {
+    n: 9,
+    title: "Skills review: everything so far",
+    days: [
+      {
+        d: 1,
+        name: "Factors, primes, and comparing decimals",
+        note: "Factors are new this week. Whiteboard first, then Factor Finder.",
+        pages: [
+          { href: "lesson-09/factors.html", name: "Factor Finder", blurb: "Tap every factor of a number on the grid. Sort numbers into prime and composite. Or the 60 second Prime round.", cta: "Start practicing" },
+          { href: "lesson-05/place-value.html#tab=compare", name: "Compare round (from lesson 5)", blurb: "Two decimals, tap <, =, or >. Sixty seconds.", cta: "Start the round" }
+        ]
+      },
+      {
+        d: 2,
+        name: "Multiplying decimals; times and divided by 10, 100, 1,000",
+        pages: [
+          { href: "lesson-05/line-up.html#tab=mixed", name: "Line them up: Mixed", blurb: "Add, subtract, and multiply decimals, shuffled.", cta: "Start practicing" },
+          { href: "lesson-07/percents.html#tab=shift", name: "Move the point", blurb: "Times or divided by 10, 100, 1,000.", cta: "Start practicing" }
+        ]
+      },
+      {
+        d: 3,
+        name: "Dividing decimals",
+        pages: [
+          { href: "lesson-08/three-ways.html#tab=dec", name: "To a decimal", blurb: "Long division, adding zeros until nothing is left over.", cta: "Start practicing" }
+        ]
+      },
+      {
+        d: 4,
+        name: "Word problems and a look back",
+        pages: [
+          { href: "lesson-08/part-whole.html#tab=mixed", name: "Percent word problems: Mixed", blurb: "Find the part or find the percent. Decide which first.", cta: "Start practicing" },
+          { href: "lesson-09/factors.html", name: "Factor Finder", blurb: "One more pass if factors still feel new.", cta: "Start practicing" }
+        ]
+      },
+      {
+        d: 5,
+        name: "Test day",
+        pages: [],
+        note: "The big halfway test, on paper. Every factor, including 1 and the number itself. Word problems in a full sentence."
+      }
+    ]
+  },
+  {
     n: 8,
     title: "Converting between fractions, decimals, and percentages; square roots",
     days: [

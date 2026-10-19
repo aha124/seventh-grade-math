@@ -52,7 +52,9 @@ lesson-08/three-ways.html  fraction to decimal and percent, decimal or percent t
 lesson-08/part-whole.html  percent word problems both ways (find the percent, find the part, mixed), plus the tip round
 lesson-08/roots.html     perfect squares, guess and check for bigger roots, plus the squares round
 lesson-09/factors.html   find every factor on a tap grid, prime or composite, plus the prime round
+lesson-10/balance.html   equations with a missing number: adding, subtracting, multiply and divide, mixed, plus the balance round
 anatomy/week-01.html     anatomy week 1: which system, which level (tap to answer, earns tokens)
+anatomy/week-02.html     anatomy week 2: parts of the heart, vessels, and blood
 shop.html                the prize counter: spend tokens on items from shared/items.js
 grown-ups.html           pending hand-offs, history, stats, manual adjustments
 shared/style.css         design tokens and the components every page shares

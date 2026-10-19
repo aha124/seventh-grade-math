@@ -47,6 +47,8 @@ const WARMUPS = [
     text: "60 seconds of making change, counting up from the price." },
   { name: "Percent round", href: "lesson-07/percents.html#tab=round",
     text: "60 seconds of decimals to percents and back." },
+  { name: "Balance round", href: "lesson-10/balance.html#tab=round",
+    text: "60 seconds of one-step equations in your head." },
   { name: "Tip round", href: "lesson-08/part-whole.html#tab=tips",
     text: "60 seconds of tips in your head: 10%, then double, halve, or add half." },
   { name: "Dice game", version: DICE_VERSION,
@@ -54,6 +56,20 @@ const WARMUPS = [
 ];
 
 const LESSONS = [
+  {
+    n: 10,
+    title: "Equations with missing numbers",
+    days: [
+      { d: 1, name: "Missing numbers: adding", note: "Skills Check on the board, then the lesson. Afterward, the Adding tab.",
+        pages: [ { href: "lesson-10/balance.html#tab=add", name: "Balance It", blurb: "Find the missing number. Undo the adding by subtracting, then put it back in to check.", cta: "Start practicing" } ] },
+      { d: 2, name: "Missing numbers: subtracting", pages: [ { href: "lesson-10/balance.html#tab=sub", name: "Balance It: Subtracting", blurb: "Undo the subtracting by adding.", cta: "Start practicing" } ] },
+      { d: 3, name: "Missing numbers: multiplying and dividing", pages: [ { href: "lesson-10/balance.html#tab=muldiv", name: "Balance It: Multiply and divide", blurb: "Divide to undo multiplying. In division, which number is missing decides what you do.", cta: "Start practicing" } ] },
+      { d: 4, name: "Review day", pages: [
+          { href: "lesson-10/balance.html#tab=mixed", name: "Balance It: Mixed", blurb: "Decide which operation undoes it.", cta: "Start practicing" },
+          { href: "lesson-09/factors.html", name: "Factor Finder", blurb: "The test asks for the factors of 27 and 32.", cta: "Start practicing" } ] },
+      { d: 5, name: "Test day", pages: [], note: "The test is on paper. Round decimal answers to the hundredth. Fractions in lowest terms." }
+    ]
+  },
   {
     n: 9,
     title: "Skills review: everything so far",
@@ -464,7 +480,9 @@ const ANATOMY = [
   { d: 1, name: "The body's map", pages: [
       { href: "anatomy/week-01.html", name: "The Body's Map", blurb: "Which system does each organ belong to? Which level is it: cell, tissue, organ, system, or organism?", cta: "Start practicing" }
     ], note: "The lesson is on the board. The worksheets are on paper." },
-  { d: 2, name: "Heart and blood", pages: [], note: "Coming up." },
+  { d: 2, name: "Heart and blood", pages: [
+      { href: "anatomy/week-02.html", name: "Heart & Blood", blurb: "Which part of the heart does each job? Which vessel, or which part of the blood?", cta: "Start practicing" }
+    ], note: "Her book: the Heart & Circulatory System chapter." },
   { d: 3, name: "Lungs and breathing", pages: [], note: "Coming up." },
   { d: 4, name: "Digestion", pages: [], note: "Coming up." },
   { d: 5, name: "Brain and nerves", pages: [], note: "Coming up." },

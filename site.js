@@ -500,7 +500,8 @@ const ANATOMY = [
       { href: "anatomy/week-02.html", name: "Heart & Blood", blurb: "Which part of the heart does each job? Which vessel, or which part of the blood?", cta: "Start practicing" }
     ], note: "Her book: the Heart & Circulatory System chapter." },
   { d: 3, name: "Lungs and breathing", pages: [
-      { href: "anatomy/week-03.html", name: "Lungs & Breathing", blurb: "Which part of the airway? How does oxygen get into the blood? What goes wrong?", cta: "Start practicing" }
+      { href: "anatomy/week-03.html", name: "Lungs & Breathing", blurb: "Which part of the airway? How does oxygen get into the blood? What goes wrong?", cta: "Start practicing" },
+      { href: "anatomy/lungs-3d.html", name: "Lungs in 3D", blurb: "Breathe in with the diaphragm, then watch oxygen and carbon dioxide swap at an air sac.", cta: "Open it" }
     ], note: "Four days this week. The worksheets are on paper." },
   { d: 4, name: "Digestion", pages: [], note: "Coming up." },
   { d: 5, name: "Brain and nerves", pages: [], note: "Coming up." },

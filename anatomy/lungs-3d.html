@@ -9,34 +9,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/style.css">
 <style>
-.wrap{max-width:980px;margin:0 auto;padding:0 1rem}
+.wrap{max-width:1040px;margin:0 auto;padding:0 1rem}
 .modes{display:flex;gap:.4rem;margin:1rem 0 .2rem;flex-wrap:wrap}
 .mode-tab{font-family:var(--display);font-size:1.1rem;font-weight:600;background:transparent;color:var(--board-soft);
   border:1.5px solid var(--line);border-radius:2px;min-height:44px;padding:.45rem .9rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
 .mode-note{margin:.5rem 0 0;font-size:1rem;color:var(--board-soft)}
-.stage{position:relative;margin:.7rem 0 0;height:min(62vh,640px);min-height:340px;background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#E4EEF4 100%);
-  border:1.5px solid var(--line);border-radius:4px;overflow:hidden;touch-action:none}
+.stage{position:relative;margin:.7rem 0 0;height:min(66vh,680px);min-height:360px;
+  background:radial-gradient(ellipse at 50% 35%,#2B3E52 0%,#141F2B 70%,#0E161F 100%);
+  border-radius:6px;overflow:hidden;touch-action:none}
 .stage canvas{display:block;width:100%;height:100%}
-.hud{position:absolute;left:.6rem;top:.6rem;padding:.5rem .7rem;background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:4px;
-  font-size:.92rem;line-height:1.35;color:var(--board);max-width:15.5rem;pointer-events:none}
-.hud b{font-family:var(--display);font-size:1.05rem}
-.meter{height:10px;background:#E4EEF4;border-radius:5px;overflow:hidden;margin:.2rem 0 .45rem}
-.meter i{display:block;height:100%;width:0;background:var(--edge);border-radius:5px}
-.meter.o2 i{background:#2F86D6} .meter.co2 i{background:#8C7A9B} .meter.red i{background:#C9252C}
-.flow{font-family:var(--display);font-weight:700;font-size:1.25rem}
-.flow.in{color:#2F86D6} .flow.out{color:#8C7A9B} .flow.still{color:#7C93A5}
-.tag{position:absolute;transform:translate(-50%,-50%);padding:.1rem .45rem;background:rgba(16,36,58,.86);color:#fff;border-radius:3px;
-  font-family:var(--display);font-weight:600;font-size:.95rem;white-space:nowrap;pointer-events:none}
-.legend{position:absolute;right:.6rem;top:.6rem;padding:.45rem .65rem;background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:4px;font-size:.88rem;pointer-events:none}
-.legend span{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;vertical-align:-1px;margin-right:.35rem}
-.hint{position:absolute;right:.6rem;bottom:.5rem;font-size:.8rem;color:#7C93A5;pointer-events:none}
+.hud{position:absolute;left:.6rem;top:.6rem;padding:.55rem .75rem;background:rgba(12,22,32,.72);border:1px solid rgba(143,196,224,.25);border-radius:5px;
+  font-size:.92rem;line-height:1.35;color:#E3EDF3;max-width:16rem;pointer-events:none;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.hud b{font-family:var(--display);font-size:1.05rem;color:#fff;font-weight:600}
+.meter{height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;margin:.25rem 0 .5rem}
+.meter i{display:block;height:100%;width:0;background:#8FC4E0;border-radius:4px;transition:width .15s linear}
+.meter.o2 i{background:#4DA3F0} .meter.co2 i{background:#9A9AA6}
+.flow{font-family:var(--display);font-weight:700;font-size:1.3rem;letter-spacing:.02em}
+.flow.in{color:#6CB8F5} .flow.out{color:#C2B8CF} .flow.still{color:#8297A8}
+.tag{position:absolute;padding:.12rem .5rem;background:rgba(255,255,255,.92);color:#10243A;border-radius:3px;
+  font-family:var(--display);font-weight:600;font-size:.95rem;white-space:nowrap;pointer-events:none;transform:translate(-50%,-50%);
+  box-shadow:0 1px 6px rgba(0,0,0,.35)}
+.legend{position:absolute;right:.6rem;top:.6rem;padding:.5rem .7rem;background:rgba(12,22,32,.72);border:1px solid rgba(143,196,224,.25);border-radius:5px;
+  font-size:.88rem;color:#E3EDF3;pointer-events:none;line-height:1.6}
+.legend .mol{display:inline-flex;align-items:center;gap:1px;margin-right:.45rem;vertical-align:-2px}
+.legend .a{display:inline-block;width:.7rem;height:.7rem;border-radius:50%}
+.hint{position:absolute;right:.7rem;bottom:.5rem;font-size:.8rem;color:#8297A8;pointer-events:none}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#C9D8E3;font-family:var(--display);font-size:1.3rem;pointer-events:none}
 .controls{display:flex;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;align-items:center}
+.controls[hidden]{display:none}
 .btn.big{min-height:60px;font-size:1.25rem;padding:.6rem 1.4rem;user-select:none;-webkit-user-select:none;touch-action:none}
 .btn.big.active{background:var(--good);border-color:var(--good)}
 .toggle[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
-.controls[hidden]{display:none}
 .err{display:none;margin:.8rem 0 0;padding:.6rem .8rem;background:#FBF0DF;border-left:4px solid var(--gold)}
+.credit{margin:1rem 0 0;font-size:.8rem;color:#7C93A5}
+.credit a{color:inherit}
 </style>
 </head>
 <body>
@@ -53,6 +60,7 @@
   </div>
   <p class="mode-note" id="note"></p>
   <div class="stage" id="stage">
+    <div class="loading" id="loading">Loading the chest model...</div>
     <div class="hud" id="hud"></div>
     <div class="legend" id="legend" hidden></div>
     <div id="tags"></div>
@@ -61,6 +69,7 @@
   <div class="controls" id="ctlBreathe">
     <button class="btn primary big" id="hold" type="button">Hold to breathe in</button>
     <button class="btn ghost toggle" id="auto" type="button" aria-pressed="false">Breathe by itself</button>
+    <button class="btn ghost toggle" id="ribsBtn" type="button" aria-pressed="true">Ribs</button>
     <button class="btn ghost toggle" id="labels1" type="button" aria-pressed="true">Labels</button>
   </div>
   <div class="controls" id="ctlSwap" hidden>
@@ -69,7 +78,8 @@
     <button class="btn ghost toggle" id="slow" type="button" aria-pressed="false">Slow motion</button>
     <button class="btn ghost toggle" id="labels2" type="button" aria-pressed="true">Labels</button>
   </div>
-  <p class="err" id="err">The 3D part needs an internet connection the first time it loads. Check the connection and reload.</p>
+  <p class="err" id="err">The 3D part did not load. It needs an internet connection, and it has to be opened from the website rather than from a file on the computer.</p>
+  <p class="credit">Chest model: <a href="https://www.z-anatomy.com/">Z-Anatomy</a> (CC BY-SA 4.0), built on BodyParts3D, The Database Center for Life Science (CC BY-SA 2.1 Japan). Simplified for the web.</p>
 </main>
 
 <script type="importmap">
@@ -80,402 +90,444 @@
 </script>
 <script>
 window.__lungsLoaded = false;
-setTimeout(() => { if (!window.__lungsLoaded) document.getElementById('err').style.display = 'block'; }, 8000);
+setTimeout(() => { if (!window.__lungsLoaded) document.getElementById('err').style.display = 'block'; }, 15000);
 </script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-window.__lungsLoaded = true;
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 stage.prepend(renderer.domElement);
+const envTex = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 
-function lights(scene){
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c9d6, 1.1));
-  const d = new THREE.DirectionalLight(0xffffff, 1.4); d.position.set(3, 6, 5); scene.add(d);
-  const d2 = new THREE.DirectionalLight(0xffffff, 0.5); d2.position.set(-4, 2, -3); scene.add(d2);
-}
-function mat(color, opacity, extra){
-  return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.55, metalness: 0, transparent: opacity < 1, opacity,
-    depthWrite: opacity >= 1, side: THREE.DoubleSide }, extra || {}));
-}
-function tube(a, b, r, m){
-  const dir = new THREE.Vector3().subVectors(b, a), len = dir.length();
-  const g = new THREE.CylinderGeometry(r * 0.8, r, len, 14, 1, true);
-  const mesh = new THREE.Mesh(g, m);
-  mesh.position.copy(a).addScaledVector(dir, 0.5);
-  mesh.quaternion.setFromUnitVectors(V3(0, 1, 0), dir.normalize());
-  return mesh;
-}
-
-/* ================= SCENE 1: breathing ================= */
-const S1 = { scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(40, 1, 0.1, 100) };
-lights(S1.scene);
-S1.camera.position.set(2.6, 1.6, 9.0);
-
-/* lungs: a squashed sphere, flat on the bottom and the inner side; the left one has a notch for the heart */
-function lungGeom(side){ // side -1 = person's right (viewer's left), +1 = person's left
-  const g = new THREE.SphereGeometry(1, 56, 40), p = g.attributes.position, v = new THREE.Vector3();
-  for (let i = 0; i < p.count; i++){
-    v.fromBufferAttribute(p, i);
-    let x = v.x * 0.78, y = v.y * 1.38, z = v.z * 0.9;
-    if (y < -0.95) y = -0.95 + (y + 0.95) * 0.25;            // flat base on the diaphragm
-    const inner = -side * x;                                  // distance toward the middle
-    if (inner > 0.32) x = -side * (0.32 + (inner - 0.32) * 0.35);
-    if (side > 0 && -x > 0.05 && y < 0.15 && z > -0.1){        // heart notch
-      const k = Math.min(1, (0.15 - y) / 0.6) * Math.min(1, (z + 0.1) / 0.6);
-      x += 0.42 * k;
-    }
-    if (y > 0.9) { x *= 0.92; z *= 0.92; }                    // narrower top
-    p.setXYZ(i, x, y - 1.38, z);                               // hang from the top
-  }
-  g.computeVertexNormals();
-  return g;
-}
-const lungMat = mat(0xE8919B, 0.72, { roughness: 0.8 });
-const lungs = [];
-const treeMat = mat(0xF4F1EA, 1, { roughness: 0.7 });
-for (const side of [-1, 1]){
-  const grp = new THREE.Group();
-  grp.position.set(side * 0.98, 1.62, 0);
-  grp.add(new THREE.Mesh(lungGeom(side), lungMat));
-  // a little bronchial tree inside
-  const start = V3(-side * 0.55, -0.1, 0);
-  const grow = (a, dir, len, r, depth) => {
-    const b = a.clone().addScaledVector(dir, len);
-    grp.add(tube(a, b, r, treeMat));
-    if (depth === 0) return;
-    for (const t of [-1, 1]){
-      const d = dir.clone().applyAxisAngle(V3(0, 0, 1), t * rnd(0.35, 0.6)).applyAxisAngle(V3(0, 1, 0), rnd(-0.8, 0.8)).normalize();
-      grow(b, d, len * 0.68, r * 0.7, depth - 1);
-    }
+/* see-through tissue: solid at the edges, clearer where you look straight in (like a medical illustration) */
+function rim(m, minA, power){
+  m.transparent = true; m.depthWrite = false;
+  m.onBeforeCompile = sh => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>',
+      'float _f = 1.0 - abs(dot(normalize(normal), normalize(vViewPosition)));\n' +
+      'diffuseColor.a *= mix(' + minA.toFixed(3) + ', 1.0, pow(_f, ' + power.toFixed(2) + '));\n#include <opaque_fragment>');
   };
-  grow(start, V3(side * 0.55, -1, 0).normalize(), 0.62, 0.075, 3);
-  grp.userData.side = side;
-  S1.scene.add(grp); lungs.push(grp);
+  return m;
 }
-// fissure lines: right lung 3 lobes (two lines), left lung 2 lobes (one line)
-function fissure(grp, y0, y1){
-  const pts = []; for (let i = 0; i <= 40; i++){ const a = -Math.PI * 0.5 + i / 40 * Math.PI * 1.15; const t = i / 40; pts.push(V3(Math.cos(a) * 0.79 * grp.userData.side * -1 * -1, y0 + (y1 - y0) * t, Math.sin(a) * 0.9)); }
-  const c = new THREE.CatmullRomCurve3(pts);
-  grp.add(new THREE.Mesh(new THREE.TubeGeometry(c, 40, 0.012, 6), mat(0x9E4A57, 0.8)));
+function phys(o){ return new THREE.MeshPhysicalMaterial(Object.assign({ envMap: envTex, envMapIntensity: 0.9, side: THREE.DoubleSide }, o)); }
+function lights(scene){
+  scene.add(new THREE.HemisphereLight(0xdfe9f2, 0x2a2018, 0.55));
+  const key = new THREE.DirectionalLight(0xfff4e8, 2.0); key.position.set(2, 3, 4); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xbcd6ff, 0.7); fill.position.set(-3, 1, 2); scene.add(fill);
+  const back = new THREE.DirectionalLight(0xffffff, 1.0); back.position.set(0, 2, -4); scene.add(back);
 }
 
-// trachea with rings, and the two bronchi
-const tracheaMat = mat(0xF4F1EA, 1, { roughness: 0.6 });
-S1.scene.add(tube(V3(0, 1.45, 0), V3(0, 3.45, 0), 0.15, tracheaMat));
-for (let y = 1.6; y < 3.4; y += 0.16){
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.155, 0.025, 6, 20), mat(0xE2DACB, 1));
-  ring.rotation.x = Math.PI / 2; ring.position.y = y; S1.scene.add(ring);
+/* ================= SCENE 1: breathing, on a real chest model ================= */
+const S1 = { scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(32, 1, 0.01, 20), ready: false, target: V3(0, 0, 0) };
+lights(S1.scene);
+S1.camera.position.set(0.16, 0.08, 0.9);
+const M = {
+  lung: rim(phys({ color: 0xE59A9A, roughness: 0.55, sheen: 0.8, sheenColor: new THREE.Color(0xFFD6D2), sheenRoughness: 0.5, clearcoat: 0.35, clearcoatRoughness: 0.4 }), 0.5, 1.4),
+  airway: phys({ color: 0xEDE6DA, roughness: 0.45, clearcoat: 0.3, clearcoatRoughness: 0.5 }),
+  bone: phys({ color: 0xE6D9BF, roughness: 0.62, sheen: 0.3, sheenColor: new THREE.Color(0xffffff) }),
+  cart: phys({ color: 0xC9DCE0, roughness: 0.35, clearcoat: 0.5, clearcoatRoughness: 0.3 }),
+  muscle: phys({ color: 0xA9473F, roughness: 0.5, sheen: 0.6, sheenColor: new THREE.Color(0xFF9B8A), clearcoat: 0.3, clearcoatRoughness: 0.45 }),
+  heart: phys({ color: 0x8E2B2D, roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.3, sheen: 0.4, sheenColor: new THREE.Color(0xFF7A6E) })
+};
+const parts = {}, base = {};
+let cage, lungsR = [], lungsL = [], pivotR, pivotL, dia, diaPos0, diaTop, diaBase, cagePivot, airLeaves = [], tracheaTop, carina;
+const B = { phase: 0, air: 1, flow: 0, holding: false, auto: false, autoT: 0, labels: true };
+
+async function loadChest(){
+  const [gltf, tree] = await Promise.all([
+    new GLTFLoader().loadAsync('models/thorax.glb'),
+    fetch('models/bronchi.json').then(r => r.json())
+  ]);
+  gltf.scene.traverse(o => { if (o.isMesh) parts[o.name] = o; });
+  const matFor = { lobe_RS: M.lung, lobe_RM: M.lung, lobe_RI: M.lung, lobe_LS: M.lung, lobe_LI: M.lung, trachea: M.airway, larynx: M.cart,
+    diaphragm: M.muscle, heart: M.heart, ribs: M.bone, cartilage: M.cart, sternum: M.bone, spine: M.bone, clavicles: M.bone };
+  for (const [k, m] of Object.entries(parts)){ m.material = matFor[k] || M.bone; }
+  ['lobe_RS', 'lobe_RM', 'lobe_RI', 'lobe_LS', 'lobe_LI'].forEach(k => parts[k].renderOrder = 5);
+  const root = gltf.scene;
+  const box = new THREE.Box3().setFromObject(parts.ribs), c = box.getCenter(new THREE.Vector3());
+  root.position.sub(c); S1.scene.add(root); root.updateMatrixWorld(true);
+  const toW = v => V3(v[0] - c.x, v[1] - c.y, v[2] - c.z);
+  // the rib cage moves as one piece (ribs, cartilage, sternum), hinged at the back near the top of the spine
+  // the rib cage: the backs of the ribs stay on the spine, the fronts swing up and forward
+  const bake = m => { m.updateMatrixWorld(true); const g = m.geometry.clone().applyMatrix4(m.matrixWorld); m.geometry = g; S1.scene.add(m); m.position.set(0, 0, 0); m.quaternion.identity(); m.scale.set(1, 1, 1); return g; };
+  const rb = new THREE.Box3().setFromObject(parts.ribs);
+  cagePivot = V3(0, rb.max.y - 0.01, rb.min.z + 0.02);
+  const zBack = rb.min.z + 0.035, zFront = rb.max.z;
+  cage = ['ribs', 'cartilage', 'sternum'].map(k => {
+    const g = bake(parts[k]), a = g.attributes.position.array, w = new Float32Array(a.length / 3);
+    for (let i = 0; i < w.length; i++) w[i] = Math.pow(Math.max(0, Math.min(1, (a[i * 3 + 2] - zBack) / (zFront - zBack))), 1.1);
+    return { g, a0: a.slice(), w };
+  });
+  // lungs grow from their tops
+  const lobeR = ['lobe_RS', 'lobe_RM', 'lobe_RI'].map(k => parts[k]), lobeL = ['lobe_LS', 'lobe_LI'].map(k => parts[k]);
+  const holderR = new THREE.Group(), holderL = new THREE.Group(); S1.scene.add(holderR, holderL);
+  lobeR.forEach(m => holderR.attach(m)); lobeL.forEach(m => holderL.attach(m));
+  const topOf = arr => { const b = new THREE.Box3(); arr.forEach(m => b.expandByObject(m)); const cc = b.getCenter(new THREE.Vector3()); return V3(cc.x, b.max.y, cc.z); };
+  pivotR = topOf(lobeR); pivotL = topOf(lobeL);
+  lungsR = [holderR]; lungsL = [holderL];
+  S1.lobes = { R: lobeR, L: lobeL };
+  // diaphragm: keep a copy of the shape to flatten the dome
+  dia = parts.diaphragm; dia.updateMatrixWorld(true);
+  const dg = dia.geometry.clone().applyMatrix4(dia.matrixWorld); dia.geometry = dg; dia.position.set(0, 0, 0); dia.rotation.set(0, 0, 0); dia.scale.set(1, 1, 1); S1.scene.attach(dia); dia.position.set(0,0,0); dia.quaternion.identity(); dia.scale.set(1,1,1);
+  diaPos0 = dg.attributes.position.array.slice();
+  const db = new THREE.Box3().setFromBufferAttribute(dg.attributes.position); diaTop = db.max.y; diaBase = db.max.y - 0.11;
+  // the airway tree, from the model's bronchus paths
+  const T = {};
+  for (const [name, v] of Object.entries(tree)) T[name] = { name, pts: v.p.map(toW), parent: v.parent, kids: [] };
+  const tb = new THREE.Box3().setFromObject(parts.trachea);
+  carina = toW([-0.001, 1.3704, -0.0113]);
+  const tTopPts = [], tp = parts.trachea.geometry.attributes.position, tw = new THREE.Vector3();
+  for (let i = 0; i < tp.count; i++){ tw.fromBufferAttribute(tp, i); parts.trachea.localToWorld(tw); if (tw.y > tb.max.y - 0.004) tTopPts.push(tw.clone()); }
+  tracheaTop = tTopPts.reduce((a, b) => a.add(b), V3(0, 0, 0)).multiplyScalar(1 / Math.max(1, tTopPts.length));
+  const endOf = n => n.pts[n.pts.length - 1];
+  const orient = (n, from) => { if (n.pts[0].distanceTo(from) > endOf(n).distanceTo(from)) n.pts.reverse(); };
+  const roots = [];
+  for (const n of Object.values(T)){ if (T[n.parent]) T[n.parent].kids.push(n); else roots.push(n); }
+  const radius = [0.0062, 0.0046, 0.0033, 0.0027];
+  const leafs = [];
+  const walk = (n, from, d, chain) => {
+    orient(n, from); const ch = chain.concat([n]);
+    const pts = [from.clone(), ...n.pts].filter((p, i, a) => i === 0 || p.distanceTo(a[i - 1]) > 1e-4);
+    if (pts.length < 2) pts.push(n.pts[0].clone().add(V3(0, -0.001, 0)));
+    const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(6, pts.length * 2), radius[Math.min(3, d)], 10, false), M.airway);
+    n.side = (pts[0].x + pts[pts.length - 1].x) < 0 ? 'R' : 'L';
+    (n.side === 'R' ? holderR : holderL).add(tube);
+    if (!n.kids.length) leafs.push(ch);
+    n.kids.forEach(k => walk(k, endOf(n), /Intermediate/.test(k.name) ? d : d + 1, ch));
+  };
+  roots.forEach(r => walk(r, carina, 0, []));
+  airLeaves = leafs.map(ch => {
+    const pts = [tracheaTop.clone().add(V3(0, 0.05, 0.012)), tracheaTop.clone(), carina.clone()];
+    ch.forEach(n => n.pts.forEach(p => pts.push(p.clone())));
+    const lens = [0]; for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + pts[i].distanceTo(pts[i - 1]));
+    return { pts, lens, total: lens[lens.length - 1], side: ch[0].side };
+  });
+  S1.target = V3(0, 0.025, 0);
+  S1.ready = true;
 }
-S1.scene.add(tube(V3(0, 1.48, 0), V3(-0.45, 1.45, 0), 0.11, tracheaMat));
-S1.scene.add(tube(V3(0, 1.48, 0), V3(0.45, 1.45, 0), 0.11, tracheaMat));
-// heart
-const heart = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 24), mat(0xB8282E, 1, { roughness: 0.45 }));
-heart.scale.set(1, 1.15, 0.9); heart.rotation.z = -0.5; heart.position.set(0.22, 0.2, 0.1); S1.scene.add(heart);
-// diaphragm dome
-const dia = new THREE.Mesh(new THREE.SphereGeometry(1.8, 56, 18, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xC0605A, 0.9, { roughness: 0.7 }));
-dia.position.y = -1.6; S1.scene.add(dia);
-// ribs, spine, sternum
-const boneMat = mat(0xE9E0CC, 0.8, { roughness: 0.6 });
-const ribs = [];
-for (let i = 0; i < 7; i++){
-  const rg = new THREE.TorusGeometry(1, 0.04, 8, 64, Math.PI * 2 * 0.86); rg.rotateZ(Math.PI / 2 + Math.PI * 0.14);
-  const r = new THREE.Mesh(rg, boneMat);
-  r.userData = { y: 2.55 - i * 0.43, sx: 1.55 + Math.sin((i + 1) / 8 * Math.PI) * 0.55, sz: 1.08 + Math.sin((i + 1) / 8 * Math.PI) * 0.32 };
-  S1.scene.add(r); ribs.push(r);
-}
-const spine = tube(V3(0, -1.8, -1.25), V3(0, 3.0, -1.25), 0.13, mat(0xE2DACB, 1)); S1.scene.add(spine);
-const sternum = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.0, 0.08), mat(0xEDE6D6, 0.85)); S1.scene.add(sternum);
 
 // air particles
-const AIR_N = 260;
-const airMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.035, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }), AIR_N);
-airMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+const AIR_N = 320;
+const airMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.0021, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95, depthTest: false }), AIR_N);
+airMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); airMesh.renderOrder = 10; airMesh.frustumCulled = false;
 S1.scene.add(airMesh);
 const air = [];
-const cIn = new THREE.Color(0x2F86D6), cOut = new THREE.Color(0x8C7A9B);
+const cIn = new THREE.Color(0x7CC4FF), cOut = new THREE.Color(0xC9BBD8);
+const tmpM = new THREE.Matrix4(), tmpV = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
+const lungScale = p => V3(1 + 0.05 * p, 1 + 0.13 * p, 1 + 0.06 * p);
 function spawnAir(dir){
-  if (air.length >= AIR_N) return;
-  const g = lungs[Math.random() < 0.5 ? 0 : 1], s = g.userData.side;
-  const local = V3(rnd(-0.45, 0.45), rnd(-2.0, -0.35), rnd(-0.55, 0.55));
-  air.push({ g, local, s, u: dir > 0 ? 0 : 1, dir, j: V3(rnd(-0.04, 0.04), 0, rnd(-0.04, 0.04)) });
+  if (air.length >= AIR_N || !airLeaves.length) return;
+  const L = airLeaves[Math.floor(Math.random() * airLeaves.length)];
+  air.push({ L, s: dir > 0 ? 0 : L.total, dir, j: V3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).multiplyScalar(0.002), v: rnd(0.85, 1.15) });
 }
-const tmpM = new THREE.Matrix4(), tmpV = new THREE.Vector3();
-function airPos(a, out){
-  const pA = V3(a.j.x, 3.6, a.j.z), pB = V3(a.j.x, 1.5, a.j.z), pC = V3(a.s * 0.5, 1.42, 0);
-  const pD = a.g.localToWorld(a.local.clone());
-  const u = a.u;
-  if (u < 0.45) out.lerpVectors(pA, pB, u / 0.45);
-  else if (u < 0.55) out.lerpVectors(pB, pC, (u - 0.45) / 0.1);
-  else out.lerpVectors(pC, pD, (u - 0.55) / 0.45);
+function airAt(a, out){
+  const L = a.L; let i = 1; while (i < L.lens.length - 1 && L.lens[i] < a.s) i++;
+  const t = (a.s - L.lens[i - 1]) / Math.max(1e-6, L.lens[i] - L.lens[i - 1]);
+  out.lerpVectors(L.pts[i - 1], L.pts[i], Math.min(1, Math.max(0, t))).add(a.j);
+  if (i > 3){ const piv = L.side === 'R' ? pivotR : pivotL, sc = lungScale(B.phase); out.sub(piv).multiply(sc).add(piv); }
   return out;
 }
-
-const B = { phase: 0, air: 1, flow: 0, holding: false, auto: false, autoT: 0, labels: true };
-function setBreatheShape(p){
-  const ex = 1 + 0.09 * p;
-  for (const g of lungs){ g.scale.set(1 + 0.07 * p, 1 + 0.17 * p, 1 + 0.07 * p); }
-  dia.scale.set(1 + 0.03 * p, 0.5 - 0.3 * p, 0.8 + 0.03 * p);
-  dia.position.y = -1.6 - 0.1 * p;
-  ribs.forEach((r, i) => {
-    const d = r.userData;
-    r.scale.set(d.sx * ex, d.sz * (1 + 0.13 * p), 1);
-    r.rotation.set(Math.PI / 2 + 0.32 - 0.22 * p, 0, 0);
-    r.position.set(0, d.y + 0.06 * p * (i + 1) / 7, 0.06 * p);
-  });
-  sternum.position.set(0, 1.25 + 0.1 * p, ribs[3].userData.sz * (1 + 0.13 * p) * 0.97 - 0.05 + 0.08 * p);
-  sternum.rotation.x = -0.12 + 0.08 * p;
+function shapeChest(p){
+  if (!S1.ready) return;
+  if (Math.abs(p - (shapeChest.lastP ?? -1)) < 1e-4) return;
+  shapeChest.lastP = p;
+  const sc = lungScale(p);
+  for (const [h, piv] of [[lungsR[0], pivotR], [lungsL[0], pivotL]]){
+    h.scale.copy(sc); h.position.set(piv.x * (1 - sc.x), piv.y * (1 - sc.y), piv.z * (1 - sc.z));
+  }
+  const pos = dia.geometry.attributes.position, a = pos.array, drop = 0.034 * p;
+  for (let i = 0; i < pos.count; i++){
+    const y0 = diaPos0[i * 3 + 1], k = Math.max(0, Math.min(1, (y0 - diaBase) / (diaTop - diaBase)));
+    a[i * 3 + 1] = y0 - drop * Math.pow(k, 0.9);
+  }
+  pos.needsUpdate = true; dia.geometry.computeVertexNormals();
+  const th = -0.07 * p, cs = Math.cos(th), sn = Math.sin(th), py = cagePivot.y, pz = cagePivot.z;
+  for (const c of cage){
+    const a = c.g.attributes.position.array, a0 = c.a0, w = c.w;
+    for (let i = 0; i < w.length; i++){
+      const x = a0[i * 3], y = a0[i * 3 + 1], z = a0[i * 3 + 2], k = w[i];
+      const dy = y - py, dz = z - pz;
+      const ry = py + dy * cs - dz * sn, rz = pz + dy * sn + dz * cs;
+      a[i * 3] = x * (1 + 0.04 * p * k); a[i * 3 + 1] = y + (ry - y) * k; a[i * 3 + 2] = z + (rz - z) * k;
+    }
+    c.g.attributes.position.needsUpdate = true;
+  }
 }
+function centerOf(arr, off){ if (!arr || !arr.length || !arr[0]) return null; const b = new THREE.Box3(); arr.forEach(m => b.expandByObject(m)); return b.getCenter(new THREE.Vector3()).add(off); }
 const tags1 = [
-  { text: 'Trachea', at: () => V3(0, 3.2, 0) },
-  { text: 'Right lung', at: () => lungs[0].localToWorld(V3(-0.5, -0.6, 0.4)) },
-  { text: 'Left lung', at: () => lungs[1].localToWorld(V3(0.55, -0.6, 0.4)) },
-  { text: 'Heart', at: () => V3(0.25, 0.15, 0.55) },
-  { text: 'Diaphragm', at: () => V3(0, dia.position.y + dia.scale.y * 1.8 * 0.6, 1.25) },
-  { text: 'Ribs', at: () => V3(-1.9, 2.1, 0.6) }
+  { text: 'Trachea', at: () => tracheaTop ? tracheaTop.clone().add(V3(0, -0.03, 0.03)) : null },
+  { text: 'Bronchi', at: () => carina ? carina.clone().add(V3(0.0, -0.012, 0.04)) : null },
+  { text: 'Right lung: 3 lobes', at: () => S1.lobes ? centerOf(S1.lobes.R, V3(-0.045, 0.02, 0.05)) : null },
+  { text: 'Left lung: 2 lobes', at: () => S1.lobes ? centerOf(S1.lobes.L, V3(0.05, 0.02, 0.05)) : null },
+  { text: 'Heart', at: () => parts.heart ? centerOf([parts.heart], V3(0.012, -0.005, 0.05)) : null },
+  { text: 'Diaphragm', at: () => dia ? V3(-0.07, diaTop - 0.035 - 0.034 * B.phase, 0.07) : null },
+  { text: 'Ribs', at: () => parts.ribs && parts.ribs.visible ? V3(0.15, -0.045, 0.04) : null }
 ];
 function stepBreathe(dt){
-  if (B.auto){ B.autoT = (B.autoT + dt) % 4.5; B.holding = B.autoT < 2.0; }
-  const target = B.holding ? 1 : 0;
-  const rate = B.holding ? 0.62 : 0.55;
+  if (B.auto){ B.autoT = (B.autoT + dt) % 4.6; B.holding = B.autoT < 2.1; }
+  const target = B.holding ? 1 : 0, rate = B.holding ? 0.6 : 0.55;
   B.phase += Math.max(-rate * dt, Math.min(rate * dt, target - B.phase));
-  setBreatheShape(B.phase);
-  // air: lung space grows, inside pressure drops, air flows from high pressure to low
+  shapeChest(B.phase);
   const V = 1 + 0.55 * B.phase, P = B.air / V;
-  B.flow = 3.2 * (1 - P);
-  B.air += B.flow * dt;
-  // particles
-  const want = Math.abs(B.flow) * 260 * dt;
-  for (let k = 0; k < want + (Math.random() < want % 1 ? 1 : 0); k++) spawnAir(B.flow > 0 ? 1 : -1);
-  const speed = 0.55;
+  B.flow = 3.2 * (1 - P); B.air += B.flow * dt;
+  const want = Math.abs(B.flow) * 300 * dt;
+  for (let k = 0; k < Math.floor(want) + (Math.random() < want % 1 ? 1 : 0); k++) spawnAir(B.flow > 0 ? 1 : -1);
   for (let i = air.length - 1; i >= 0; i--){
-    const a = air[i];
-    a.u += a.dir * speed * dt * (a.dir > 0 ? 1 : 1.1);
-    if ((a.dir > 0 && a.u >= 1) || (a.dir < 0 && a.u <= 0)) air.splice(i, 1);
+    const a = air[i]; a.s += a.dir * 0.16 * a.v * dt;
+    if ((a.dir > 0 && a.s >= a.L.total) || (a.dir < 0 && a.s <= 0)) air.splice(i, 1);
   }
   for (let i = 0; i < AIR_N; i++){
-    if (i < air.length){
-      airPos(air[i], tmpV); tmpM.makeTranslation(tmpV.x, tmpV.y, tmpV.z);
-      airMesh.setMatrixAt(i, tmpM); airMesh.setColorAt(i, air[i].dir > 0 ? cIn : cOut);
-    } else { tmpM.makeScale(0, 0, 0); airMesh.setMatrixAt(i, tmpM); }
+    if (i < air.length){ airAt(air[i], tmpV); tmpM.makeTranslation(tmpV.x, tmpV.y, tmpV.z); airMesh.setMatrixAt(i, tmpM); airMesh.setColorAt(i, air[i].dir > 0 ? cIn : cOut); }
+    else { tmpM.makeScale(0, 0, 0); airMesh.setMatrixAt(i, tmpM); }
   }
   airMesh.instanceMatrix.needsUpdate = true; if (airMesh.instanceColor) airMesh.instanceColor.needsUpdate = true;
-  // readouts
   const fl = B.flow > 0.04 ? ['in', 'Air rushes IN'] : B.flow < -0.04 ? ['out', 'Air is pushed OUT'] : ['still', 'No air moving'];
   const pText = fl[0] === 'in' ? 'lower than outside' : fl[0] === 'out' ? 'higher than outside' : 'same as outside';
-  $('hud').innerHTML = '<b>Diaphragm:</b> ' + (B.holding ? 'pulling down' : 'relaxing up') +
+  $('hud').innerHTML = '<b>Diaphragm:</b> ' + (B.holding ? 'tightening, pulling down' : 'relaxing, rising') +
     '<br><b>Space in the chest</b><div class="meter"><i style="width:' + Math.round(30 + 70 * B.phase) + '%"></i></div>' +
-    '<b>Air pressure inside:</b> ' + pText + '<div class="flow ' + fl[0] + '">' + fl[1] + '</div>';
+    '<b>Air pressure in the lungs:</b> ' + pText + '<div class="flow ' + fl[0] + '">' + fl[1] + '</div>';
 }
 
-/* ================= SCENE 2: the gas swap ================= */
-const S2 = { scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(40, 1, 0.1, 100) };
+/* ================= SCENE 2: the gas swap at one air sac ================= */
+const S2 = { scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(36, 1, 0.1, 100), ready: true, target: V3(0, 1.0, 0) };
 lights(S2.scene);
-S2.camera.position.set(3.2, 3.4, 8.2);
-const R = 2.1;                 // air sac radius
-const CR = 0.85, CY = -CR - 0.06, CL = 4.2; // capillary radius, center height, half length
-const sac = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 32, 0, Math.PI * 2, 0, Math.PI * 0.5), mat(0xF0A5AE, 0.28, { roughness: 0.9 }));
-S2.scene.add(sac);
-const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.03, 8, 80), mat(0xD77F8B, 0.9)); rim.rotation.x = Math.PI / 2; S2.scene.add(rim);
-// the duct the air comes down
-S2.scene.add(tube(V3(0, R - 0.08, 0), V3(0, R + 1.3, 0), 0.38, mat(0xF0A5AE, 0.35)));
-// the shared wall where the sac sits on the capillary
-const wall = new THREE.Mesh(new THREE.PlaneGeometry(2 * R * 0.95, 0.9), mat(0xE7B9A3, 0.55)); wall.rotation.x = -Math.PI / 2; wall.position.y = -0.02; S2.scene.add(wall);
-const cap = new THREE.Mesh(new THREE.CylinderGeometry(CR, CR, CL * 2, 40, 1, true), mat(0xC9454D, 0.26));
-cap.rotation.z = Math.PI / 2; cap.position.y = CY; S2.scene.add(cap);
-const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.55, 20), mat(0xC9454D, 0.9)); arrow.rotation.z = -Math.PI / 2; arrow.position.set(CL + 0.45, CY, 0); S2.scene.add(arrow);
+S2.camera.position.set(4.2, 4.3, 12.0);
+const R = 2.1, YC = R - 0.42;   // air sac radius and center height; its floor is flat where it presses on the capillary
+const FLOOR = Math.sqrt(R * R - YC * YC);
+const CR = 0.85, CY = -CR - 0.02, CL = 4.4;
+function noisy(geom, amt, f){
+  const p = geom.attributes.position, v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++){
+    v.fromBufferAttribute(p, i);
+    const n = Math.sin(v.x * f + 1.3) * Math.sin(v.y * f * 1.3 + 0.4) * Math.sin(v.z * f * 0.9 + 2.1) + 0.5 * Math.sin(v.x * f * 2.7 + v.z * f * 1.9);
+    v.addScaledVector(v.clone().normalize(), n * amt); p.setXYZ(i, v.x, v.y, v.z);
+  }
+  geom.computeVertexNormals(); return geom;
+}
+const sacMat = rim(phys({ color: 0xF0B4B4, roughness: 0.5, sheen: 0.7, sheenColor: new THREE.Color(0xFFE0DC), clearcoat: 0.4, clearcoatRoughness: 0.35 }), 0.12, 2.2);
+const ghostMat = rim(phys({ color: 0xE8A3A6, roughness: 0.55, sheen: 0.5, sheenColor: new THREE.Color(0xFFD8D4) }), 0.05, 2.6);
+const sac = new THREE.Mesh(noisy(new THREE.SphereGeometry(R, 96, 64, 0, Math.PI * 2, 0, Math.acos(-YC / R)), 0.035, 2.4), sacMat);
+sac.position.y = YC; sac.renderOrder = 4; S2.scene.add(sac);
+[[-3.2, 1.9, -2.2, 1.6], [2.9, 2.2, -2.6, 1.7], [-0.4, 4.1, -2.9, 1.5], [3.4, 0.3, -3.6, 1.4], [-3.6, 0.0, -3.2, 1.5]].forEach(([x, y, z, r]) => {
+  const g = new THREE.Mesh(noisy(new THREE.SphereGeometry(r, 48, 32), 0.03, 2.6), ghostMat); g.position.set(x, y, z); g.renderOrder = 1; S2.scene.add(g);
+});
+const ductCurve = new THREE.CatmullRomCurve3([V3(0, YC + R - 0.25, 0), V3(0.1, YC + R + 0.9, -0.2), V3(0.5, YC + R + 2.2, -0.9)]);
+const duct = new THREE.Mesh(new THREE.TubeGeometry(ductCurve, 30, 0.55, 32, true), sacMat); duct.renderOrder = 4; S2.scene.add(duct);
+const capGeom = new THREE.CylinderGeometry(CR, CR, CL * 2, 64, 40, true); capGeom.rotateZ(Math.PI / 2);
+{ const p = capGeom.attributes.position, col = [], cA = new THREE.Color(0x7A3A5E), cB = new THREE.Color(0xD8343A);
+  for (let i = 0; i < p.count; i++){ const t = (p.getX(i) + CL) / (2 * CL); const c = cA.clone().lerp(cB, THREE.MathUtils.smoothstep(t, 0.3, 0.7)); col.push(c.r, c.g, c.b); }
+  capGeom.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); }
+const capMat = rim(phys({ color: 0xffffff, vertexColors: true, roughness: 0.4, clearcoat: 0.5, clearcoatRoughness: 0.3, sheen: 0.4, sheenColor: new THREE.Color(0xFFB0A8) }), 0.1, 2.0);
+const cap = new THREE.Mesh(capGeom, capMat); cap.position.y = CY; cap.renderOrder = 3; S2.scene.add(cap);
+const netMat = phys({ color: 0xffffff, vertexColors: true, roughness: 0.45, clearcoat: 0.4 });
+// capillaries run down over the sac like a net, from the top to the floor
+for (let k = 0; k < 14; k++){
+  const ph = k / 14 * Math.PI * 2 + rnd(-0.12, 0.12), pts = [];
+  const latTop = rnd(1.15, 1.35), latBot = Math.asin(Math.max(-0.99, (0.08 - YC) / (R + 0.05)));
+  for (let i = 0; i <= 30; i++){
+    const t = i / 30, lat = latTop + (latBot - latTop) * t, lon = ph + 0.18 * Math.sin(t * 7 + k);
+    pts.push(V3(Math.cos(lat) * Math.sin(lon), Math.sin(lat), Math.cos(lat) * Math.cos(lon)).multiplyScalar(R + 0.045).add(V3(0, YC, 0)));
+  }
+  const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.055, 8, false);
+  const p = g.attributes.position, col = [];
+  for (let i = 0; i < p.count; i++){ const t = (p.getX(i) + R) / (2 * R); const c = new THREE.Color(0x6E3A62).lerp(new THREE.Color(0xD23238), Math.min(1, Math.max(0, t))); col.push(c.r, c.g, c.b); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  const net = new THREE.Mesh(g, netMat); net.renderOrder = 2; S2.scene.add(net);
+}
+for (const lat of [0.35, 0.8]){
+  const pts = []; for (let i = 0; i <= 64; i++){ const lon = i / 64 * Math.PI * 2; pts.push(V3(Math.cos(lat) * Math.sin(lon), Math.sin(lat) + 0.03 * Math.sin(lon * 5), Math.cos(lat) * Math.cos(lon)).multiplyScalar(R + 0.05).add(V3(0, YC, 0))); }
+  const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 120, 0.045, 8, true);
+  const p = g.attributes.position, col = [];
+  for (let i = 0; i < p.count; i++){ const t = (p.getX(i) + R) / (2 * R); const c = new THREE.Color(0x6E3A62).lerp(new THREE.Color(0xD23238), Math.min(1, Math.max(0, t))); col.push(c.r, c.g, c.b); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  S2.scene.add(Object.assign(new THREE.Mesh(g, netMat), { renderOrder: 2 }));
+}
+const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.6, 32), phys({ color: 0xD8343A, roughness: 0.4, clearcoat: 0.4 }));
+arrow.rotation.z = -Math.PI / 2; arrow.position.set(CL + 0.5, CY, 0); S2.scene.add(arrow);
 
-// red blood cells: a dented disk
+// red blood cells: the real dented-disk shape
 const rbcGeom = (() => {
-  const pts = []; for (let i = 0; i <= 24; i++){ const t = i / 24, r = t * 0.32; const h = 0.035 + 0.09 * Math.pow(t, 0.8) * (1 - Math.pow(t, 6)); pts.push(new THREE.Vector2(r, h)); }
-  for (let i = 24; i >= 0; i--){ const t = i / 24, r = t * 0.32; const h = 0.035 + 0.09 * Math.pow(t, 0.8) * (1 - Math.pow(t, 6)); pts.push(new THREE.Vector2(r, -h)); }
-  const g = new THREE.LatheGeometry(pts, 32); g.computeVertexNormals(); return g;
+  const prof = t => new THREE.Vector2(t * 0.34, 0.5 * 0.34 * Math.sqrt(Math.max(0, 1 - t * t)) * (0.21 + 2.0 * t * t - 1.12 * t * t * t * t));
+  const pts = []; for (let i = 0; i <= 32; i++) pts.push(prof(i / 32));
+  for (let i = 32; i >= 0; i--){ const v = prof(i / 32); pts.push(new THREE.Vector2(v.x, -v.y)); }
+  const g = new THREE.LatheGeometry(pts, 48); g.computeVertexNormals(); return g;
 })();
 const RBC_N = 40;
-const rbcMesh = new THREE.InstancedMesh(rbcGeom, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45 }), RBC_N);
-rbcMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); S2.scene.add(rbcMesh);
-const MOL_N = 520;
-const molMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(0.055, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }), MOL_N);
-molMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); S2.scene.add(molMesh);
-const colO2 = new THREE.Color(0x2F86D6), colCO2 = new THREE.Color(0x8C7A9B);
-const dark = new THREE.Color(0x4A0D16), bright = new THREE.Color(0xF0262C);
+const rbcMesh = new THREE.InstancedMesh(rbcGeom, phys({ color: 0xffffff, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.25, sheen: 0.5, sheenColor: new THREE.Color(0xFF8080) }), RBC_N);
+rbcMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); rbcMesh.frustumCulled = false; S2.scene.add(rbcMesh);
+// molecules: O2 is two oxygen atoms; CO2 is a carbon with an oxygen on each side
+const ATOM_O = 0.052, ATOM_C = 0.058, O_N = 1300, C_N = 300;
+const oMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(ATOM_O, 14, 10), phys({ color: 0x3E95E8, roughness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.15 }), O_N);
+const cMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(ATOM_C, 14, 10), phys({ color: 0x3B3B42, roughness: 0.3, clearcoat: 0.7 }), C_N);
+for (const m of [oMesh, cMesh]){ m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.renderOrder = 6; S2.scene.add(m); }
+const dark = new THREE.Color(0x5C1220), bright = new THREE.Color(0xD9262C);
 
 const W = { mols: [], cells: [], holdBreath: false, exercise: false, slow: false, breathT: 0, exits: [], spawnT: 0, cellT: 0, labels: true };
-const SLOTS = [V3(0.2, 0.13, 0), V3(-0.2, 0.13, 0), V3(0, 0.13, 0.2), V3(0, 0.13, -0.2)];
-function inSac(p){ return p.y >= 0 && p.lengthSq() < (R - 0.08) * (R - 0.08); }
-function sacPoint(top){ for (;;){ const p = V3(rnd(-R, R), top ? rnd(R * 0.55, R) : rnd(0.05, R), rnd(-R, R)); if (top && Math.hypot(p.x, p.z) > 0.6) continue; if (inSac(p)) return p; } }
-function capPoint(x){ for (;;){ const y = rnd(-CR, CR), z = rnd(-CR, CR); if (y * y + z * z < (CR - 0.1) * (CR - 0.1)) return V3(x === undefined ? rnd(-CL, CL) : x, CY + y, z); } }
-function addMol(type, where, p){ if (W.mols.length < MOL_N) W.mols.push({ type, where, p }); }
-function addCell(x){
+const SLOTS = [V3(0.2, 0.12, 0), V3(-0.2, 0.12, 0), V3(0, 0.12, 0.2), V3(0, 0.12, -0.2)];
+const randQ = () => new THREE.Quaternion().setFromEuler(new THREE.Euler(rnd(0, 6.28), rnd(0, 6.28), rnd(0, 6.28)));
+function inSac(p){ return p.y > 0.05 && (p.x * p.x + (p.y - YC) * (p.y - YC) + p.z * p.z) < (R - 0.14) * (R - 0.14); }
+function sacPoint(top){ for (;;){ const p = top ? V3(rnd(-0.4, 0.4), rnd(YC + R - 0.6, YC + R - 0.15), rnd(-0.4, 0.4)) : V3(rnd(-R, R), rnd(0.05, YC + R), rnd(-R, R)); if (inSac(p)) return p; } }
+function capPoint(x){ for (;;){ const y = rnd(-CR, CR), z = rnd(-CR, CR); if (y * y + z * z < (CR - 0.12) * (CR - 0.12)) return V3(x === undefined ? rnd(-CL, CL) : x, CY + y, z); } }
+function addMol(type, where, p){ if (W.mols.length < 600) W.mols.push({ type, where, p, q: randQ(), w: V3(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).normalize() }); }
+function addCell(x, full){
   if (W.cells.length >= RBC_N) return;
-  const c = { p: capPoint(x), bound: Math.random() < 0.5 ? 2 : 3, spin: rnd(0, 6.28), tilt: rnd(-0.6, 0.6), held: [] };
-  c.p.y = CY + rnd(-0.45, 0.45); c.p.z = rnd(-0.45, 0.45);
+  const c = { p: capPoint(x), bound: 0, spin: rnd(0, 6.28), tilt: rnd(-0.7, 0.7), wob: rnd(0, 6.28) };
+  c.p.y = CY + rnd(-0.42, 0.42); c.p.z = rnd(-0.42, 0.42);
   W.cells.push(c);
+  const n = full ? 4 : (Math.random() < 0.5 ? 2 : 3);
+  for (let k = 0; k < n; k++){ W.mols.push({ type: 'O2', where: 'bound', p: c.p.clone(), q: randQ(), w: V3(0, 1, 0), cell: c, slot: k }); c.bound++; }
 }
 function resetSwap(){
   W.mols = []; W.cells = []; W.exits = [];
-  for (let i = 0; i < 90; i++) addMol('O2', 'sac', sacPoint());
+  for (let i = 0; i < 95; i++) addMol('O2', 'sac', sacPoint());
   for (let i = 0; i < 6; i++) addMol('CO2', 'sac', sacPoint());
-  for (let i = 0; i < 40; i++) addMol('CO2', 'blood', capPoint());
-  for (let i = 0; i < 6; i++) addMol('O2', 'blood', capPoint());
-  for (let x = -CL + 0.3; x < CL; x += 0.55){
-    addCell(x);
-    const c = W.cells[W.cells.length - 1];
-    if (c && x > R * 0.9){ // already went past the air sac: loaded
-      W.mols = W.mols.filter(m => m.cell !== c);
-      c.bound = 4; for (let k = 0; k < 4; k++) W.mols.push({ type: 'O2', where: 'bound', p: c.p.clone(), cell: c, slot: k });
-    }
-  }
+  for (let i = 0; i < 38; i++) addMol('CO2', 'blood', capPoint());
+  for (let i = 0; i < 5; i++) addMol('O2', 'blood', capPoint());
+  for (let x = -CL + 0.3; x < CL; x += 0.55) addCell(x, x > FLOOR * 0.9);
 }
 resetSwap();
 function stepSwap(dtReal){
   const dt = dtReal * (W.slow ? 0.35 : 1);
-  const flowV = W.exercise ? 0.95 : 0.42;
-  const jig = 1.45 * Math.sqrt(dt);
-  // breathing keeps the sac fresh
+  const flowV = W.exercise ? 0.95 : 0.42, jig = 1.45 * Math.sqrt(dt);
   W.breathT += dt;
   if (!W.holdBreath && W.breathT > 3.2){
     W.breathT = 0;
     W.mols = W.mols.filter(m => !(m.where === 'sac' && m.type === 'CO2' && Math.random() < 0.75));
     const o2 = W.mols.filter(m => m.where === 'sac' && m.type === 'O2').length;
-    for (let i = o2; i < 90; i++) addMol('O2', 'sac', sacPoint(true));
+    for (let i = o2; i < 95; i++) addMol('O2', 'sac', sacPoint(true));
   }
-  // new blood arrives: dark, with carbon dioxide from the body
   W.spawnT += dt * flowV;
-  while (W.spawnT > 0.11){ W.spawnT -= 0.11; addMol('CO2', 'blood', capPoint(-CL + 0.05)); if (Math.random() < 0.12) addMol('O2', 'blood', capPoint(-CL + 0.05)); }
+  while (W.spawnT > 0.11){ W.spawnT -= 0.11; addMol('CO2', 'blood', capPoint(-CL + 0.05)); if (Math.random() < 0.1) addMol('O2', 'blood', capPoint(-CL + 0.05)); }
   W.cellT += dt * flowV;
-  while (W.cellT > 0.55){ W.cellT -= 0.55; addCell(-CL + 0.05); }
-  // molecules wander
+  while (W.cellT > 0.55){ W.cellT -= 0.55; addCell(-CL + 0.05, false); }
   for (let i = W.mols.length - 1; i >= 0; i--){
     const m = W.mols[i];
     if (m.where === 'bound') continue;
     const p = m.p;
     p.x += (Math.random() * 2 - 1) * jig; p.y += (Math.random() * 2 - 1) * jig; p.z += (Math.random() * 2 - 1) * jig;
     if (m.where === 'sac'){
-      if (p.y < 0){
-        if (Math.abs(p.z) < 0.42 && Math.abs(p.x) < R * 0.9 && Math.random() < 0.55){ m.where = 'blood'; p.y = CY + CR - 0.14; }
-        else p.y = -p.y;
+      if (p.y < 0.05){
+        if (Math.abs(p.z) < 0.45 && p.x * p.x + p.z * p.z < FLOOR * FLOOR * 0.9 && Math.random() < 0.55){ m.where = 'blood'; p.y = CY + CR - 0.16; }
+        else p.y = 0.1 - (p.y - 0.05);
       }
-      const L = p.length(); if (L > R - 0.08) p.multiplyScalar((R - 0.1) / L);
+      const d = V3(p.x, p.y - YC, p.z), L = d.length();
+      if (L > R - 0.12){ d.multiplyScalar((R - 0.14) / L); p.set(d.x, d.y + YC, d.z); if (p.y < 0.06) p.y = 0.06; }
     } else {
       p.x += flowV * dt;
       const dy = p.y - CY, d = Math.hypot(dy, p.z);
-      if (d > CR - 0.08){
-        if (dy > 0 && Math.abs(p.z) < 0.42 && Math.abs(p.x) < R * 0.9 && Math.random() < 0.55){ m.where = 'sac'; p.y = 0.08; }
-        else { const k = (CR - 0.1) / d; p.y = CY + dy * k; p.z *= k; }
+      if (d > CR - 0.1){
+        if (dy > 0 && Math.abs(p.z) < 0.45 && p.x * p.x + p.z * p.z < FLOOR * FLOOR * 0.9 && Math.random() < 0.55){ m.where = 'sac'; p.y = 0.1; }
+        else { const k = (CR - 0.12) / d; p.y = CY + dy * k; p.z *= k; }
       }
       if (p.x > CL){ W.mols.splice(i, 1); continue; }
       if (p.x < -CL) p.x = -CL;
-      if (m.type === 'O2'){
-        for (const c of W.cells){
-          if (c.bound < 4 && c.p.distanceToSquared(p) < 0.16){ c.bound++; m.where = 'bound'; m.cell = c; m.slot = c.bound - 1; break; }
-        }
-      }
+      if (m.type === 'O2') for (const c of W.cells){ if (c.bound < 4 && c.p.distanceToSquared(p) < 0.16){ m.where = 'bound'; m.cell = c; m.slot = c.bound; c.bound++; break; } }
     }
+    m.q.multiply(tmpQ.setFromAxisAngle(m.w, dt * 2.2));
   }
-  // cells drift with the blood
   for (let i = W.cells.length - 1; i >= 0; i--){
     const c = W.cells[i];
-    c.p.x += flowV * dt * 1.05; c.spin += dt * 0.8;
+    c.p.x += flowV * dt * 1.05; c.spin += dt * 0.7; c.wob += dt;
     c.p.y += (Math.random() * 2 - 1) * 0.3 * Math.sqrt(dt); c.p.z += (Math.random() * 2 - 1) * 0.3 * Math.sqrt(dt);
-    const dy = c.p.y - CY, d = Math.hypot(dy, c.p.z); if (d > 0.5){ c.p.y = CY + dy * 0.5 / d; c.p.z *= 0.5 / d; }
-    if (c.p.x > CL){
-      W.exits.push({ t: performance.now(), full: c.bound / 4 });
-      W.mols = W.mols.filter(m => m.cell !== c);
-      W.cells.splice(i, 1);
-    }
+    const dy = c.p.y - CY, d = Math.hypot(dy, c.p.z); if (d > 0.48){ c.p.y = CY + dy * 0.48 / d; c.p.z *= 0.48 / d; }
+    if (c.p.x > CL){ W.exits.push({ t: performance.now(), full: c.bound / 4 }); W.mols = W.mols.filter(m => m.cell !== c); W.cells.splice(i, 1); }
   }
   const now = performance.now(); W.exits = W.exits.filter(e => now - e.t < 8000);
-  // draw
-  const q = new THREE.Quaternion(), e = new THREE.Euler(), sc = V3(1, 1, 1), pos = new THREE.Vector3();
+  drawSwap();
+  let sO2 = 0, sCO2 = 0;
+  for (const m of W.mols) if (m.where === 'sac'){ if (m.type === 'O2') sO2++; else sCO2++; }
+  const fout = W.exits.length ? W.exits.reduce((s, e) => s + e.full, 0) / W.exits.length : 0;
+  $('hud').innerHTML = (W.holdBreath ? '<b style="color:#E0A955">Holding breath: no fresh air</b><br>' : '<b>Breathing:</b> fresh air every few seconds<br>') +
+    '<b>Oxygen in the air sac</b><div class="meter o2"><i style="width:' + Math.min(100, sO2 / 1.15) + '%"></i></div>' +
+    '<b>Carbon dioxide in the air sac</b><div class="meter co2"><i style="width:' + Math.min(100, sCO2 / 1.15) + '%"></i></div>' +
+    '<b>Red cells leaving:</b> ' + (W.exits.length ? Math.round(fout * 100) + '% loaded with oxygen' : 'wait...');
+}
+const e3 = new THREE.Euler(), one = V3(1, 1, 1);
+function drawSwap(){
   for (let i = 0; i < RBC_N; i++){
     const c = W.cells[i];
     if (!c){ tmpM.makeScale(0, 0, 0); rbcMesh.setMatrixAt(i, tmpM); continue; }
-    e.set(Math.PI / 2 + c.tilt, c.spin * 0.2, 0); q.setFromEuler(e);
-    tmpM.compose(c.p, q, sc); rbcMesh.setMatrixAt(i, tmpM);
+    e3.set(Math.PI / 2 + c.tilt + 0.25 * Math.sin(c.wob), c.spin * 0.25, 0.2 * Math.sin(c.wob * 0.7)); c.q = new THREE.Quaternion().setFromEuler(e3);
+    tmpM.compose(c.p, c.q, one); rbcMesh.setMatrixAt(i, tmpM);
     rbcMesh.setColorAt(i, dark.clone().lerp(bright, Math.max(0, (c.bound - 1) / 3)));
-    c.q = q.clone();
   }
   rbcMesh.instanceMatrix.needsUpdate = true; if (rbcMesh.instanceColor) rbcMesh.instanceColor.needsUpdate = true;
-  for (let i = 0; i < MOL_N; i++){
-    const m = W.mols[i];
-    if (!m){ tmpM.makeScale(0, 0, 0); molMesh.setMatrixAt(i, tmpM); continue; }
-    if (m.where === 'bound'){ pos.copy(SLOTS[m.slot]).applyQuaternion(m.cell.q || q).add(m.cell.p); } else pos.copy(m.p);
-    tmpM.makeTranslation(pos.x, pos.y, pos.z); molMesh.setMatrixAt(i, tmpM); molMesh.setColorAt(i, m.type === 'O2' ? colO2 : colCO2);
+  let oi = 0, ci = 0; const pos = new THREE.Vector3(), off = new THREE.Vector3();
+  for (const m of W.mols){
+    if (m.where === 'bound'){ if (!m.cell.q) continue; pos.copy(SLOTS[m.slot]).applyQuaternion(m.cell.q).add(m.cell.p); } else pos.copy(m.p);
+    if (m.type === 'O2'){
+      for (const s of [-1, 1]){ if (oi >= O_N) break; off.set(s * ATOM_O * 0.85, 0, 0).applyQuaternion(m.q).add(pos); tmpM.makeTranslation(off.x, off.y, off.z); oMesh.setMatrixAt(oi++, tmpM); }
+    } else {
+      if (ci < C_N){ tmpM.makeTranslation(pos.x, pos.y, pos.z); cMesh.setMatrixAt(ci++, tmpM); }
+      for (const s of [-1, 1]){ if (oi >= O_N) break; off.set(s * (ATOM_C + ATOM_O) * 0.86, 0, 0).applyQuaternion(m.q).add(pos); tmpM.makeTranslation(off.x, off.y, off.z); oMesh.setMatrixAt(oi++, tmpM); }
+    }
   }
-  molMesh.instanceMatrix.needsUpdate = true; if (molMesh.instanceColor) molMesh.instanceColor.needsUpdate = true;
-  // readouts
-  let sO2 = 0, sCO2 = 0, bCO2 = 0;
-  for (const m of W.mols){ if (m.where === 'sac'){ if (m.type === 'O2') sO2++; else sCO2++; } else if (m.where === 'blood' && m.type === 'CO2') bCO2++; }
-  const inFull = W.cells.filter(c => c.p.x < -CL + 1.2), outFull = W.exits;
-  const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
-  const fin = avg(inFull.map(c => c.bound / 4)), fout = avg(outFull.map(x => x.full));
-  const pct = x => Math.round(x * 100) + '%';
-  $('hud').innerHTML = (W.holdBreath ? '<b style="color:#C0862B">Holding breath: no fresh air</b><br>' : '<b>Breathing:</b> fresh air every few seconds<br>') +
-    '<b>Oxygen in the air sac</b><div class="meter o2"><i style="width:' + Math.min(100, sO2 / 1.1) + '%"></i></div>' +
-    '<b>Carbon dioxide in the air sac</b><div class="meter co2"><i style="width:' + Math.min(100, sCO2 / 1.1) + '%"></i></div>' +
-    '<b>Red cells leaving:</b> ' + (outFull.length ? pct(fout) + ' loaded with oxygen' : 'wait...');
+  oMesh.count = oi; cMesh.count = ci;
+  oMesh.instanceMatrix.needsUpdate = true; cMesh.instanceMatrix.needsUpdate = true;
 }
 const tags2 = [
-  { text: 'Air sac (alveolus)', at: () => V3(1.3, 1.7, 0.6) },
-  { text: 'Air comes in', at: () => V3(0, R + 1.25, 0) },
-  { text: 'Capillary', at: () => V3(-CL + 0.6, CY - CR - 0.25, 0) },
-  { text: 'Thin wall, one cell thick', at: () => V3(R * 0.55, 0.05, 0.75) },
+  { text: 'Air sac (alveolus)', at: () => V3(1.25, YC + 1.0, 0.9) },
+  { text: 'Air comes in', at: () => V3(0.45, YC + R + 1.6, -0.6) },
+  { text: 'Capillary', at: () => V3(-CL + 0.7, CY - CR - 0.25, 0) },
+  { text: 'Shared wall, very thin', at: () => V3(FLOOR * 0.7, 0.02, 0.75) },
   { text: 'Blood flows this way', at: () => V3(CL - 1.3, CY - CR - 0.3, 0) }
 ];
 
-/* ================= shared loop ================= */
+/* ================= shared ================= */
 const controls = new OrbitControls(S1.camera, renderer.domElement);
-controls.enableDamping = true; controls.enablePan = false; controls.minDistance = 4; controls.maxDistance = 16;
+controls.enableDamping = true; controls.enablePan = false;
 let mode = 'breathe', S = S1, tags = tags1;
 const tagEls = [];
 function buildTags(list){
   const box = $('tags'); box.textContent = ''; tagEls.length = 0;
   list.forEach(t => { const d = document.createElement('div'); d.className = 'tag'; d.textContent = t.text; box.append(d); tagEls.push(d); });
 }
-const views = { breathe: { target: V3(0, 0.8, 0) }, swap: { target: V3(0, 0, 0) } };
 const NOTES = {
-  breathe: 'Hold the button. The diaphragm pulls down and the ribs lift, so the chest gets bigger. Bigger space means lower pressure inside, and air rushes in. Let go and it flows back out.',
-  swap: 'Blue is oxygen, gray is carbon dioxide. Each spreads from where there is a lot of it to where there is little. Watch the red cells grab oxygen and turn bright red.'
+  breathe: 'A real chest model. Hold the button: the diaphragm tightens and pulls down, the ribs lift up and out, and the lungs get bigger. More space means lower pressure inside, so air rushes in. Let go and it flows back out.',
+  swap: 'One air sac sitting on a capillary. Blue pairs are oxygen; the ones with a dark carbon in the middle are carbon dioxide. Each spreads from where there is a lot of it to where there is little. Watch the red cells load up with oxygen and turn bright red.'
 };
 function setMode(k){
   mode = k; S = k === 'breathe' ? S1 : S2; tags = k === 'breathe' ? tags1 : tags2;
-  controls.object = S.camera; controls.target.copy(views[k].target); controls.update();
+  controls.object = S.camera;
+  if (k === 'breathe'){ controls.minDistance = 0.3; controls.maxDistance = 1.6; } else { controls.minDistance = 4; controls.maxDistance = 16; }
+  controls.target.copy(S.target); controls.update();
   document.querySelectorAll('#modes .mode-tab').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === k)));
   $('note').textContent = NOTES[k];
   $('ctlBreathe').hidden = k !== 'breathe'; $('ctlSwap').hidden = k !== 'swap';
   const lg = $('legend'); lg.hidden = k !== 'swap';
-  lg.innerHTML = '<div><span style="background:#2F86D6"></span>Oxygen</div><div><span style="background:#8C7A9B"></span>Carbon dioxide</div><div><span style="background:#C9252C;border-radius:30%"></span>Red blood cell</div>';
+  lg.innerHTML = '<div><span class="mol"><i class="a" style="background:#3E95E8"></i><i class="a" style="background:#3E95E8"></i></span>Oxygen (O₂)</div>' +
+    '<div><span class="mol"><i class="a" style="background:#3E95E8"></i><i class="a" style="background:#3B3B42;border:1px solid #777"></i><i class="a" style="background:#3E95E8"></i></span>Carbon dioxide (CO₂)</div>' +
+    '<div><span class="mol"><i class="a" style="background:#C9252C;border-radius:40%;width:1rem"></i></span>Red blood cell</div>';
+  $('loading').style.display = (k === 'breathe' && !S1.ready) ? 'flex' : 'none';
   buildTags(tags); resize();
   try { history.replaceState(null, '', '#tab=' + k); } catch (e) {}
 }
 document.querySelectorAll('#modes .mode-tab').forEach(b => b.onclick = () => setMode(b.dataset.k));
-
 function resize(){
-  const w = stage.clientWidth, h = stage.clientHeight;
-  renderer.setSize(w, h, false);
-  for (const s of [S1, S2]){ const a = w / h; s.camera.aspect = a; s.camera.fov = a < 1.6 ? 2 * Math.atan(Math.tan(20 * Math.PI / 180) * 1.6 / a) * 180 / Math.PI : 40; s.camera.updateProjectionMatrix(); }
+  const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false);
+  for (const s of [S1, S2]){ const a = w / h, f0 = s === S1 ? 32 : 36, k = s === S1 ? 0.9 : 1.6; s.camera.aspect = a; s.camera.fov = a < k ? 2 * Math.atan(Math.tan(f0 / 2 * Math.PI / 180) * k / a) * 180 / Math.PI : f0; s.camera.updateProjectionMatrix(); }
 }
 window.addEventListener('resize', resize);
-
 function placeTags(){
-  const show = mode === 'breathe' ? B.labels : W.labels;
-  const w = stage.clientWidth, h = stage.clientHeight;
+  const show = mode === 'breathe' ? B.labels : W.labels, w = stage.clientWidth, h = stage.clientHeight;
   tags.forEach((t, i) => {
-    const el = tagEls[i]; if (!show){ el.style.display = 'none'; return; }
-    const p = t.at().project(S.camera);
-    el.style.display = p.z < 1 ? '' : 'none';
+    const el = tagEls[i]; if (!el) return;
+    const at = show ? t.at() : null; if (!at){ el.style.display = 'none'; return; }
+    const p = at.project(S.camera); el.style.display = p.z < 1 ? '' : 'none';
     el.style.left = ((p.x + 1) / 2 * w) + 'px'; el.style.top = ((1 - p.y) / 2 * h) + 'px';
   });
 }
-
-// controls: breathing
 const hold = $('hold');
 const press = on => { if (B.auto) return; B.holding = on; hold.classList.toggle('active', on); hold.textContent = on ? 'Breathing in...' : 'Hold to breathe in'; };
 hold.addEventListener('pointerdown', e => { e.preventDefault(); try { hold.setPointerCapture(e.pointerId); } catch (err) {} press(true); });
@@ -484,7 +536,8 @@ hold.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => { if (e.code === 'Space' && mode === 'breathe' && !e.repeat){ e.preventDefault(); press(true); } });
 window.addEventListener('keyup', e => { if (e.code === 'Space' && mode === 'breathe') press(false); });
 const tog = (id, fn) => { const b = $(id); b.onclick = () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(v)); fn(v); }; };
-tog('auto', v => { B.auto = v; B.autoT = 0; if (!v) press(false); hold.disabled = v; hold.classList.remove('active'); hold.textContent = 'Hold to breathe in'; });
+tog('auto', v => { B.auto = v; B.autoT = 0; if (!v) B.holding = false; hold.disabled = v; hold.classList.remove('active'); hold.textContent = 'Hold to breathe in'; });
+tog('ribsBtn', v => { ['ribs', 'cartilage', 'sternum', 'clavicles'].forEach(k => { if (parts[k]) parts[k].visible = v; }); });
 tog('labels1', v => { B.labels = v; });
 tog('holdBreath', v => { W.holdBreath = v; W.breathT = 0; });
 tog('exercise', v => { W.exercise = v; });
@@ -495,15 +548,18 @@ let last = performance.now();
 function frame(now){
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (mode === 'breathe') stepBreathe(dt); else stepSwap(dt);
-  controls.update();
-  renderer.render(S.scene, S.camera);
-  placeTags();
+  controls.update(); renderer.render(S.scene, S.camera); placeTags();
   requestAnimationFrame(frame);
 }
 const m0 = /[#&]tab=([a-z]+)/.exec(location.hash || '');
-setMode(m0 && views[m0[1]] ? m0[1] : 'breathe');
+setMode(m0 && (m0[1] === 'swap' || m0[1] === 'breathe') ? m0[1] : 'breathe');
 requestAnimationFrame(frame);
-window.__sim = { B, W, setMode, stepSwap, stepBreathe };
+window.__lungsLoaded = true;
+loadChest().then(() => {
+  $('loading').style.display = 'none';
+  if (mode === 'breathe'){ controls.target.copy(S1.target); controls.update(); }
+}).catch(err => { console.error(err); $('loading').textContent = 'The chest model did not load.'; $('err').style.display = 'block'; });
+window.__sim = { B, W, setMode, stepSwap, stepBreathe, parts };
 </script>
 </body>
 </html>

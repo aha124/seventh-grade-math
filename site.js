@@ -47,6 +47,8 @@ const WARMUPS = [
     text: "60 seconds of making change, counting up from the price." },
   { name: "Percent round", href: "lesson-07/percents.html#tab=round",
     text: "60 seconds of decimals to percents and back." },
+  { name: "Hop round", href: "lesson-11/walk.html#tab=round",
+    text: "60 seconds of hops on the number line, negatives included." },
   { name: "Balance round", href: "lesson-10/balance.html#tab=round",
     text: "60 seconds of one-step equations in your head." },
   { name: "Tip round", href: "lesson-08/part-whole.html#tab=tips",
@@ -56,6 +58,20 @@ const WARMUPS = [
 ];
 
 const LESSONS = [
+  {
+    n: 11,
+    title: "Negative numbers, inequalities, and metric length",
+    days: [
+      { d: 1, name: "Negative numbers on the line", note: "Skills Check on the board, then the lesson. Afterward, Move it.",
+        pages: [ { href: "lesson-11/walk.html#tab=move", name: "Walk the Line", blurb: "Plus moves right, minus moves left. Tap where you land.", cta: "Start practicing" } ] },
+      { d: 2, name: "Hops with negatives", pages: [ { href: "lesson-11/walk.html#tab=move", name: "Walk the Line: Move it", blurb: "Start at the first number and count the hops.", cta: "Start practicing" } ] },
+      { d: 3, name: "Inequalities", pages: [ { href: "lesson-11/walk.html#tab=graph", name: "Walk the Line: Graph it", blurb: "Open or filled circle, which number, which way.", cta: "Start practicing" } ] },
+      { d: 4, name: "Metric length and review", pages: [
+          { href: "lesson-11/walk.html#tab=metric", name: "Walk the Line: Metric", blurb: "mm, cm, m, km. Smaller unit, bigger number.", cta: "Start practicing" },
+          { href: "lesson-09/factors.html", name: "Factor Finder", blurb: "The test asks for the factors of 22 and 16.", cta: "Start practicing" } ] },
+      { d: 5, name: "Test day", pages: [], note: "The test is on paper. Round decimal answers to the hundredth. Fractions in lowest terms." }
+    ]
+  },
   {
     n: 10,
     title: "Equations with missing numbers",

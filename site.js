@@ -499,7 +499,9 @@ const ANATOMY = [
   { d: 2, name: "Heart and blood", pages: [
       { href: "anatomy/week-02.html", name: "Heart & Blood", blurb: "Which part of the heart does each job? Which vessel, or which part of the blood?", cta: "Start practicing" }
     ], note: "Her book: the Heart & Circulatory System chapter." },
-  { d: 3, name: "Lungs and breathing", pages: [], note: "Coming up." },
+  { d: 3, name: "Lungs and breathing", pages: [
+      { href: "anatomy/week-03.html", name: "Lungs & Breathing", blurb: "Which part of the airway? How does oxygen get into the blood? What goes wrong?", cta: "Start practicing" }
+    ], note: "Four days this week. The worksheets are on paper." },
   { d: 4, name: "Digestion", pages: [], note: "Coming up." },
   { d: 5, name: "Brain and nerves", pages: [], note: "Coming up." },
   { d: 6, name: "Hormones", pages: [], note: "Coming up." },

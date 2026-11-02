@@ -47,6 +47,8 @@ const WARMUPS = [
     text: "60 seconds of making change, counting up from the price." },
   { name: "Percent round", href: "lesson-07/percents.html#tab=round",
     text: "60 seconds of decimals to percents and back." },
+  { name: "Sign round", href: "lesson-12/signed.html#tab=round",
+    text: "60 seconds of adding, subtracting, multiplying, and dividing with negatives." },
   { name: "Hop round", href: "lesson-11/walk.html#tab=round",
     text: "60 seconds of hops on the number line, negatives included." },
   { name: "Balance round", href: "lesson-10/balance.html#tab=round",
@@ -58,6 +60,21 @@ const WARMUPS = [
 ];
 
 const LESSONS = [
+  {
+    n: 12,
+    title: "Signed numbers (Lessons 12 and 13 together)",
+    days: [
+      { d: 1, name: "Adding signed numbers", note: "Skills Check on the board, then the lesson. Afterward, the Adding tab.",
+        pages: [ { href: "lesson-12/signed.html#tab=add", name: "Signed Numbers", blurb: "Same signs: add and keep the sign. Different signs: subtract and take the sign of the bigger number.", cta: "Start practicing" } ] },
+      { d: 2, name: "Subtracting signed numbers", pages: [ { href: "lesson-12/signed.html#tab=sub", name: "Signed Numbers: Subtracting", blurb: "Change the minus to a plus, flip the next sign, then add.", cta: "Start practicing" } ] },
+      { d: 3, name: "Multiplying and dividing signed numbers", pages: [ { href: "lesson-12/signed.html#tab=muldiv", name: "Signed Numbers: Multiply and divide", blurb: "Same signs, positive. Different signs, negative.", cta: "Start practicing" } ] },
+      { d: 4, name: "Review the whole year", pages: [
+          { href: "lesson-12/signed.html#tab=mixed", name: "Signed Numbers: Mixed", blurb: "All four operations with negatives.", cta: "Start practicing" },
+          { href: "lesson-10/balance.html#tab=mixed", name: "Balance It", blurb: "Missing numbers, from Lesson 10.", cta: "Start practicing" },
+          { href: "lesson-11/walk.html#tab=metric", name: "Walk the Line: Metric", blurb: "Metric length, from Lesson 11.", cta: "Start practicing" } ] },
+      { d: 5, name: "Test day: Lesson 14 Skills Review", pages: [], note: "The test is on paper and covers the whole year so far." }
+    ]
+  },
   {
     n: 11,
     title: "Negative numbers, inequalities, and metric length",
@@ -503,7 +520,7 @@ const ANATOMY = [
       { href: "anatomy/week-03.html", name: "Lungs & Breathing", blurb: "Which part of the airway? How does oxygen get into the blood? What goes wrong?", cta: "Start practicing" },
       { href: "anatomy/lungs-3d.html", name: "Lungs in 3D", blurb: "Breathe in with the diaphragm, then watch oxygen and carbon dioxide swap at an air sac.", cta: "Open it" }
     ], note: "Four days this week. The worksheets are on paper." },
-  { d: 4, name: "Digestion", pages: [], note: "Coming up." },
+  { d: 4, name: "Digestion", pages: [], note: "Four days, ending in the Doctor's Case Log. The worksheets are on paper." },
   { d: 5, name: "Brain and nerves", pages: [], note: "Coming up." },
   { d: 6, name: "Hormones", pages: [], note: "Coming up." },
   { d: 7, name: "Bones and muscles", pages: [], note: "Coming up." },

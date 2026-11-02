@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signed Numbers: Lessons 12 and 13</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.modes{display:flex;gap:.4rem;margin:1.2rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{font-family:var(--display);font-size:1.05rem;font-weight:600;background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft);max-width:60ch}
+.speed-bar{display:flex;align-items:baseline;justify-content:center;gap:1.4rem;flex-wrap:wrap;margin:1rem 0 0;font-family:var(--display);font-size:1.1rem;color:var(--board-soft)}
+.speed-bar b{font-size:1.6rem;font-weight:700;color:var(--board);font-variant-numeric:tabular-nums}
+.q{margin:.7rem 0 0;padding:1rem .8rem;background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(2rem,9vw,3rem);color:var(--board);text-align:center;font-variant-numeric:tabular-nums}
+.q small{display:block;font-family:var(--body);font-weight:500;font-size:.95rem;color:#7C93A5}
+.q .re{display:block;font-size:.55em;color:var(--edge);font-weight:600;min-height:1.2em}
+.answer-row{display:flex;align-items:center;justify-content:center;gap:.6rem;margin:.9rem 0 0;padding:.7rem;background:#FFFDF8;border:1.5px solid var(--gold);border-radius:3px}
+.ansbox{width:9rem;min-height:52px;text-align:center;font-family:var(--display);font-weight:700;font-size:2rem;border:1.5px solid var(--edge);border-radius:3px;background:#fff;color:var(--board)}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;max-width:360px;margin:.7rem auto 0}
+.pad button{min-height:54px;font-family:var(--display);font-size:1.6rem;font-weight:700;background:var(--paper);color:var(--board);border:1.5px solid var(--line);border-radius:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pad button:active{background:#E6EFF5}
+.pad .neg{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+.pad .go{background:var(--good);border-color:var(--good);color:#fff;grid-column:span 2}
+.say{min-height:3.2em;margin:.8rem 0 0;padding:.6rem .8rem;border-radius:2px;font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line)}
+.say.good{border-left-color:var(--good)} .say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board)}
+.banner{margin:1rem 0 0;padding:.8rem 1rem;border-radius:3px;background:#E8F4EC;border:1.5px solid var(--good);color:var(--good);font-family:var(--display);font-size:1.3rem;font-weight:600;display:none}
+.banner.show{display:block} .banner.best{background:#FBF5EA;border-color:var(--gold);color:#8A5F1E}
+.actions{display:flex;gap:.6rem;margin:1rem 0 0;flex-wrap:wrap}
+.rules{margin:1.6rem 0 0;padding:.8rem 1rem;background:var(--paper);border:1.5px solid var(--line);border-left:5px solid var(--ice);border-radius:3px;font-size:.98rem;color:var(--board-soft)}
+.rules b{color:var(--board)}
+.rules p{margin:.25rem 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html">All lessons</a></div>
+    <h1 class="mark">Signed <span>Numbers</span></h1>
+    <div class="tally" id="tally">Solved 0 / Clean 0</div>
+  </div>
+</header>
+<main class="wrap">
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="note"></p>
+  <div class="speed-bar" id="speedBar" hidden><span>Seconds left <b id="clock">60</b></span><span>Correct <b id="score">0</b></span><span>Best <b id="best">0</b></span></div>
+  <div class="q" id="q"></div>
+  <div class="answer-row"><input class="ansbox" id="box" type="text" inputmode="none" autocomplete="off" aria-label="Your answer"></div>
+  <div class="pad" id="pad"></div>
+  <p class="say" id="say" aria-live="polite"></p>
+  <div class="banner" id="banner"></div>
+  <div class="actions">
+    <button class="btn primary" id="next" type="button">New problem</button>
+    <button class="btn ghost" id="hint" type="button">Hint</button>
+  </div>
+  <div class="rules">
+    <p><b>Adding, same signs:</b> add, keep the sign. <b>Different signs:</b> subtract, take the sign of the bigger number.</p>
+    <p><b>Subtracting:</b> change the minus to a plus and flip the sign of the next number. Then add.</p>
+    <p><b>Multiplying and dividing:</b> same signs, positive. Different signs, negative.</p>
+  </div>
+</main>
+<script src="../shared/tokens.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[rand(0, a.length - 1)];
+/* numbers are kept in tenths (integers) so decimals stay exact */
+const fmt = t => { const neg = t < 0, a = Math.abs(t), w = Math.floor(a / 10), f = a % 10; return (neg ? '−' : '') + w + (f ? '.' + f : ''); };
+const paren = t => t < 0 ? '(' + fmt(t) + ')' : fmt(t);
+const nz = (a, b) => { let v; do { v = rand(a, b); } while (v === 0); return v; };
+
+const KEY = 'seventh-grade-math:signed';
+let solved = 0, clean = 0, best = 0;
+try { const s = JSON.parse(localStorage.getItem(KEY) || '{}'); solved = s.solved | 0; clean = s.clean | 0; best = s.best | 0; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ solved, clean, best })); } catch (e) {} };
+const drawTally = () => { $('tally').textContent = 'Solved ' + solved + ' / Clean ' + clean; };
+function say(kind, lead, extra){ const e = $('say'); e.className = 'say' + (kind ? ' ' + kind : ''); e.textContent = ''; if (!lead) return; const b = document.createElement('b'); b.textContent = lead; e.append(b); if (extra) e.append(' ' + extra); }
+function banner(t, isBest){ const b = $('banner'); b.className = 'banner' + (t ? ' show' : '') + (isBest ? ' best' : ''); b.textContent = t || ''; }
+
+/* ---------------- problem makers; every value in tenths ---------------- */
+function makeAdd(small){
+  const R = small ? 12 : 20;
+  const a = nz(-R, R) * 10, b = nz(-R, R) * 10, ans = a + b;
+  const slips = [];
+  if (Math.sign(a) !== Math.sign(b)){
+    const big = Math.abs(a) > Math.abs(b) ? a : b;
+    slips.push({ v: Math.sign(big) * (Math.abs(a) + Math.abs(b)), lead: 'Different signs: subtract.', extra: 'Take ' + fmt(Math.min(Math.abs(a), Math.abs(b))) + ' away from ' + fmt(Math.max(Math.abs(a), Math.abs(b))) + '.' });
+    slips.push({ v: -ans, lead: 'Check the sign.', extra: 'The answer gets the sign of the number that is further from zero: ' + fmt(big) + '.' });
+  } else if (a < 0){
+    slips.push({ v: -ans, lead: 'Both are negative,', extra: 'so the answer stays negative. Owe ' + fmt(-a) + ', owe ' + fmt(-b) + ' more.' });
+  }
+  return { kind: 'add', text: fmt(a) + ' + ' + paren(b), ans, slips,
+    hint: Math.sign(a) === Math.sign(b) ? 'Same signs: add ' + fmt(Math.abs(a)) + ' and ' + fmt(Math.abs(b)) + ', keep the sign.' : 'Different signs: subtract the smaller from the bigger, then use the sign of the bigger one.' };
+}
+function makeSub(small){
+  const R = small ? 12 : 20;
+  const a = nz(-R, R) * 10, b = nz(-R, R) * 10, ans = a - b;
+  const slips = [{ v: a + b, lead: 'Two changes, not one.', extra: 'Minus becomes plus, and ' + fmt(b) + ' becomes ' + fmt(-b) + '.' }, { v: -ans, lead: 'Check the sign.', extra: '' }];
+  return { kind: 'sub', text: fmt(a) + ' − ' + paren(b), ans, slips, re: fmt(a) + ' + ' + paren(-b), hint: 'Rewrite it: ' + fmt(a) + ' + ' + paren(-b) + '. Then add.' };
+}
+function makeMulDiv(small){
+  const dec = !small && Math.random() < 0.25;
+  if (Math.random() < 0.5){
+    let a = nz(-12, 12) * 10, b = nz(-12, 12) * 10;
+    if (dec) a = (nz(-9, 9) * 10 + pick([5, 5, 2])) * (Math.random() < .5 ? 1 : -1);
+    const ans = a * b / 10;
+    if (ans % 1 !== 0) return makeMulDiv(small);
+    return { kind: 'mul', text: '(' + fmt(a) + ')(' + fmt(b) + ')', ans, slips: [{ v: -ans, lead: (Math.sign(a) === Math.sign(b) ? 'Same signs: positive.' : 'Different signs: negative.'), extra: 'Do it without signs, then decide the sign.' }],
+      hint: 'Multiply ' + fmt(Math.abs(a)) + ' × ' + fmt(Math.abs(b)) + '. Then: same signs positive, different signs negative.' };
+  }
+  const q = nz(-12, 12) * 10, d = nz(-12, 12) * 10, n = q * d / 10;
+  const form = pick(['÷', 'frac']);
+  const text = form === 'frac' ? '<span style="display:inline-flex;flex-direction:column;vertical-align:middle;line-height:1.05;font-size:.8em"><span style="border-bottom:3px solid currentColor;padding:0 .2em">' + fmt(n) + '</span><span>' + fmt(d) + '</span></span>' : paren(n) + ' ÷ ' + paren(d);
+  return { kind: 'div', text, html: true, ans: q, slips: [{ v: -q, lead: (Math.sign(n) === Math.sign(d) ? 'Same signs: positive.' : 'Different signs: negative.'), extra: 'Same rule as multiplying.' }],
+    hint: 'Divide ' + fmt(Math.abs(n)) + ' ÷ ' + fmt(Math.abs(d)) + '. Then: same signs positive, different signs negative.' };
+}
+function makeMixed(small){ return pick([makeAdd, makeSub, makeMulDiv])(small); }
+
+/* ---------------- input ---------------- */
+function parse(s){
+  s = s.replace(/[−–]/g, '-').replace(/\s/g, '');
+  if (!/^-?(\d+\.?\d*|\.\d+)$/.test(s)) return null;
+  const neg = s[0] === '-'; s = s.replace('-', '');
+  const [w, f = ''] = s.split('.');
+  if (f.replace(/0+$/, '').length > 1) return NaN;
+  return (neg ? -1 : 1) * ((parseInt(w || '0', 10) * 10) + parseInt((f + '0')[0], 10));
+}
+const box = $('box');
+const KEYS = ['7', '8', '9', 'back', '4', '5', '6', 'neg', '1', '2', '3', '.', '0', 'go'];
+KEYS.forEach(k => {
+  const b = document.createElement('button'); b.type = 'button';
+  b.textContent = k === 'back' ? '⌫' : k === 'neg' ? '−' : k === 'go' ? 'Check' : k;
+  if (k === 'neg') b.className = 'neg'; if (k === 'go') b.className = 'go';
+  b.setAttribute('aria-label', k === 'back' ? 'Delete' : k === 'neg' ? 'Negative sign' : k === 'go' ? 'Check' : k);
+  b.onclick = () => {
+    if (k === 'go') return check();
+    if (k === 'back') box.value = box.value.slice(0, -1);
+    else if (k === 'neg') box.value = box.value.startsWith('−') ? box.value.slice(1) : '−' + box.value;
+    else box.value += k;
+  };
+  $('pad').append(b);
+});
+box.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); check(); } });
+
+/* ---------------- flow ---------------- */
+let cur = null, misses = 0, done = false, mode = 'add';
+const MAKERS = { add: makeAdd, sub: makeSub, muldiv: makeMulDiv, mixed: makeMixed };
+function show(p, small){
+  cur = p; misses = 0; done = false; box.value = '';
+  const q = $('q'); q.innerHTML = '';
+  const sm = document.createElement('small'); sm.textContent = small || (p.kind === 'sub' ? 'Change it to adding first' : 'Solve it'); q.append(sm);
+  const main = document.createElement('span'); if (p.html) main.innerHTML = p.text; else main.textContent = p.text; q.append(main);
+  const re = document.createElement('span'); re.className = 're'; re.id = 're'; q.append(re);
+  say('', ''); banner('');
+}
+function finished(isClean){ solved++; if (isClean) clean++; save(); drawTally(); if (window.Tokens) Tokens.earnSolve({ clean: isClean, source: 'signed' }); }
+function check(){
+  if (!cur || done) return;
+  const v = parse(box.value);
+  if (v === null){ say('', 'Type a number.', 'Use the − key for a negative.'); return; }
+  if (v === cur.ans){
+    if (speedOn){ score++; $('score').textContent = score; say('good', fmt(cur.ans) + '.', ''); show(makeRound(), 'Fast!'); return; }
+    done = true; finished(misses === 0); banner(misses ? 'Got it.' : 'Right, first try.');
+    say('good', fmt(cur.ans) + '.', (cur.re ? cur.text + ' is ' + cur.re + '. ' : '') + 'Tap New problem.');
+    return;
+  }
+  misses++;
+  if (speedOn){ say('bad', 'It\'s ' + fmt(cur.ans) + '.', ''); setTimeout(() => { if (speedOn) show(makeRound(), 'Fast!'); }, 900); done = true; return; }
+  const s = (cur.slips || []).find(x => x.v === v);
+  if (Number.isNaN(v)) say('bad', 'Not that.', 'These answers need at most one decimal place.');
+  else if (s) say('bad', s.lead, s.extra); else say('bad', 'Not that.', cur.hint);
+  if (cur.re && misses >= 1) $('re').textContent = '= ' + cur.re;
+  box.value = '';
+}
+$('hint').onclick = () => { if (!cur || done) return; say('', 'Hint:', cur.hint); if (cur.re) $('re').textContent = '= ' + cur.re; };
+
+/* ---------------- sign round ---------------- */
+let speedOn = false, score = 0, endsAt = 0, timer = 0;
+function makeRound(){ return pick([makeAdd, makeSub, makeMulDiv])(true); }
+function startRound(){ speedOn = true; score = 0; $('score').textContent = 0; banner(''); endsAt = Date.now() + 60000; $('next').textContent = 'Stop'; clearInterval(timer); timer = setInterval(tick, 200); tick(); show(makeRound(), 'Fast!'); }
+function tick(){ const left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)); $('clock').textContent = left; if (left <= 0) stopRound(); }
+function stopRound(){
+  if (!speedOn) return; speedOn = false; clearInterval(timer); cur = null; $('next').textContent = 'Start the round'; $('q').innerHTML = '<small>Sign round</small>Again?'; box.value = '';
+  const isBest = score > best; if (isBest){ best = score; save(); $('best').textContent = best; if (score > 0 && window.Tokens) Tokens.earnBest('signed:round'); }
+  banner(isBest ? score + ' right. That is a new best.' : score + ' right. Best so far is ' + best + '.', isBest); say('', '');
+}
+
+const MODES = [
+  { key: 'add', tab: 'Adding', note: 'Same signs: add and keep the sign. Different signs: subtract, and use the sign of the number further from zero.' },
+  { key: 'sub', tab: 'Subtracting', note: 'Change the minus to a plus and flip the sign of the number after it. Then add.' },
+  { key: 'muldiv', tab: 'Multiply and divide', note: 'Do it without the signs. Then: same signs, positive; different signs, negative.' },
+  { key: 'mixed', tab: 'Mixed', note: 'All four. Look at the operation first.' },
+  { key: 'round', tab: 'Sign round', note: 'Sixty seconds. Whole numbers only.' }
+];
+MODES.forEach(m => { const b = document.createElement('button'); b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab; b.onclick = () => setMode(m.key); $('modes').append(b); });
+function setMode(k){
+  if (speedOn) stopRound();
+  mode = k;
+  Array.prototype.forEach.call($('modes').children, (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === k)));
+  $('note').textContent = MODES.find(m => m.key === k).note;
+  $('speedBar').hidden = k !== 'round'; $('hint').hidden = k === 'round'; banner(''); say('', '');
+  if (k === 'round'){ $('next').textContent = 'Start the round'; $('best').textContent = best; $('clock').textContent = 60; cur = null; $('q').innerHTML = '<small>Sign round</small>Ready?'; box.value = ''; return; }
+  $('next').textContent = 'New problem'; show(MAKERS[k]());
+}
+$('next').onclick = () => { if (mode === 'round'){ if (speedOn) stopRound(); else startRound(); } else show(MAKERS[mode]()); };
+
+/* self-check: the parser and the book's examples */
+const ok = parse('−5') === -50 && parse('3.5') === 35 && parse('-.5') === -5 && parse('12') === 120 && parse('2.25') !== 22 &&
+  (-50 + -30) === -80 && (-40 + 20) === -20 && (10 - 30) === -20 && (-80 - 30) === -110 && fmt(-35) === '−3.5' && fmt(120) === '12';
+drawTally();
+if (!ok) say('bad', 'This page has a problem.', 'Do not use it until it is fixed.');
+else { const m = /[#&]tab=([a-z]+)/.exec(location.hash || ''); setMode(m && MODES.some(x => x.key === m[1]) ? m[1] : 'add'); }
+window.__signed = { get cur(){ return cur; }, check, setMode };
+</script>
+</body>
+</html>

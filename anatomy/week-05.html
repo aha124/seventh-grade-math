@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bones and Muscles: Anatomy Week 5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+.wrap{max-width:820px;margin:0 auto;padding:0 1.25rem}
+.tally{font-family:var(--display);font-weight:500;font-size:1.05rem;color:var(--ice);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.ideas{margin:1.2rem 0 0;padding:.8rem 1rem;background:var(--paper);border:1.5px solid var(--line);border-left:5px solid var(--ice);border-radius:3px}
+.ideas h2{margin:0 0 .3rem;font-family:var(--display);font-size:1.25rem;color:var(--board)}
+.ideas ul{margin:0;padding-left:1.15rem}
+.ideas li{margin:.2rem 0;color:var(--board-soft)}
+.ideas b{color:var(--board)}
+.modes{display:flex;gap:.4rem;margin:1.3rem 0 .2rem;flex-wrap:wrap}
+.mode-tab{font-family:var(--display);font-size:1.05rem;font-weight:600;background:transparent;color:var(--board-soft);
+  border:1.5px solid var(--line);border-radius:2px;min-height:44px;padding:.45rem .8rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mode-tab[aria-pressed="true"]{background:var(--board);color:#fff;border-color:var(--board)}
+.mode-note{margin:.5rem 0 0;font-size:.98rem;color:var(--board-soft)}
+.q{margin:.7rem 0 0;padding:1.1rem .8rem;min-height:5rem;background:var(--paper);border:1.5px solid var(--line);border-radius:3px;
+  font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,7vw,2.4rem);color:var(--board);text-align:center}
+.q small{display:block;font-family:var(--body);font-weight:500;font-size:.95rem;color:#7C93A5}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.5rem;margin:.8rem 0 0}
+.choice{font-family:var(--display);font-size:1.15rem;font-weight:600;min-height:52px;padding:.4rem .6rem;cursor:pointer;
+  background:var(--paper);color:var(--board);border:1.5px solid var(--edge);border-radius:3px;-webkit-tap-highlight-color:transparent}
+.choice.no{border-color:var(--gold);background:#FBF0DF;color:#8A5F1E}
+.choice.yes{border-color:var(--good);background:#EEF7F1;color:var(--good)}
+.choice:disabled{cursor:default}
+.say{min-height:3.2em;margin:.8rem 0 0;padding:.6rem .8rem;border-radius:2px;font-size:1rem;color:var(--board-soft);background:#F6FAFC;border-left:4px solid var(--line)}
+.say.good{border-left-color:var(--good)} .say.bad{border-left-color:var(--gold);color:var(--board)}
+.say b{color:var(--board)}
+.actions{display:flex;gap:.6rem;margin:1rem 0 0}
+.foot{margin:2rem 0 0;font-size:.92rem;color:#7C93A5}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <div class="board-nav"><a class="backlink" href="../index.html#anatomy">All subjects</a></div>
+    <h1 class="mark">Bones <span>&amp;</span> Muscles</h1>
+    <div class="tally" id="tally">Right 0</div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="ideas">
+    <h2>This week</h2>
+    <ul>
+      <li><b>Five jobs:</b> support, protect, move, make blood, store calcium.</li>
+      <li><b>Bone is alive:</b> collagen (rope) plus calcium (rock); osteoblasts build, osteoclasts chew.</li>
+      <li><b>Joints:</b> ligaments tie bone to bone; cartilage keeps the ends slippery.</li>
+      <li><b>Muscles only pull,</b> so they work in pairs. Every pull costs ATP.</li>
+    </ul>
+  </section>
+  <div class="modes" id="modes"></div>
+  <p class="mode-note" id="note"></p>
+  <div class="q" id="q" aria-live="polite"></div>
+  <div class="choices" id="choices"></div>
+  <p class="say" id="say" aria-live="polite"></p>
+  <div class="actions"><button class="btn primary" id="next" type="button">Next</button></div>
+  <p class="foot">Right on the first tap earns 2 tokens; right after a miss earns 1.</p>
+</main>
+<script src="../shared/tokens.js"></script>
+<script>
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const MODES = [
+  { key: 'bones', tab: 'Name that bone', note: 'Which bone is it?', small: 'Which bone?',
+    opts: ['Skull', 'Clavicle', 'Sternum', 'Ribs', 'Vertebrae', 'Humerus', 'Radius', 'Ulna', 'Pelvis', 'Femur', 'Patella', 'Tibia'],
+    bank: [
+      ['a helmet for your brain, 22 bones locked together', 'Skull', 'The zigzag lines between them are sutures.'],
+      ['the collarbone, across the top of the chest', 'Clavicle', 'One of the most often broken bones.'],
+      ['the flat breastbone the ribs attach to', 'Sternum', 'Shaped a little like a necktie.'],
+      ['12 pairs that make a cage around the heart and lungs', 'Ribs', 'The bottom two pairs are floating ribs.'],
+      ['33 small bones stacked around the spinal cord', 'Vertebrae', 'The bottom few fuse into the tailbone.'],
+      ['the upper arm bone (the funny bone joke)', 'Humerus', 'The funny bone is really a nerve.'],
+      ['the forearm bone on the thumb side', 'Radius', 'It rolls over the ulna when you turn your palm.'],
+      ['the forearm bone on the pinky side', 'Ulna', 'Its end is the point of your elbow.'],
+      ['the hip bowl that connects your spine to your legs', 'Pelvis', 'It holds up your belly organs.'],
+      ['the longest, strongest bone in the body', 'Femur', 'About a quarter of your height.'],
+      ['the kneecap', 'Patella', 'A little shield inside a tendon.'],
+      ['the shin bone, the big one in front', 'Tibia', 'The fibula is its skinny partner.']
+    ] },
+  { key: 'inside', tab: 'Inside and joints', note: 'Which part, or which joint?', small: 'Which one?',
+    opts: ['Compact bone', 'Spongy bone', 'Red marrow', 'Growth plate', 'Cartilage', 'Ligament', 'Hinge joint', 'Ball-and-socket', 'Pivot joint', 'Saddle joint'],
+    bank: [
+      ['the hard, heavy outer wall of a bone', 'Compact bone', 'Made of tiny tubes, each with a blood vessel.'],
+      ['honeycomb inside the ends of a bone', 'Spongy bone', 'Strong but light, like bridge beams.'],
+      ['makes about 2 million red blood cells a second', 'Red marrow', 'Inside your bones.'],
+      ['where a kid\'s bone grows longer', 'Growth plate', 'It closes in the late teens.'],
+      ['the smooth, slippery cap on the ends of bones', 'Cartilage', 'Worn-out cartilage is arthritis.'],
+      ['a tough strap that ties bone to bone', 'Ligament', 'A stretched ligament is a sprain.'],
+      ['your elbow, knee, and fingers', 'Hinge joint', 'One direction, like a door.'],
+      ['your shoulder and hip', 'Ball-and-socket', 'Every direction, like a joystick.'],
+      ['the top of your neck, shaking your head "no"', 'Pivot joint', 'One bone twists around another.'],
+      ['the base of your thumb', 'Saddle joint', 'It lets your thumb touch each fingertip.']
+    ] },
+  { key: 'muscle', tab: 'Muscles', note: 'Which one?', small: 'Which one?',
+    opts: ['Skeletal muscle', 'Smooth muscle', 'Cardiac muscle', 'Tendon', 'Biceps', 'Triceps', 'Myosin', 'ATP'],
+    bank: [
+      ['moves your bones, and you control it', 'Skeletal muscle', 'Striped under a microscope.'],
+      ['squeezes food along the gut, all on its own', 'Smooth muscle', 'Also in the walls of blood vessels.'],
+      ['only in the heart, and it never gets tired', 'Cardiac muscle', 'About 100,000 beats a day.'],
+      ['a tough cord that ties muscle to bone', 'Tendon', 'The Achilles tendon is the biggest.'],
+      ['bends your elbow', 'Biceps', 'It pulls the forearm up.'],
+      ['straightens your elbow', 'Triceps', 'Muscles can only pull, so they work in pairs.'],
+      ['the protein with little heads that grab and pull', 'Myosin', 'It pulls on actin, hand over hand.'],
+      ['the energy coin every pull costs', 'ATP', 'Made from sugar and oxygen.'],
+      ['runs low when you squeeze a clothespin over and over', 'ATP', 'That is muscle fatigue.']
+    ] },
+  { key: 'clinic', tab: 'The clinic', note: 'What is the diagnosis?', small: 'Which problem?',
+    opts: ['Broken bone', 'Sprain', 'Muscle strain', 'Cramp', 'Osteoporosis', 'Arthritis', 'Scoliosis'],
+    bank: [
+      ['fell on an outstretched hand, heard a crack, the X-ray shows a line across the radius', 'Broken bone', 'A cast holds it while a callus grows.'],
+      ['rolled an ankle, puffy and purple, but the X-ray is normal', 'Sprain', 'A stretched or torn ligament.'],
+      ['felt a pop in the back of the thigh while sprinting cold', 'Muscle strain', 'Warm up first.'],
+      ['calf locked tight at night after a hot day with little water', 'Cramp', 'Stretch it and drink water.'],
+      ['a small trip broke a wrist; thin, light bones on the X-ray', 'Osteoporosis', 'The chewer cells got ahead of the builders.'],
+      ['stiff, crunchy knees after many years; bones almost touching on the X-ray', 'Arthritis', 'The cartilage wore thin.'],
+      ['one shoulder higher; the spine curves sideways in an S', 'Scoliosis', 'Often found at school checks.']
+    ] }
+];
+const KEY = 'seventh-grade-math:anatomy-5';
+let right = 0;
+try { right = Math.max(0, parseInt(localStorage.getItem(KEY), 10) || 0); } catch (e) {}
+const $ = id => document.getElementById(id);
+let mode = 'bones', cur = null, last = null, misses = 0, done = false;
+function drawTally(){ $('tally').textContent = 'Right ' + right; }
+function say(kind, lead, extra){
+  const el = $('say'); el.className = 'say' + (kind ? ' ' + kind : ''); el.textContent = '';
+  if (!lead) return; const b = document.createElement('b'); b.textContent = lead; el.append(b); if (extra) el.append(' ' + extra);
+}
+function next(){
+  const M = MODES.find(m => m.key === mode), bank = M.bank;
+  do { cur = pick(bank); } while (cur === last && bank.length > 1);
+  last = cur; misses = 0; done = false;
+  const q = $('q'); q.textContent = '';
+  const sm = document.createElement('small'); sm.textContent = M.small;
+  q.append(sm, cur[0]);
+  const box = $('choices'); box.textContent = '';
+  M.opts.forEach(opt => {
+    const b = document.createElement('button'); b.className = 'choice'; b.type = 'button'; b.textContent = opt;
+    b.onclick = () => choose(b, opt); box.append(b);
+  });
+  say('', '');
+}
+function choose(btn, opt){
+  if (done) return;
+  if (opt !== cur[1]){ misses++; btn.classList.add('no'); btn.disabled = true; say('bad', 'Not that one.', 'Try again.'); return; }
+  done = true; btn.classList.add('yes');
+  Array.prototype.forEach.call($('choices').children, b => { b.disabled = true; });
+  right++; try { localStorage.setItem(KEY, String(right)); } catch (e) {}
+  drawTally();
+  if (window.Tokens) Tokens.earnSolve({ clean: misses === 0, source: 'anatomy-5' });
+  say('good', cur[1] + '.', (cur[2] || '') + ' Tap Next.');
+}
+MODES.forEach(m => {
+  const b = document.createElement('button'); b.className = 'mode-tab'; b.type = 'button'; b.textContent = m.tab;
+  b.onclick = () => setMode(m.key); $('modes').append(b);
+});
+function setMode(k){
+  mode = k;
+  Array.prototype.forEach.call($('modes').children, (b, i) => b.setAttribute('aria-pressed', String(MODES[i].key === k)));
+  $('note').textContent = MODES.find(m => m.key === k).note;
+  last = null; next();
+}
+$('next').onclick = next;
+drawTally();
+const h = /[#&]tab=([a-z]+)/.exec(location.hash || '');
+setMode(h && MODES.some(m => m.key === h[1]) ? h[1] : 'bones');
+</script>
+</body>
+</html>

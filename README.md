@@ -55,9 +55,11 @@ lesson-09/factors.html   find every factor on a tap grid, prime or composite, pl
 lesson-10/balance.html   equations with a missing number: adding, subtracting, multiply and divide, mixed, plus the balance round
 lesson-11/walk.html      number lines with negatives, graphing inequalities, metric length, plus the hop round
 lesson-12/signed.html    signed numbers (Lessons 12 and 13): adding, subtracting, multiply and divide, mixed, plus the sign round
+lesson-15/equations.html rules for equations (Lesson 15): add and subtract, divide, flip it, two steps, mixed, plus the equation round
 anatomy/week-01.html     anatomy week 1: which system, which level (tap to answer, earns tokens)
 anatomy/week-02.html     anatomy week 2: parts of the heart, vessels, and blood
 anatomy/week-03.html     anatomy week 3: the air path, oxygen into the blood, and what goes wrong
+anatomy/week-05.html     anatomy week 5: bones, joints, muscles, and the clinic
 anatomy/lungs-3d.html    3D demos for week 3: the diaphragm and breathing in, and the gas swap at an air sac (three.js from a CDN)
 anatomy/models/          chest model for lungs-3d.html: simplified from Z-Anatomy (CC BY-SA 4.0), built on BodyParts3D (CC BY-SA 2.1 Japan); shared under CC BY-SA 4.0
 shop.html                the prize counter: spend tokens on items from shared/items.js

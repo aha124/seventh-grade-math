@@ -39,6 +39,8 @@ const DICE_GAMES = {
   2: "roll two fractions and multiply them in your head, lowest terms"
 };
 const WARMUPS = [
+  { name: "Equation round", href: "lesson-15/equations.html#tab=round",
+    text: "60 seconds of one-step equations: do the opposite to both sides." },
   { name: "Exponents speed round", href: "lesson-01/exponents-practice.html#tab=speed",
     text: "45 seconds on the nine powers worth knowing cold." },
   { name: "LCD Match it", href: "lesson-02/fractions-practice.html#tab=match",
@@ -60,6 +62,22 @@ const WARMUPS = [
 ];
 
 const LESSONS = [
+  {
+    n: 15,
+    title: "Rules for equations",
+    days: [
+      { d: 1, name: "The add and subtract rules", note: "Skills Check on the board, then the lesson. Afterward, Add and subtract.",
+        pages: [ { href: "lesson-15/equations.html#tab=addsub", name: "Both Sides", blurb: "Plus something? Subtract it from both sides. Minus something? Add it to both sides.", cta: "Start practicing" } ] },
+      { d: 2, name: "The divide and multiply rules", pages: [
+          { href: "lesson-15/equations.html#tab=muldiv", name: "Both Sides: Divide", blurb: "A number times x: divide both sides by it. Fraction answers are fine.", cta: "Start practicing" },
+          { href: "lesson-15/equations.html#tab=recip", name: "Both Sides: Flip it", blurb: "A fraction times x: multiply both sides by its flip.", cta: "Start practicing" } ] },
+      { d: 3, name: "Putting it all together", pages: [ { href: "lesson-15/equations.html#tab=two", name: "Both Sides: Two steps", blurb: "Undo the adding or subtracting first, then the multiplying.", cta: "Start practicing" } ] },
+      { d: 4, name: "Review", pages: [
+          { href: "lesson-15/equations.html#tab=mixed", name: "Both Sides: Mixed", blurb: "Every kind of equation from this week.", cta: "Start practicing" },
+          { href: "lesson-12/signed.html#tab=mixed", name: "Signed Numbers: Mixed", blurb: "All four operations with negatives.", cta: "Start practicing" } ] },
+      { d: 5, name: "Test day", pages: [], note: "The Lesson 15 Test is on paper." }
+    ]
+  },
   {
     n: 12,
     title: "Signed numbers (Lessons 12 and 13 together)",
@@ -521,9 +539,11 @@ const ANATOMY = [
       { href: "anatomy/lungs-3d.html", name: "Lungs in 3D", blurb: "Breathe in with the diaphragm, then watch oxygen and carbon dioxide swap at an air sac.", cta: "Open it" }
     ], note: "Four days this week. The worksheets are on paper." },
   { d: 4, name: "Digestion", pages: [], note: "Four days, ending in the Doctor's Case Log. The worksheets are on paper." },
-  { d: 5, name: "Brain and nerves", pages: [], note: "Coming up." },
-  { d: 6, name: "Hormones", pages: [], note: "Coming up." },
-  { d: 7, name: "Bones and muscles", pages: [], note: "Coming up." },
+  { d: 5, name: "Bones and muscles", pages: [
+      { href: "anatomy/week-05.html", name: "Bones & Muscles", blurb: "Name the bone, the joint, or the muscle part, then run the clinic.", cta: "Start practicing" }
+    ], note: "Four days, with the vinegar bone and the clothespin test. The worksheets are on paper." },
+  { d: 6, name: "Brain and nerves", pages: [], note: "Coming up." },
+  { d: 7, name: "Hormones", pages: [], note: "Coming up." },
   { d: 8, name: "Kidneys", pages: [], note: "Coming up." },
   { d: 9, name: "Immune system and skin", pages: [], note: "Coming up." },
   { d: 10, name: "Wrap-up", pages: [], note: "Put the whole body back together." }

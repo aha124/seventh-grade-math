@@ -39,6 +39,8 @@ const DICE_GAMES = {
   2: "roll two fractions and multiply them in your head, lowest terms"
 };
 const WARMUPS = [
+  { name: "Chance round", href: "lesson-16/chance.html#tab=round",
+    text: "60 seconds of one-pick probabilities: what you want over everything." },
   { name: "Equation round", href: "lesson-15/equations.html#tab=round",
     text: "60 seconds of one-step equations: do the opposite to both sides." },
   { name: "Exponents speed round", href: "lesson-01/exponents-practice.html#tab=speed",
@@ -62,6 +64,22 @@ const WARMUPS = [
 ];
 
 const LESSONS = [
+  {
+    n: 16,
+    title: "Probability",
+    days: [
+      { d: 1, name: "Probability as a fraction", note: "Skills Check on the board, then the lesson. Afterward, One pick.",
+        pages: [ { href: "lesson-16/chance.html#tab=one", name: "Chance It", blurb: "What you want over everything that could happen, in lowest terms.", cta: "Start practicing" } ] },
+      { d: 2, name: "Chance as a percent", pages: [ { href: "lesson-16/chance.html#tab=pct", name: "Chance It: As a percent", blurb: "Fraction, then decimal, then percent.", cta: "Start practicing" } ] },
+      { d: 3, name: "Two or more in a row", pages: [
+          { href: "lesson-16/chance.html#tab=series", name: "Chance It: In a row", blurb: "Multiply one fraction for each try.", cta: "Start practicing" },
+          { href: "lesson-16/chance.html#tab=keep", name: "Chance It: Keep it out", blurb: "One fewer in the bag on the next pick.", cta: "Start practicing" } ] },
+      { d: 4, name: "Review", pages: [
+          { href: "lesson-16/chance.html#tab=mixed", name: "Chance It: Mixed", blurb: "Every kind of probability from this week.", cta: "Start practicing" },
+          { href: "lesson-15/equations.html#tab=mixed", name: "Both Sides: Mixed", blurb: "Equations, from Lesson 15.", cta: "Start practicing" } ] },
+      { d: 5, name: "Test day", pages: [], note: "The Lesson 16 Test is on paper in the workbook." }
+    ]
+  },
   {
     n: 15,
     title: "Rules for equations",
@@ -542,7 +560,9 @@ const ANATOMY = [
   { d: 5, name: "Bones and muscles", pages: [
       { href: "anatomy/week-05.html", name: "Bones & Muscles", blurb: "Name the bone, the joint, or the muscle part, then run the clinic.", cta: "Start practicing" }
     ], note: "Four days, with the vinegar bone and the clothespin test. The worksheets are on paper." },
-  { d: 6, name: "Brain and nerves", pages: [], note: "Coming up." },
+  { d: 6, name: "Brain and nerves", pages: [
+      { href: "anatomy/week-06.html", name: "Brain & Nerves", blurb: "Neurons, the parts of the brain, reflexes, and the clinic.", cta: "Start practicing" }
+    ], note: "Five days: the lab is Wednesday, the disorders Thursday, and the clinic Friday. The worksheets are on paper." },
   { d: 7, name: "Hormones", pages: [], note: "Coming up." },
   { d: 8, name: "Kidneys", pages: [], note: "Coming up." },
   { d: 9, name: "Immune system and skin", pages: [], note: "Coming up." },
